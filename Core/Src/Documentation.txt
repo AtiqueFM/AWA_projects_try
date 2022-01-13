@@ -26,3 +26,10 @@ Risk				:-
 						Cause :- Check for UART	TC (Transfer complete flag), wait untill its set and then clear it 
 								 by writing '1' to it.
 					    Comment :- Not implemented yet.
+					    
+Date				:- 13/01/2022
+Updates				:- Added the COD and TSS check screen, including
+						1. Screen switch commands.
+						2. read acid
+						3. read sample
+						4. set as zero
