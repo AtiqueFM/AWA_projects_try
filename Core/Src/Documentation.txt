@@ -26,3 +26,13 @@ Risk				:-
 						Cause :- Check for UART	TC (Transfer complete flag), wait untill its set and then clear it 
 								 by writing '1' to it.
 					    Comment :- Not implemented yet.
+					    
+Date				:-13/01/2022
+Updates				:- 
+						1. Added new register in Input register for :-
+							1. COD
+							2. BOD
+							3. TSS
+							These register will hold the values which will be only seen by the developer.
+							and will be viewed on check and factory setting display.
+						2. Chnages alos applied in CODCapture()
