@@ -26,3 +26,8 @@ Risk				:-
 						Cause :- Check for UART	TC (Transfer complete flag), wait untill its set and then clear it 
 								 by writing '1' to it.
 					    Comment :- Not implemented yet.
+					    
+Date				:- 13/01/2022
+Updates				:- 
+						1. Added the caluclted pH values to the HMI display instead of the ADC counts.
+						2. Implemented in pHsensotGetValue().
