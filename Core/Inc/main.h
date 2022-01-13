@@ -427,6 +427,9 @@ typedef struct{
 	//Two_pt_Cal AI1_PT;
 	float TSS_CF;
 	float TSS_Intercept;
+	float pH_Cal_Point_1_value; 			/*<Caluclated pH value*/
+	float pH_Cal_Point_2_value; 			/*<Caluclated pH value*/
+	float pH_1pt_Cal_point_1_value; 		/*<Caluclated pH value*/
 	Two_pt_Cal AI2_PT;
 }SensoralibrationHandle_t;
 
