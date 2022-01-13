@@ -1195,8 +1195,12 @@ uint8_t CODADCCapture(uint8_t command)
 				//COD value with Factory Calibration not sensor
 				//COD_MeasurementValues_t.Cal_Value = factory_cod_value;
 
+				/*<DEPRICATED CODE*/
 				//TSS value
-				TSS_MeasurementValues_t.Cal_Value = factory_tss_value;
+				//TSS_MeasurementValues_t.Cal_Value = factory_tss_value;
+
+				//TSS value
+				TSS_MeasurementValues_t.Cal_Value = factory_tss_value * TSS_SensorCalibration_t.slope + TSS_SensorCalibration_t.intercept;
 
 				//BOD value
 				InputRegister_t.PV_info.BODValue = 0.5f * COD_MeasurementValues_t.Cal_Value;//factory_cod_value;
@@ -1207,11 +1211,13 @@ uint8_t CODADCCapture(uint8_t command)
 				//Publish the COD_RAW on modbus
 				//InputRegister_t.PV_info.COD_RAW = COD_MeasurementValues_t.RAW_Value;
 				InputRegister_t.PV_info.COD_RAW = COD_RAW;
-				InputRegister_t.PV_info.CODValue = COD_MeasurementValues_t.Cal_Value;
+				InputRegister_t.PV_info.CODValue = abs(COD_MeasurementValues_t.Cal_Value);	/*<Display to the Customer,only positive value*/
+				InputRegister_t.PV_info.CODValueUser = COD_MeasurementValues_t.Cal_Value; 	/*<Reference for the Developer, can be negative value*/
 
 				//Publish the TSS value to the modbus
 				InputRegister_t.PV_info.TSS_RAW = TSS_RAW;
-				InputRegister_t.PV_info.TSSValue = TSS_MeasurementValues_t.Cal_Value;
+				InputRegister_t.PV_info.TSSValue = abs(TSS_MeasurementValues_t.Cal_Value);	/*<Display to the Customer,only positive value*/
+				InputRegister_t.PV_info.TSSValueUser = TSS_MeasurementValues_t.Cal_Value; 	/*<Reference for the Developer, can be negative value*/
 
 			}
 
