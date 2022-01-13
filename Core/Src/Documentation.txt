@@ -1,0 +1,28 @@
+Software Version 	:- 4.1.0
+copied from 		:- 4.0.0
+Date 				:- 06/12/2022
+Major Features 		:- 
+						1. UART6 with DMA for RX and TX.
+						2. PLL Fclk at 50MHz
+Updates 			:-
+						1. Code Clean-Up.
+						2. Addition of three header and source file:
+							i.   Application (.c/.h)
+							ii.  Calibration (.c/.h)
+							iii. Initialization (.c/.h)
+<BUG 1>				:-	1. UART 1 is not working along side with DMA.
+
+Date 				:- 06/01/2022
+Update 				:- 
+						1. <BUG 1> RESOLVED.
+							Cause :- Resetting of UART 1 NVIC IRQ enable bits resulted in disabling the interrupt request.
+
+Date				:- 12/01/2022
+Updates				:- 
+						1.Shifted the UART 1 to DMA.
+						comments:- Testing remaining.
+Risk				:-
+						1.<RISK 1> PENDING
+						Cause :- Check for UART	TC (Transfer complete flag), wait untill its set and then clear it 
+								 by writing '1' to it.
+					    Comment :- Not implemented yet.
