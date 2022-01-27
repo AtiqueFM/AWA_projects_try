@@ -338,6 +338,7 @@ void ProcessModbusQuery(void)
 						}
 						startadd = startadd * 2;
 						Temp1 = length * 2;
+						DMA_Transaction_no_Tx_uart1 = Temp1;//for the DMA
 						Txbuff[TxBytes++] = Temp1; // byte count
 //						if((startadd + length) >= 500)
 //						{
