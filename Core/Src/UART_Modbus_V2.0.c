@@ -109,10 +109,10 @@ void ProcessModbusQuery(void)
 	//huart3.Instance->CR1 |= UART_IT_TXE;
 	if(Rxbuff[0] == SlaveID) // check slave ID
 	{
-		Temp1 = Rxbuff[RxBytes - 1] << 8;
-		Temp1 |= Rxbuff[RxBytes - 2];
+		Temp1 = Rxbuff[7] << 8;
+		Temp1 |= Rxbuff[6];
 		// calculate CRC of received packet
-		Temp2 = crc_calc((char*)Rxbuff, RxBytes - 2);
+		Temp2 = crc_calc((char*)Rxbuff, 6);
 		if(Temp2 == Temp1) // verify CRC
 		{
 			TxBytes = 0;
