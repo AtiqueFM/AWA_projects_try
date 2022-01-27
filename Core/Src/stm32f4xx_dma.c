@@ -36,20 +36,20 @@ void DMAInit(DMA_Handle_t *pDMAHandle)
 	if(pDMAHandle->pDMAConfig.DataFlowDirection == 0)
 	{
 		//Configure the source address
-		pDMAHandle->pDMAStreamx->M0AR |= (pDMAHandle->pDMAConfig.DestinationAddress << 0);
+		pDMAHandle->pDMAStreamx->M0AR = (pDMAHandle->pDMAConfig.DestinationAddress << 0);
 		//pDMAHanlde->pDMAx->S7M0AR |= (pDMAHanlde->pDMAConfig.SourceAddress << 0);
 		//Configure the Destination address
-		pDMAHandle->pDMAStreamx->PAR |= (pDMAHandle->pDMAConfig.SourceAddress << 0);
+		pDMAHandle->pDMAStreamx->PAR = (pDMAHandle->pDMAConfig.SourceAddress << 0);
 		//pDMAHanlde->pDMAx->S7PAR |= (pDMAHanlde->pDMAConfig.DestinationAddress << 0);
 	}
 	//Memory to peripheral
 	else if(pDMAHandle->pDMAConfig.DataFlowDirection == 1)
 	{
 		//Configure the source address
-		pDMAHandle->pDMAStreamx->M0AR |= (pDMAHandle->pDMAConfig.SourceAddress << 0);
+		pDMAHandle->pDMAStreamx->M0AR = (pDMAHandle->pDMAConfig.SourceAddress << 0);
 		//pDMAHanlde->pDMAx->S7M0AR |= (pDMAHanlde->pDMAConfig.SourceAddress << 0);
 		//Configure the Destination address
-		pDMAHandle->pDMAStreamx->PAR |= (pDMAHandle->pDMAConfig.DestinationAddress << 0);
+		pDMAHandle->pDMAStreamx->PAR = (pDMAHandle->pDMAConfig.DestinationAddress << 0);
 		//pDMAHanlde->pDMAx->S7PAR |= (pDMAHanlde->pDMAConfig.DestinationAddress << 0);
 	}
 #if 0
