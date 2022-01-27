@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stm32f4xx_dma.h"
+#include "Initialization.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,6 +59,9 @@ extern uint8_t codSlotNO;
 extern uint8_t phSlotNO;
 
 extern DMA_Handle_t DMA_UART6_RX_handle_t,DMA_UART6_TX_handle_t,DMA_UART1_RX_handle_t,DMA_UART1_TX_handle_t;
+
+uint8_t MODBUS_DMA_querry_count = 0;/*<if first half of the MODBUS query yet to be received then 0
+ 	 	 	 	 	 	 	 	 	   incremented to 1 after receiving 1st half of the query*/
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -593,17 +597,40 @@ void DMA2_Stream5_IRQHandler(void)
 	/*Clear the FLAG*/
 	DMAInterruptHandle(&DMA_UART1_RX_handle_t);
 
-	/*Disable the Stream 5 IRQ*/
-	HAL_NVIC_DisableIRQ(DMA2_Stream5_IRQn);
+	if(!MODBUS_DMA_querry_count)
+	{
+		//TODO: Reconfigure the DMA Rx for remaining MODBUS transaction.
+		if(Rxbuff[1] == MODBUS_FUNCODE_READ_HOLDING)
+		{
+			DMAPeripheralEnable(DMA2_Stream5,DISABLE);
 
-	/*Enable the MODBUS Query process flag*/
-	RxFlag = 0x01;
+			DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[6]),DMA_SECOND_HOLDINGREAD_TRANSACTION_NO);
 
-	/*Clear the UART1 Transfer complete flag*/
-	huart1.Instance->SR &= !USART_SR_TC;
+			DMAPeripheralEnable(DMA2_Stream5,ENABLE);
+		}
 
-	/*Disable the DMA2 Stream 5*/
-	DMAPeripheralEnable(DMA2_Stream5,DISABLE);
+		//TODO: Increment the MODBUS_DMA_querry_count to 1.
+		MODBUS_DMA_querry_count = 1;
+	}
+	else if(MODBUS_DMA_querry_count == 1)
+	{
+		//TODO: Reset the MODBUS_DMA_querry_count to 0.
+		MODBUS_DMA_querry_count = 0;
+
+		//TODO: Paste the below code.
+		/*Disable the Stream 5 IRQ*/
+		HAL_NVIC_DisableIRQ(DMA2_Stream5_IRQn);
+
+		/*Enable the MODBUS Query process flag*/
+		RxFlag = 0x01;
+
+		/*Clear the UART1 Transfer complete flag*/
+		huart1.Instance->SR &= !USART_SR_TC;
+
+		/*Disable the DMA2 Stream 5*/
+		DMAPeripheralEnable(DMA2_Stream5,DISABLE);
+	}
+
 }
 
 void DMA2_Stream7_IRQHandler(void)
