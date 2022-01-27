@@ -24,6 +24,8 @@ volatile uint8_t Txbuff[310];
 volatile uint8_t SlaveID = 1;
 volatile uint8_t MOD2_SlaveID = 2;
 uint8_t TimerStart = 0;
+volatile uint8_t RxCRCIndex = 0;/*<For extracting the CRC value from RxBuff[]*/
+volatile uint8_t RxCRCDataPacketLength = 0;/*<For extracting the data from RxBUff[] except CRC value*/
 
 //For RTU MODBUS
 volatile uint8_t MOD2_Rxbuff[310];
@@ -104,15 +106,17 @@ uint16_t crc_calc(char* input_str, int len )
 void ProcessModbusQuery(void)
 {
 	uint16_t Temp1 = 0, Temp2 = 0, startadd = 0, length = 0, Temp = 0;
+	uint16_t u16RxCRCDataPacketLength = 0;
 
 
 	//huart3.Instance->CR1 |= UART_IT_TXE;
 	if(Rxbuff[0] == SlaveID) // check slave ID
 	{
-		Temp1 = Rxbuff[7] << 8;
-		Temp1 |= Rxbuff[6];
+		u16RxCRCDataPacketLength = RxCRCIndex;
+		Temp1 = Rxbuff[RxCRCIndex] << 8;
+		Temp1 |= Rxbuff[--RxCRCIndex];
 		// calculate CRC of received packet
-		Temp2 = crc_calc((char*)Rxbuff, 6);
+		Temp2 = crc_calc((char*)Rxbuff, u16RxCRCDataPacketLength - 1);
 		if(Temp2 == Temp1) // verify CRC
 		{
 			TxBytes = 0;
@@ -267,7 +271,7 @@ void ProcessModbusQuery(void)
 						}
 							startadd = startadd * 2;
 							Temp1 = length * 2;
-							DMA_Transaction_no_Tx_uart1 = Temp1;//for the DMA
+							DMA_Transaction_no_Tx_uart1 = Temp1 + 5;//Data and other components
 							Txbuff[TxBytes++] = Temp1; // byte count
 
 							for(Temp2 = 0; Temp2 < length; Temp2++)
@@ -338,7 +342,7 @@ void ProcessModbusQuery(void)
 						}
 						startadd = startadd * 2;
 						Temp1 = length * 2;
-						DMA_Transaction_no_Tx_uart1 = Temp1;//for the DMA
+						DMA_Transaction_no_Tx_uart1 = Temp1 + 5;//Data and other compenents
 						Txbuff[TxBytes++] = Temp1; // byte count
 //						if((startadd + length) >= 500)
 //						{
@@ -459,7 +463,8 @@ void ProcessModbusQuery(void)
 						startadd = startadd << 1;
 						HoldingRegister_t.bytes[index + startadd++] = Rxbuff[5];
 						HoldingRegister_t.bytes[index + startadd] = Rxbuff[4];
-						for(Temp1 = 2; Temp1 < RxBytes; Temp1++) // echo response
+						DMA_Transaction_no_Tx_uart1 = 8;//Data  + other components
+						for(Temp1 = 2; Temp1 < 8; Temp1++) // echo response
 							Txbuff[TxBytes++] = Rxbuff[Temp1];
 						if(UHoldReg.SHoldReg.ADCReadStart == 0x01)
 						{
