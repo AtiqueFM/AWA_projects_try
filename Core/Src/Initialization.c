@@ -269,7 +269,7 @@ void DMA_UART6_TX_Init(void)
 
 
 /*Initialization of UART1 Reception*/
-void DMA_UART1_RX_Init(void)
+void DMA_UART1_RX_Init_(void)
 {
 	//UART RX
 	//Select DMA 2
@@ -283,7 +283,7 @@ void DMA_UART1_RX_Init(void)
 	DMA_UART1_RX_handle_t.pDMAConfig.DirectModeEnable = 1;
 
 	DMA_UART1_RX_handle_t.pDMAConfig.MemoryIncrementEnable = 1;
-	DMA_UART1_RX_handle_t.pDMAConfig.NumberOfTransaction = 8;//data
+	DMA_UART1_RX_handle_t.pDMAConfig.NumberOfTransaction = 8; /*<Must be changed according to function code*/
 	DMA_UART1_RX_handle_t.pDMAConfig.PeripheralDataSize = 0;//8 bit
 	DMA_UART1_RX_handle_t.pDMAConfig.MemoryDataSize = 0;//8 bit
 	DMA_UART1_RX_handle_t.pDMAConfig.PeripheralIncrementEnable = 0;
@@ -301,6 +301,38 @@ void DMA_UART1_RX_Init(void)
 	DMAInit(&DMA_UART1_RX_handle_t);//configuration
 }
 
+/*Initialization of UART1 Reception with variable transactions*/
+void DMA_UART1_RX_Init(uint32_t *pDestinationBuff, uint16_t noTrasaction)
+{
+	//UART RX
+	//Select DMA 2
+	DMA_UART1_RX_handle_t.pDMAx = DMA2;
+	//Select Stream 5 for UART6_RX
+	DMA_UART1_RX_handle_t.pDMAStreamx = DMA2_Stream5;
+
+	//Configuration
+	DMA_UART1_RX_handle_t.pDMAConfig.ChannelSelect = 4;
+	DMA_UART1_RX_handle_t.pDMAConfig.DataFlowDirection = 0;//Peripheral to memory
+	DMA_UART1_RX_handle_t.pDMAConfig.DirectModeEnable = 1;
+
+	DMA_UART1_RX_handle_t.pDMAConfig.MemoryIncrementEnable = 1;
+	DMA_UART1_RX_handle_t.pDMAConfig.NumberOfTransaction = noTrasaction;//8; /*<Must be changed according to function code*/
+	DMA_UART1_RX_handle_t.pDMAConfig.PeripheralDataSize = 0;//8 bit
+	DMA_UART1_RX_handle_t.pDMAConfig.MemoryDataSize = 0;//8 bit
+	DMA_UART1_RX_handle_t.pDMAConfig.PeripheralIncrementEnable = 0;
+	DMA_UART1_RX_handle_t.pDMAConfig.SelectPriority = 0x11;//priority very high
+	DMA_UART1_RX_handle_t.pDMAConfig.StreamSelect = 5;
+	//source destination address
+	DMA_UART1_RX_handle_t.pDMAConfig.SourceAddress= USART1_BASE + 0x04;//UART6_DR register address
+	//Destination destination address
+	DMA_UART1_RX_handle_t.pDMAConfig.DestinationAddress = (uint32_t)pDestinationBuff;//UART_6_RX_DESTINATION_ADDR;//0x40005410;//SRAM address
+	//enable interrupt at its default priority
+	HAL_NVIC_SetPriority(DMA2_Stream5_IRQn, 0, 0);
+	//DMA_IRQITConfig(IRQ_NO_DMA2_Stream2,ENABLE);//RX
+	HAL_NVIC_EnableIRQ(DMA2_Stream5_IRQn);
+	//DMAEnable(DMA2,ENABLE);//RCC CLOCK
+	DMAInit(&DMA_UART1_RX_handle_t);//configuration
+}
 /*Initialization of UART1 Transmission*/
 void DMA_UART1_TX_Init(void)
 {
@@ -316,7 +348,7 @@ void DMA_UART1_TX_Init(void)
 	DMA_UART1_TX_handle_t.pDMAConfig.DirectModeEnable = 1;
 
 	DMA_UART1_TX_handle_t.pDMAConfig.MemoryIncrementEnable = 1;
-	DMA_UART1_TX_handle_t.pDMAConfig.NumberOfTransaction = DMA_Transaction_no_Tx_uart1 + 5;//Change the variable
+	DMA_UART1_TX_handle_t.pDMAConfig.NumberOfTransaction = DMA_Transaction_no_Tx_uart1;// + 5;//Change the variable
 	DMA_UART1_TX_handle_t.pDMAConfig.PeripheralDataSize = 0;//8 bit
 	DMA_UART1_TX_handle_t.pDMAConfig.MemoryDataSize = 0;//8 bit
 	DMA_UART1_TX_handle_t.pDMAConfig.PeripheralIncrementEnable = 0;

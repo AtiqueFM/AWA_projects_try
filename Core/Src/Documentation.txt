@@ -26,3 +26,8 @@ Risk				:-
 						Cause :- Check for UART	TC (Transfer complete flag), wait untill its set and then clear it 
 								 by writing '1' to it.
 					    Comment :- Not implemented yet.
+					    
+Date				:- 27/01/2022
+Update				:- 
+						1. Added MODBUS for HMI over DMA, handling the query except multiple preset input coil.
+						  TESTED over MODSCAN.

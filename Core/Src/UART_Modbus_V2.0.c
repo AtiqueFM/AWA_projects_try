@@ -137,7 +137,7 @@ void ProcessModbusQuery(void)
 						else
 							Temp1 = (length >> 3) + 1; // odd byte count;
 						Txbuff[TxBytes++] = Temp1;
-
+						DMA_Transaction_no_Tx_uart1 = Temp1 + 5;//CRC + other components
 						length = length + startadd;
 						for(Temp2 = 0; Temp2 < Temp1; Temp2 ++) //  byte count
 						{
@@ -198,7 +198,7 @@ void ProcessModbusQuery(void)
 
 				  break;
 				}
-				case 0x02:
+				case 0x02://Input status
 				{
 					length = Rxbuff[4] << 8;
 					length |= Rxbuff[5]; // number of coils to read
@@ -209,7 +209,7 @@ void ProcessModbusQuery(void)
 						else
 							Temp1 = (length >> 3) + 1; // odd byte count;
 						Txbuff[TxBytes++] = Temp1;
-
+						DMA_Transaction_no_Tx_uart1 = Temp1 + 5;//CRC + other components
 						length = length + startadd;
 						for(Temp2 = 0; Temp2 < Temp1; Temp2 ++) //  byte count
 						{
@@ -407,8 +407,9 @@ void ProcessModbusQuery(void)
 				{
 					if(startadd < 16)
 					{
+						DMA_Transaction_no_Tx_uart1 = 8;//Data  + other components
 						CoilStatusRegister_t.bytes[startadd] = Rxbuff[4] & 0x01;
-						for(Temp1 = 2; Temp1 < RxBytes; Temp1++) // echo response
+						for(Temp1 = 2; Temp1 < 8; Temp1++) // echo response
 							Txbuff[TxBytes++] = Rxbuff[Temp1];
 					}
 #if 0
