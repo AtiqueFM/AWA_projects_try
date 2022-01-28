@@ -27,6 +27,7 @@ Risk				:-
 								 by writing '1' to it.
 					    Comment :- Not implemented yet.
 					    
+
 Date				:-13/01/2022
 Updates				:- 
 						1. Added new register in Input register for :-
@@ -36,3 +37,9 @@ Updates				:-
 							These register will hold the values which will be only seen by the developer.
 							and will be viewed on check and factory setting display.
 						2. Chnages alos applied in CODCapture()
+
+Date				:- 27/01/2022
+Update				:- 
+						1. Added MODBUS for HMI over DMA, handling the query except multiple preset input coil.
+						  TESTED over MODSCAN.
+

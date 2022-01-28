@@ -165,7 +165,8 @@ int main(void)
   DMA_UART6_RX_Init();
 
   //Configure DMA for UART 1 RX
-  DMA_UART1_RX_Init();
+  //DMA_UART1_RX_Init();
+  DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),DMA_FIRST_TRANSACTION_NO); /*< Initialize the DMA2 Stream 5 with DMA_FIRST_TRANSACTION_NO*/
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */

@@ -24,6 +24,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stm32f4xx_dma.h"
+#include "Initialization.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,6 +59,11 @@ extern uint8_t codSlotNO;
 extern uint8_t phSlotNO;
 
 extern DMA_Handle_t DMA_UART6_RX_handle_t,DMA_UART6_TX_handle_t,DMA_UART1_RX_handle_t,DMA_UART1_TX_handle_t;
+
+uint8_t MODBUS_DMA_querry_count = 0;/*<if first half of the MODBUS query yet to be received then 0
+ 	 	 	 	 	 	 	 	 	   incremented to 1 after receiving 1st half of the query*/
+extern volatile uint8_t RxCRCIndex;/*<For extracting the CRC value from RxBuff[]*/
+extern volatile uint8_t RxCRCDataPacketLength;/*<For extracting the data from RxBUff[] except CRC value*/
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -590,20 +596,114 @@ void DMA2_Stream6_IRQHandler(void)
 /*UART 1 RX*/
 void DMA2_Stream5_IRQHandler(void)
 {
+	//test
+	static uint8_t multipresetcoilgetdataflag = 0;
 	/*Clear the FLAG*/
 	DMAInterruptHandle(&DMA_UART1_RX_handle_t);
 
-	/*Disable the Stream 5 IRQ*/
-	HAL_NVIC_DisableIRQ(DMA2_Stream5_IRQn);
+	if(!MODBUS_DMA_querry_count)
+	{
+		//TODO: Reconfigure the DMA Rx for remaining MODBUS transaction.
+		DMAPeripheralEnable(DMA2_Stream5,DISABLE);
 
-	/*Enable the MODBUS Query process flag*/
-	RxFlag = 0x01;
+		switch(Rxbuff[1])
+		{
+		case MODBUS_FUNCODE_READ_HOLDING:
+			DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[6]),
+								DMA_SECOND_HOLDINGREAD_TRANSACTION_NO);
+			RxCRCIndex = 7;
+			break;
+		case MODBUS_FUNCODE_READ_INPUT:
+			DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[6]),
+								DMA_SECOND_INPUTREAD_TRANSACTION_NO);
+			RxCRCIndex = 7;
+			RxCRCDataPacketLength = 6;
+			break;
+		case MODBUS_FUNCODE_SINGLE_PRESET_HOLDING:
+			DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[6]),
+								DMA_SECOND_SINGLEPRESETHOLDING_TRANSACTION_NO);
+			RxCRCIndex = 7;
+			break;
+		case MODBUS_FUNCODE_MULTI_PRESET_HOLDING:
+		{
+			uint16_t byteCount = Rxbuff[5];//lower byte
+			byteCount |= (Rxbuff[4] << 8);//higher byte
+			byteCount *= 2;//number of words to number of bytes
+			uint16_t noOfTransaction = byteCount + 2 + 1;//Byte count + Data + CRC
+			DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[6]),
+					noOfTransaction);
+			RxCRCIndex = 8 + byteCount;
+			break;
+		}
+		case MODBUS_FUNCODE_READ_INPUTCOIL:
+			DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[6]),
+								DMA_SECOND_INPUTCOILREAD_TRANSACTION_NO);
+			RxCRCIndex = 7;
+			break;
+		case MODBUS_FUNCODE_SINGLE_PRESET_INPUTCOIL:
+			DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[6]),
+								DMA_SECOND_SINGLEPRESETHOLDING_TRANSACTION_NO);
+			RxCRCIndex = 7;
+			break;
+		case MODBUS_FUNCODE_READ_STATUSCOIL:
+			DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[6]),
+								DMA_SECOND_STATUSCOILREAD_TRANSACTION_NO);
+			RxCRCIndex = 7;
+			break;
+		case MODBUS_FUNCODE_MULTI_PRESET_INPUTCOIL:
+		{
+			uint8_t regCount = 0;
+			if(!multipresetcoilgetdataflag)
+			{
+				DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[6]),
+									1);
+				multipresetcoilgetdataflag = 1;
+			}
+			else
+			{
+				regCount = Rxbuff[6] + 2;
+				DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[7]),
+									regCount);
+				multipresetcoilgetdataflag = 0;
 
-	/*Clear the UART1 Transfer complete flag*/
-	huart1.Instance->SR &= !USART_SR_TC;
+			}
+			RxCRCIndex = 6 + 1 + regCount + 1;
+			break;
+		}
+		}
 
-	/*Disable the DMA2 Stream 5*/
-	DMAPeripheralEnable(DMA2_Stream5,DISABLE);
+		//TODO: Increment the MODBUS_DMA_querry_count to 1.
+		DMAPeripheralEnable(DMA2_Stream5,ENABLE);
+
+		if(multipresetcoilgetdataflag)
+		{
+			MODBUS_DMA_querry_count = 0;
+		}
+		else
+		{
+			MODBUS_DMA_querry_count = 1;
+		}
+	}
+	else if(MODBUS_DMA_querry_count == 1)
+	{
+		//TODO: Reset the MODBUS_DMA_querry_count to 0.
+		MODBUS_DMA_querry_count = 0;
+
+		//TODO: Paste the below code.
+		/*Disable the Stream 5 IRQ*/
+		HAL_NVIC_DisableIRQ(DMA2_Stream5_IRQn);
+
+		/*Enable the MODBUS Query process flag*/
+		RxFlag = 0x01;
+
+		/*Clear the UART1 Transfer complete flag*/
+		huart1.Instance->SR &= !USART_SR_TC;
+
+		/*Disable the DMA2 Stream 5*/
+		DMAPeripheralEnable(DMA2_Stream5,DISABLE);
+
+	}
+
 }
 
 void DMA2_Stream7_IRQHandler(void)
@@ -624,8 +724,11 @@ void DMA2_Stream7_IRQHandler(void)
 	/*Enable the UART DMA Rx*/
 	huart1.Instance->CR3 |= USART_CR3_DMAR;
 
+	/*Configure the Stream 5 Rx with DMA_FIRST_TRANSACTION_NO*/
+	DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),DMA_FIRST_TRANSACTION_NO);
+
 	/*Enable the Stream 5 IRQ*/
-	HAL_NVIC_EnableIRQ(DMA2_Stream5_IRQn);
+	//HAL_NVIC_EnableIRQ(DMA2_Stream5_IRQn);
 
 	/*Enable the Stream 5*/
 	DMAPeripheralEnable(DMA2_Stream5,ENABLE);
