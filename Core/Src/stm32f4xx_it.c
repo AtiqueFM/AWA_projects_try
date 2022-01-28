@@ -596,6 +596,8 @@ void DMA2_Stream6_IRQHandler(void)
 /*UART 1 RX*/
 void DMA2_Stream5_IRQHandler(void)
 {
+	//test
+	static uint8_t multipresetcoilgetdataflag = 0;
 	/*Clear the FLAG*/
 	DMAInterruptHandle(&DMA_UART1_RX_handle_t);
 
@@ -648,12 +650,39 @@ void DMA2_Stream5_IRQHandler(void)
 								DMA_SECOND_STATUSCOILREAD_TRANSACTION_NO);
 			RxCRCIndex = 7;
 			break;
+		case MODBUS_FUNCODE_MULTI_PRESET_INPUTCOIL:
+		{
+			uint8_t regCount = 0;
+			if(!multipresetcoilgetdataflag)
+			{
+				DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[6]),
+									1);
+				multipresetcoilgetdataflag = 1;
+			}
+			else
+			{
+				regCount = Rxbuff[6] + 2;
+				DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[7]),
+									regCount);
+				multipresetcoilgetdataflag = 0;
+
+			}
+			RxCRCIndex = 6 + 1 + regCount + 1;
+			break;
+		}
 		}
 
 		//TODO: Increment the MODBUS_DMA_querry_count to 1.
 		DMAPeripheralEnable(DMA2_Stream5,ENABLE);
 
-		MODBUS_DMA_querry_count = 1;
+		if(multipresetcoilgetdataflag)
+		{
+			MODBUS_DMA_querry_count = 0;
+		}
+		else
+		{
+			MODBUS_DMA_querry_count = 1;
+		}
 	}
 	else if(MODBUS_DMA_querry_count == 1)
 	{

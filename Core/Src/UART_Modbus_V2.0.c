@@ -539,7 +539,7 @@ void ProcessModbusQuery(void)
 						Temp2 = crc_calc((char*)Txbuff, TxBytes);
 						Txbuff[TxBytes++] = Temp2;
 						Txbuff[TxBytes++] = Temp2 >> 8;
-
+						DMA_Transaction_no_Tx_uart1 = 8;//Quantity of coils + other components
 #if 0
 						//Test code start 04.03.2021 Sagar
 							if(UCoil.ByteArr[0] == 1) 	//P5
