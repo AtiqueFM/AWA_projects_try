@@ -883,6 +883,14 @@ void Error_Handler(void);
 #define TSSCoeffs								0x33
 #define CalibrateTSS							0x34
 
+
+/*CHECK*/
+#define CHECK_MODE								0x25
+#define COD_Check								0x10
+#define TSS_Check								0x20
+#define Read_acid								0x01
+#define Read_sample								0x02
+
 /*COMMON COMMANDS*/
 #define Sample_pump								0x01
 #define Clean_pump								0x02

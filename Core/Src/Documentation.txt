@@ -43,3 +43,9 @@ Update				:-
 						1. Added MODBUS for HMI over DMA, handling the query except multiple preset input coil.
 						  TESTED over MODSCAN.
 
+Date				:- 13/01/2022
+Updates				:- Added the COD and TSS check screen, including
+						1. Screen switch commands.
+						2. read acid
+						3. read sample
+						4. set as zero
