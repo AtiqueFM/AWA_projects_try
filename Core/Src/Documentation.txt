@@ -49,3 +49,6 @@ Updates				:- Added the COD and TSS check screen, including
 						2. read acid
 						3. read sample
 						4. set as zero
+						
+Date				:- 28/01/2022
+Updates				:- Merged COD and TSS check branch with COD modbus map change branch cobined with master branch.
