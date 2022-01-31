@@ -40,4 +40,23 @@ static inline void COD_SensorCalib_ypoint(uint8_t pt);
 void ParameterIOutProcess(void);
 
 void ParameterRelayAlarmProcess(void);
+
+/*Helper functions*/
+/*
+ * Function name :- Application_ReadAcid
+ * Task :- Runs the acid pump and measures the raw absorbance.
+ */
+void Application_ReadAcid(void);
+
+/*
+ * Function name :- Application_ReadSample
+ * Task :- Runs the acid pump and measures the raw absorbance.
+ */
+void Application_ReadSample(void);
+
+/*
+ * Function name :- Application_SetAsZero
+ * Task :- Overwrite the existing PD1(0) and PD2(0) by taking the current PD1 and PD2 values.
+ */
+void Application_SetAsZero(uint8_t parameter);
 #endif /* INC_APPLICATION_H_ */

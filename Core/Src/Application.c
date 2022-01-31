@@ -687,6 +687,56 @@ void ProcessModesCommands(void)
 			}
 		}
 	}
+	else if(HoldingRegister_t.ModeCommand_t.ModeCommand_H == CHECK_MODE)
+	{
+		switch(HoldingRegister_t.ModeCommand_t.ModeCommand_L)
+		{
+			case COD_Check:
+			{
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Read_acid)
+				{
+					Application_ReadAcid();
+				}
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Read_sample)
+				{
+					Application_ReadSample();
+				}
+				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
+				{
+					CODADCCapture(COD_Measure);
+				}
+				//Set as zero
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO)
+				{
+					Application_SetAsZero(1);
+				}
+				break;
+			}
+			case TSS_Check:
+			{
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Read_acid)
+				{
+					Application_ReadAcid();
+				}
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Read_sample)
+				{
+					Application_ReadSample();
+				}
+				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_Measure && !PUMPControlHandle_t.u8Flag_measurement)
+				{
+					CODADCCapture(TSS_Measure);
+				}
+				//Set as zero
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO)
+				{
+					Application_SetAsZero(2);
+				}
+				break;
+			}
+		}
+	}
 }
 
 void CardAction(uint8_t CardID)
@@ -1195,8 +1245,12 @@ uint8_t CODADCCapture(uint8_t command)
 				//COD value with Factory Calibration not sensor
 				//COD_MeasurementValues_t.Cal_Value = factory_cod_value;
 
+				/*<DEPRICATED CODE*/
 				//TSS value
-				TSS_MeasurementValues_t.Cal_Value = factory_tss_value;
+				//TSS_MeasurementValues_t.Cal_Value = factory_tss_value;
+
+				//TSS value
+				TSS_MeasurementValues_t.Cal_Value = factory_tss_value * TSS_SensorCalibration_t.slope + TSS_SensorCalibration_t.intercept;
 
 				//BOD value
 				InputRegister_t.PV_info.BODValue = 0.5f * COD_MeasurementValues_t.Cal_Value;//factory_cod_value;
@@ -1207,11 +1261,13 @@ uint8_t CODADCCapture(uint8_t command)
 				//Publish the COD_RAW on modbus
 				//InputRegister_t.PV_info.COD_RAW = COD_MeasurementValues_t.RAW_Value;
 				InputRegister_t.PV_info.COD_RAW = COD_RAW;
-				InputRegister_t.PV_info.CODValue = COD_MeasurementValues_t.Cal_Value;
+				InputRegister_t.PV_info.CODValue = abs(COD_MeasurementValues_t.Cal_Value);	/*<Display to the Customer,only positive value*/
+				InputRegister_t.PV_info.CODValueUser = COD_MeasurementValues_t.Cal_Value; 	/*<Reference for the Developer, can be negative value*/
 
 				//Publish the TSS value to the modbus
 				InputRegister_t.PV_info.TSS_RAW = TSS_RAW;
-				InputRegister_t.PV_info.TSSValue = TSS_MeasurementValues_t.Cal_Value;
+				InputRegister_t.PV_info.TSSValue = abs(TSS_MeasurementValues_t.Cal_Value);	/*<Display to the Customer,only positive value*/
+				InputRegister_t.PV_info.TSSValueUser = TSS_MeasurementValues_t.Cal_Value; 	/*<Reference for the Developer, can be negative value*/
 
 			}
 
@@ -2095,3 +2151,87 @@ void ParameterRelayAlarmProcess(void)
 	}
 	RelayToggle();
 }
+
+/*
+ * Function name :- Application_ReadAcid
+ * Task :- Runs the acid pump and measures the raw absorbance.
+ */
+void Application_ReadAcid(void)
+{
+	//Run the acid pump
+	PumpOperation(0x01);
+
+	//perform the ADC measurement action when the pump action is completed
+	if(!PUMPControlHandle_t.u8Flag_measurement)
+	{
+		HoldingRegister_t.ModeCommand_t.CommonCommand = COD_Measure;
+//		CODADCCapture(COD_Measure);
+	}
+}
+
+/*
+ * Function name :- Application_ReadSample
+ * Task :- Runs the acid pump and measures the raw absorbance.
+ */
+void Application_ReadSample(void)
+{
+	//Run the acid pump
+	PumpOperation(0x02);
+
+	//perform the ADC measurement action when the pump action is completed
+	if(!PUMPControlHandle_t.u8Flag_measurement)
+	{
+		HoldingRegister_t.ModeCommand_t.CommonCommand = COD_Measure;
+//		CODADCCapture(COD_Measure);
+	}
+}
+
+/*
+ * Function name :- Application_SetAsZero
+ * Task :- Overwrite the existing PD1(0) and PD2(0) by taking the current PD1 and PD2 values.
+ */
+void Application_SetAsZero(uint8_t parameter)
+{
+	if(parameter == 1) /*< Parameter = COD*/
+	{
+		//set the current PD1 and PD2 mean values to the PD1(0) and PD2(0)
+		COD_MeasurementValues_t.PD1_Zero = COD_MeasurementValues_t.PD1_New;
+		COD_MeasurementValues_t.PD2_Zero = COD_MeasurementValues_t.PD2_New;
+
+		//Calculate the COD RAW
+		float COD_RAW = HoldingRegister_t.ModeCommand_t.COD_SF *(log(COD_MeasurementValues_t.PD1_Zero/COD_MeasurementValues_t.PD1_New) - log(COD_MeasurementValues_t.PD2_Zero/COD_MeasurementValues_t.PD2_New));
+		//Publish the values to the MODBUS
+		InputRegister_t.PV_info.COD_RAW = COD_RAW;
+		InputRegister_t.PV_info.PD1_0 = COD_MeasurementValues_t.PD1_Zero;
+		InputRegister_t.PV_info.PD2_0 = COD_MeasurementValues_t.PD2_Zero;
+		//Reset the command
+		HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+		//Flag set as data not saved in the FRAM
+		AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+	}
+	else
+	{
+		//set the current PD1 and PD2 mean values to the PD1(0) and PD2(0)
+		//COD_MeasurementValues_t.PD1_Zero = COD_MeasurementValues_t.PD1_New;
+		TSS_MeasurementValues_t.PD2_Zero = TSS_MeasurementValues_t.PD2_New;
+
+		//Calculate the COD RAW
+		float TSS_RAW = HoldingRegister_t.ModeCommand_t.TSS_SF *(log(TSS_MeasurementValues_t.PD2_Zero/TSS_MeasurementValues_t.PD2_New));
+		//Publish the values to the MODBUS
+		InputRegister_t.PV_info.TSS_RAW = TSS_RAW;
+		InputRegister_t.PV_info.TSS_PD2_0 = TSS_MeasurementValues_t.PD2_Zero;
+		//Reset the command
+		HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+		//Flag set as data not saved in the FRAM
+		AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+	}
+}
+
+
+
+
+
+
+
+
+

@@ -19,6 +19,8 @@ void SPI_reg_Transmit(uint16_t *pData);
 void SPI_reg_Receive(uint16_t *pData);
 uint8_t getStatus(uint8_t bit);
 
+void SPI_SPE_bit(uint8_t ENorDI);
+
 typedef union{
 	uint16_t RegisterData;
 	uint8_t ByteData[2];

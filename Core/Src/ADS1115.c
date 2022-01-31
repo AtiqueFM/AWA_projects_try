@@ -7,6 +7,7 @@
 
 
 #include "ADS1115.h"
+#include <string.h>
 
 extern I2C_HandleTypeDef hi2c1;
 ADS1115_Config ADS1115_Config_t;

@@ -31,3 +31,28 @@ Date				:- 13/01/2022
 Updates				:- 
 						1. Added the caluclted pH values to the HMI display instead of the ADC counts.
 						2. Implemented in pHsensotGetValue().
+
+Date				:-13/01/2022
+Updates				:- 
+						1. Added new register in Input register for :-
+							1. COD
+							2. BOD
+							3. TSS
+							These register will hold the values which will be only seen by the developer.
+							and will be viewed on check and factory setting display.
+						2. Chnages alos applied in CODCapture()
+
+Date				:- 27/01/2022
+Update				:- 
+						1. Added MODBUS for HMI over DMA, handling the query except multiple preset input coil.
+						  TESTED over MODSCAN.
+
+Date				:- 13/01/2022
+Updates				:- Added the COD and TSS check screen, including
+						1. Screen switch commands.
+						2. read acid
+						3. read sample
+						4. set as zero
+						
+Date				:- 28/01/2022
+Updates				:- Merged COD and TSS check branch with COD modbus map change branch cobined with master branch.

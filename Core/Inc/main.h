@@ -170,10 +170,10 @@ extern union HoldReg UHoldReg;
  *  MOSCAN address : 30001 - 30060
  */
 typedef struct{
-	float CODValue;
-	float BODValue;
-	float TSSValue;
-	float TOC;
+	float CODValue;		/*<This value is for the Customer display, display only positive value.*/
+	float BODValue;		/*<This value is for the Customer display, display only positive value.*/
+	float TSSValue;		/*<This value is for the Customer display, display only positive value.*/
+	float TOC;			/*<This value is for the Customer display, display only positive value.*/
 	float PD1_MEAN;
 	float PD2_MEAN;
 	float PD3_MEAN;
@@ -201,6 +201,10 @@ typedef struct{
 	float Iout_6_value;
 	float Iout_7_value;
 	float Iout_8_value;
+	float SPARE_A[10];
+	float CODValueUser;		/*<This value is for the Developer only*/
+	float TSSValueUser;		/*<This value is for the Developer only*/
+	float BODValueUser;		/*<This value is for the Developer only*/
 }PVhandle_t;
 
 typedef struct{
@@ -881,6 +885,14 @@ void Error_Handler(void);
 #define CalibrateCOD							0x32
 #define TSSCoeffs								0x33
 #define CalibrateTSS							0x34
+
+
+/*CHECK*/
+#define CHECK_MODE								0x25
+#define COD_Check								0x10
+#define TSS_Check								0x20
+#define Read_acid								0x01
+#define Read_sample								0x02
 
 /*COMMON COMMANDS*/
 #define Sample_pump								0x01
