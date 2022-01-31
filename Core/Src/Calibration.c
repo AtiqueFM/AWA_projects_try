@@ -148,6 +148,7 @@ void PT_ElectronicCalibration(void)
 
 void pH_SensorCalibrationGetValues(void)
 {
+	float milli_volt = 0.0f;
 	//-------------------------1 point calibration--------------------------------------//
 	if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == 0x01)
 	{
@@ -211,10 +212,8 @@ void pH_SensorCalibrationGetValues(void)
 		/*For HMI display*/
 		if(pH_SensorCalibpoints_t.flag_display_count == 0x01)
 		{
-			//convert the counts to mV using pH electronic calibration curve
-			float milli_volt = pH_SensorCalibpoints_t.pH_ADCCounts * pH_ElectronicCalibpoints_t.pH_Slope + pH_ElectronicCalibpoints_t.pH_Intercept;
 			//convert the mV to Calculated pH
-			float pH_calculated = (-16.908f * milli_volt) + 7.0f; /*<To be sent to the HMI, (414,14) and (-414,0) line equation*/
+			float pH_calculated = (-16.908f * InputRegister_t.SlotParameter.pH_Live_Volatge) + 7.0f; /*<To be sent to the HMI, (414,14) and (-414,0) line equation*/
 
 			//Read by HMI
 			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_value = pH_calculated;
@@ -224,10 +223,8 @@ void pH_SensorCalibrationGetValues(void)
 			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count = 0;
 		}else if(pH_SensorCalibpoints_t.flag_display_count == 0x02)
 		{
-			//convert the counts to mV using pH electronic calibration curve
-			float milli_volt = pH_SensorCalibpoints_t.pH_ADCCounts * pH_ElectronicCalibpoints_t.pH_Slope + pH_ElectronicCalibpoints_t.pH_Intercept;
 			//convert the mV to Calculated pH
-			float pH_calculated = (-16.908f * milli_volt) + 7.0f; /*<To be sent to the HMI, (414,14) and (-414,0) line equation*/
+			float pH_calculated = (-16.908f * InputRegister_t.SlotParameter.pH_Live_Volatge) + 7.0f; /*<To be sent to the HMI, (414,14) and (-414,0) line equation*/
 
 
 			//Read by HMI
