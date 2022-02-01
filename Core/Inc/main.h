@@ -35,7 +35,7 @@ extern "C" {
 
 
 #define MODBUS_1000_BYTES					1
-#define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1200
+#define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1500
 #define UART_6_RX_DESTINATION_ADDR			(uint32_t)0x20005000
 uint8_t dma_tx_flag_AT;
 uint8_t dma_tx_flag_uart1;
@@ -450,12 +450,16 @@ typedef union{
 	struct{
 		//40000
 		ModeCommandHandle_t ModeCommand_t;
+		uint8_t RES_1[200];						/*<Reserve for additional MODBUS register*/
 		//41000
 		IOUTConfigHanldle_t IOUTConfig_t[8];
+		uint8_t RES_2[200];						/*<Reserve for additional MODBUS register*/
 		//42000
 		IOUTCalibandTestHandle_t IOUTCalibandTest_t;
+		uint8_t RES_3[200];						/*<Reserve for additional MODBUS register*/
 		//43000
 		RelayOUTConfigHandle_t RelayOUTConfig_t[8];
+		uint8_t RES_4[200];						/*<Reserve for additional MODBUS register*/
 		/*13/8/2021*/
 		//44000
 		SensoralibrationHandle_t SensorCalibration_t;
