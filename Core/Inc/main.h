@@ -385,6 +385,7 @@ typedef struct{
 	uint16_t PT100_ADC_Counts_150;
 	uint16_t PT1000_ADC_Counts_1000;
 	uint16_t PT1000_ADC_Counts_1500;
+	float temperatureSensorCable_resistance; /*<Temperature sensor cable resistance, to be subtracted from calculated resistance*/
 
 }IOUTCalibandTestHandle_t;
 
@@ -450,16 +451,16 @@ typedef union{
 	struct{
 		//40000
 		ModeCommandHandle_t ModeCommand_t;
-		uint8_t RES_1[200];						/*<Reserve for additional MODBUS register*/
+		uint8_t RES_1[100];						/*<Reserve for additional MODBUS register*/
 		//41000
 		IOUTConfigHanldle_t IOUTConfig_t[8];
-		uint8_t RES_2[200];						/*<Reserve for additional MODBUS register*/
+		uint8_t RES_2[100];						/*<Reserve for additional MODBUS register*/
 		//42000
 		IOUTCalibandTestHandle_t IOUTCalibandTest_t;
-		uint8_t RES_3[200];						/*<Reserve for additional MODBUS register*/
+		uint8_t RES_3[100 - 4];						/*<Reserve for additional MODBUS register*/
 		//43000
 		RelayOUTConfigHandle_t RelayOUTConfig_t[8];
-		uint8_t RES_4[200];						/*<Reserve for additional MODBUS register*/
+		uint8_t RES_4[100];						/*<Reserve for additional MODBUS register*/
 		/*13/8/2021*/
 		//44000
 		SensoralibrationHandle_t SensorCalibration_t;
@@ -805,14 +806,17 @@ void Error_Handler(void);
 													+ (10 * sizeof(LastCalibrationAI1Hanlde_t))\
 													+ (10 * sizeof(LastCalibrationAI2Hanlde_t)))
 
-#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t))
+#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t) + 100)
 #define HOLDING_REGISTER_ADDRESS_42000	(uint16_t)(HOLDING_REGISTER_ADDRESS_41000\
-													+ (8*sizeof(IOUTConfigHanldle_t)))
+													+ (8*sizeof(IOUTConfigHanldle_t))\
+													+ 100)
 #define HOLDING_REGISTER_ADDRESS_43000	(uint16_t)(HOLDING_REGISTER_ADDRESS_42000\
-													+ sizeof(IOUTCalibandTestHandle_t))
+													+ sizeof(IOUTCalibandTestHandle_t)\
+													+96)
 /*13/8/2021*/
 #define HOLDING_REGISTER_ADDRESS_44000	(uint16_t)(HOLDING_REGISTER_ADDRESS_43000\
-													+ (8*sizeof(RelayOUTConfigHandle_t)))
+													+ (8*sizeof(RelayOUTConfigHandle_t))\
+													+ 100)
 
 #if 0
 //Commands

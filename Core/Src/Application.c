@@ -741,7 +741,7 @@ void ProcessModesCommands(void)
 
 void CardAction(uint8_t CardID)
 {
-
+	float cableResistance = 0;
 	switch(CardID)
 	{
 	case MPH:
@@ -981,9 +981,10 @@ void CardAction(uint8_t CardID)
 		//If PT-100 is selected
 		if(HoldingRegister_t.IOUTCalibandTest_t.CalibrationType == TEMP_TYPE_PT100)
 		{
-			adc = AdCounts_pH * PT_ElectronicCalibration_t.PT100_slope + PT_ElectronicCalibration_t.PT100_intercept;
+			adc = AdCounts_pH * PT_ElectronicCalibration_t.PT100_slope + PT_ElectronicCalibration_t.PT100_intercept - HoldingRegister_t.IOUTCalibandTest_t.temperatureSensorCable_resistance;
 			volatge = adc;
 			adc *= 10.0f;
+			//cableResistance = 10.0f * HoldingRegister_t.IOUTCalibandTest_t.temperatureSensorCable_resistance;
 
 		}
 		//If PT-1000 is selected
@@ -991,7 +992,11 @@ void CardAction(uint8_t CardID)
 		{
 			adc = AdCounts_pH * PT_ElectronicCalibration_t.PT1000_slope + PT_ElectronicCalibration_t.PT1000_intercept;
 			volatge = adc;
+			//cableResistance = HoldingRegister_t.IOUTCalibandTest_t.temperatureSensorCable_resistance;
 		}
+
+		//Subtract the temperature sensor cable resistance from the calculated resistance
+		//adc -= cableResistance;
 
 		//ADC counts to temp. calculation
 		float temperature = -246.54809247 + adc * (0.23753052489 + adc * (8.8646024011e-6 + 1.5342296758e-13 * adc * adc));

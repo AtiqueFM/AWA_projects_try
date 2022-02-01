@@ -193,8 +193,8 @@ void HoldingRegisterdefaultData(void)
 	HoldingRegister_t.RelayOUTConfig_t[7].Relay_OP_HIGHLOW = 2;//HIGH = 1; LOW = 2
 #endif
 
-	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0x03;//Manual temp input
-	HoldingRegister_t.ModeCommand_t.Temperature_setPoint = 25.0f;//Temperature set point
+	//HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0x03;//Manual temp input
+	//HoldingRegister_t.ModeCommand_t.Temperature_setPoint = 25.0f;//Temperature set point
 
 }
 
