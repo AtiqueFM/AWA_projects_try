@@ -56,3 +56,13 @@ Updates				:- Added the COD and TSS check screen, including
 						
 Date				:- 28/01/2022
 Updates				:- Merged COD and TSS check branch with COD modbus map change branch cobined with master branch.
+
+
+Date				:- 01/02/2020
+Updates				:- 
+						1. Full fledged HMI MODBUS with DMA.
+						2. RTU on DMA.
+						3. Temperature cable resistance.
+						4. Only positive value for customer and -ve values for developer.
+						5. Check Screen.
+						6. Holding register spare resister space for every section.
