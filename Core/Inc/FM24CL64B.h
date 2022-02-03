@@ -39,6 +39,8 @@
 #define FRAM_ADDRESS_AI1_SENS_CALIB			FRAM_ADDRESS_AI2_ELEC_CALIB + 8 //takes 8 bytes
 //AI 2 sensor calibration
 #define FRAM_ADDRESS_AI2_SENS_CALIB			FRAM_ADDRESS_AI1_SENS_CALIB + 8 //takes 8 bytes
+//Last Calibration data
+#define FRAM_ADDRESS_LASTCALIB_HISTORY		FRAM_ADDRESS_AI2_SENS_CALIB + 8 //takes 18 bytes (c- 0:2 and time stamp)
 
 
 

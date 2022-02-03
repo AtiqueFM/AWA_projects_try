@@ -223,6 +223,8 @@ void ProcessModesCommands(void)
 					AWAOperationStatus_t.CalibrationMode = 0x0;
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+					//Set the state of which data to store
+					AWADataStoreState.sensorpH = SET;/*<TODO: to RESET after storing the data in FRAM*/
 					HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x50;
 				}
 				break;
@@ -255,6 +257,8 @@ void ProcessModesCommands(void)
 					COD_SensorCalibration();
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+					//Set the state of which data to store
+					AWADataStoreState.sensorCOD = SET;/*<TODO: to RESET after storing the data in FRAM*/
 				}
 				break;
 			}
@@ -286,6 +290,8 @@ void ProcessModesCommands(void)
 					TSS_SensorCalibration();
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+					//Set the state of which data to store
+					AWADataStoreState.sensorTSS = SET;/*<TODO: to RESET after storing the data in FRAM*/
 				}
 				break;
 			}
@@ -424,6 +430,8 @@ void ProcessModesCommands(void)
 					AWAOperationStatus_t.FactoryMode = 0x0;
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+					//Set the state of which data to store
+					AWADataStoreState.electronicpH = SET;/*<TODO: to RESET after storing the data in FRAM*/
 					HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x50;
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0x0;
 					break;
@@ -447,6 +455,8 @@ void ProcessModesCommands(void)
 					AWAOperationStatus_t.ElectronicCal_AO = 0x0;
 					//New calibration data is not saved
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+					//Set the state of which data to store
+					AWADataStoreState.electronicAO = SET;/*<TODO: to RESET after storing the data in FRAM*/
 				}
 				else if(HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Common_Command > 0\
 						&&HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Common_Command  < 3)
@@ -546,6 +556,8 @@ void ProcessModesCommands(void)
 					AWAOperationStatus_t.FactoryMode = 0x0;
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+					//Set the state of which data to store
+					AWADataStoreState.electronicPT = SET;/*<TODO: to RESET after storing the data in FRAM*/
 					HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x50;
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0x0;
 				}
@@ -572,6 +584,8 @@ void ProcessModesCommands(void)
 
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+					//Set the state of which data to store
+					AWADataStoreState.factoryCOD = SET;/*<TODO: to RESET after storing the data in FRAM*/
 
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
@@ -639,6 +653,8 @@ void ProcessModesCommands(void)
 
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+					//Set the state of which data to store
+					AWADataStoreState.factoryTSS = SET;/*<TODO: to RESET after storing the data in FRAM*/
 
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
@@ -1985,44 +2001,86 @@ void ModbusSaveConfiguration(uint8_t data)
 	  }
 	  else if(data == SAVE_CALIBRATION_DATA)//Calibration data storage
 	  {
-		  //AO Electronic calibration data store
-	//	  FRAM_OperationWrite(FRAM_ADDRESS_MIN + sizeof(HoldingRegister_t.bytes),(uint8_t*)&CurrentOutputCalibration_t,sizeof(CurrentOutputCalibration_t));
-		  FRAM_OperationWrite(FRAM_ADDRESS_AO_ELEC_CALIB,(uint8_t*)&CurrentOutputCalibration_t,sizeof(CurrentOutputCalibration_t) * 8);
-
-		  //pH Electronic calibration storage
-		  FRAM_OperationWrite(FRAM_ADDRESS_pH_ELEC_CALIB,(uint8_t*)&pH_ElectronicCalibpoints_t.bytes[8],8);
-
-		  //PH Sensor calibration store
-		  FRAM_OperationWrite(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,8);
-
-		  //PT temperature sensor electronic calibration storage (PT-100 AND PT-1000)
-		  FRAM_OperationWrite(FRAM_ADDRESS_PT_ELEC_CALIB,(uint8_t*)&PT_ElectronicCalibration_t.bytes,16);
-
-		  //COD Sensor calibration data store
-		  FRAM_OperationWrite(FRAM_ADDRESS_COD_SENS_CALIB,(uint8_t*)&COD_SensorCalibration_t.byte,8);
-
-		  //COD Factory 10pt calibration data store
-		  FRAM_OperationWrite(FRAM_ADDRESS_COD_FACTORY_CALIB,(uint8_t*)&COD_10ptFactoryCalibrationHandle_t.bytes,96); //Yet to save the COD SF, total bytes 100
-
-		  framdata.fData[0] = InputRegister_t.PV_info.PD1_0;
-		  framdata.fData[1] = InputRegister_t.PV_info.PD2_0;
-		  //COD PD1(0) and PD2(0)
-		  FRAM_OperationWrite(FRAM_ADDRESS_COD_PD_ZERO,(uint8_t*)&framdata.bytes,8);
-
-		  //TSS Factory 10pt calibration data store
-		  FRAM_OperationWrite(FRAM_ADDRESS_TSS_FACTORY_CALIB,(uint8_t*)&TSS_10ptFactoryCalibrationHandle_t.bytes,96); //Yet to save the COD SF, total bytes 100
-
-		  memset(&framdata,'\0',sizeof(framdata));
-
-		  framdata.fData[0] = InputRegister_t.PV_info.TSS_PD2_0;
-		  //TSS PD2(0)
-		  FRAM_OperationWrite(FRAM_ADDRESS_TSS_PD_ZERO,(uint8_t*)&framdata.bytes,4);
-
-		  //TSS Sensor calibration data store
-		  FRAM_OperationWrite(FRAM_ADDRESS_TSS_SENS_CALIB,(uint8_t*)&TSS_SensorCalibration_t.byte,8);
-
 		  //Reset the FRAM save Calibration flag
 		  AWAOperationStatus_t.AWADataSave_Calibration = 0x00;
+
+		  //TEST
+		  if(AWADataStoreState.electronicAO)
+		  {
+			  //AO Electronic calibration data store
+		//	  FRAM_OperationWrite(FRAM_ADDRESS_MIN + sizeof(HoldingRegister_t.bytes),(uint8_t*)&CurrentOutputCalibration_t,sizeof(CurrentOutputCalibration_t));
+			  FRAM_OperationWrite(FRAM_ADDRESS_AO_ELEC_CALIB,(uint8_t*)&CurrentOutputCalibration_t,sizeof(CurrentOutputCalibration_t) * 8);
+
+			  AWADataStoreState.electronicAO = RESET;
+		  }
+		  if(AWADataStoreState.electronicPT)
+		  {
+			  //PT temperature sensor electronic calibration storage (PT-100 AND PT-1000)
+			  FRAM_OperationWrite(FRAM_ADDRESS_PT_ELEC_CALIB,(uint8_t*)&PT_ElectronicCalibration_t.bytes,16);
+
+			  AWADataStoreState.electronicPT = RESET;
+		  }
+		  if(AWADataStoreState.electronicpH)
+		  {
+			  //pH Electronic calibration storage
+			  FRAM_OperationWrite(FRAM_ADDRESS_pH_ELEC_CALIB,(uint8_t*)&pH_ElectronicCalibpoints_t.bytes[8],8);
+
+			  AWADataStoreState.electronicpH = RESET;
+		  }
+		  if(AWADataStoreState.sensorCOD)
+		  {
+			  //COD Sensor calibration data store
+			  FRAM_OperationWrite(FRAM_ADDRESS_COD_SENS_CALIB,(uint8_t*)&COD_SensorCalibration_t.byte,8);
+
+			  AWADataStoreState.sensorCOD = RESET;
+		  }
+		  if(AWADataStoreState.sensorTSS)
+		  {
+			  //TSS Sensor calibration data store
+			  FRAM_OperationWrite(FRAM_ADDRESS_TSS_SENS_CALIB,(uint8_t*)&TSS_SensorCalibration_t.byte,8);
+
+			  AWADataStoreState.sensorTSS = RESET;
+		  }
+		  if(AWADataStoreState.sensorpH)
+		  {
+			  //PH Sensor calibration store
+			  FRAM_OperationWrite(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,8);
+
+			  AWADataStoreState.sensorpH = RESET;
+		  }
+		  if(AWADataStoreState.factoryCOD)
+		  {
+			  //COD Factory 10pt calibration data store
+			  FRAM_OperationWrite(FRAM_ADDRESS_COD_FACTORY_CALIB,(uint8_t*)&COD_10ptFactoryCalibrationHandle_t.bytes,96); //Yet to save the COD SF, total bytes 100
+
+			  AWADataStoreState.factoryCOD = RESET;
+		  }
+		  if(AWADataStoreState.factoryCOD_setzero)
+		  {
+			  memset(&framdata,'\0',sizeof(framdata));
+
+			  framdata.fData[0] = InputRegister_t.PV_info.PD1_0;
+			  framdata.fData[1] = InputRegister_t.PV_info.PD2_0;
+			  //COD PD1(0) and PD2(0)
+			  FRAM_OperationWrite(FRAM_ADDRESS_COD_PD_ZERO,(uint8_t*)&framdata.bytes,8);
+
+			  AWADataStoreState.factoryCOD_setzero = RESET;
+		  }
+		  if(AWADataStoreState.factoryTSS)
+		  {
+			  //TSS Factory 10pt calibration data store
+			  FRAM_OperationWrite(FRAM_ADDRESS_TSS_FACTORY_CALIB,(uint8_t*)&TSS_10ptFactoryCalibrationHandle_t.bytes,96); //Yet to save the COD SF, total bytes 100
+
+			  AWADataStoreState.factoryTSS = RESET;
+		  }
+		  if(AWADataStoreState.factoryTSS_setzero)
+		  {
+			  memset(&framdata,'\0',sizeof(framdata));
+
+			  framdata.fData[0] = InputRegister_t.PV_info.TSS_PD2_0;
+			  //TSS PD2(0)
+			  FRAM_OperationWrite(FRAM_ADDRESS_TSS_PD_ZERO,(uint8_t*)&framdata.bytes,4);
+		  }
 	  }
 
 

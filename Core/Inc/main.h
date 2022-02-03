@@ -207,10 +207,11 @@ typedef struct{
 	float BODValueUser;		/*<This value is for the Developer only*/
 }PVhandle_t;
 
+/*Generic handle for COD and TSS factory calibration*/
 typedef struct{
-	float CODCalibSlope;
-	float CODCalibIntercept;
-}LastCalibrationCODHanlde_t;
+	float C[3];				/*<Factory Coefficients*/
+	uint32_t timestamp; 	/*<Epoch time stamp*/
+}LastCalibrationFactoryHanlde_t;
 
 typedef struct{
 	float BODCalibSlope;
@@ -270,14 +271,14 @@ typedef struct{
 
 typedef union{
 #if(MODBUS_1000_BYTES)
-	uint8_t bytes[sizeof(PVhandle_t)\
-				  + (10 * sizeof(LastCalibrationCODHanlde_t))\
-				  + (10 * sizeof(LastCalibrationBODHanlde_t))\
-				  + (10 * sizeof(LastCalibrationTSSHanlde_t))\
-				  + (10 * sizeof(LastCalibrationOIWHanlde_t))\
-				  + (10 * sizeof(LastCalibrationPHHanlde_t))\
-				  + (10 * sizeof(LastCalibrationAI1Hanlde_t))\
-				  + (10 * sizeof(LastCalibrationAI2Hanlde_t))\
+	uint8_t bytes[sizeof(PVhandle_t)
+				  + (10 * sizeof(LastCalibrationFactoryHanlde_t))
+				  + (10 * sizeof(LastCalibrationFactoryHanlde_t))
+				  + (10 * sizeof(LastCalibrationBODHanlde_t))
+				  + (10 * sizeof(LastCalibrationOIWHanlde_t))
+				  + (10 * sizeof(LastCalibrationPHHanlde_t))
+				  + (10 * sizeof(LastCalibrationAI1Hanlde_t))
+				  + (10 * sizeof(LastCalibrationAI2Hanlde_t))
 				  + sizeof(SlotParametersHandle_t)];
 #else
 	uint8_t bytes[1000];
@@ -286,9 +287,9 @@ typedef union{
 		//30000
 		PVhandle_t PV_info;
 		//31000
-		LastCalibrationCODHanlde_t COD_lastCalibration[10];
+		LastCalibrationFactoryHanlde_t COD_lastCalibration[10];
+		LastCalibrationFactoryHanlde_t TSS_lastCalibration[10];
 		LastCalibrationBODHanlde_t BOD_lastCalibration[10];
-		LastCalibrationTSSHanlde_t TSS_lastCalibration[10];
 		LastCalibrationOIWHanlde_t OIW_lastCalibration[10];
 		LastCalibrationPHHanlde_t PH_lastCalibration[10];
 		LastCalibrationAI1Hanlde_t AI1_lastCalibration[10];
@@ -798,9 +799,9 @@ void Error_Handler(void);
 //Starting addresses
 #define INPUT_REGISTER_ADDRESS_31000	(uint16_t)(sizeof(PVhandle_t))
 #define INPUT_REGISTER_ADDRESS_32000	(uint16_t)(INPUT_REGISTER_ADDRESS_31000\
-													+ (10 * sizeof(LastCalibrationCODHanlde_t))\
+													+ (10 * sizeof(LastCalibrationFactoryHanlde_t))\
 													+ (10 * sizeof(LastCalibrationBODHanlde_t))\
-													+ (10 * sizeof(LastCalibrationTSSHanlde_t))\
+													+ (10 * sizeof(LastCalibrationFactoryHanlde_t))\
 													+ (10 * sizeof(LastCalibrationOIWHanlde_t))\
 													+ (10 * sizeof(LastCalibrationPHHanlde_t))\
 													+ (10 * sizeof(LastCalibrationAI1Hanlde_t))\
@@ -1301,6 +1302,21 @@ typedef union{
 	};
 }AWAOperationHandle_t;
 AWAOperationHandle_t AWAOperationStatus_t;
+
+/*Data to save in FRAM*/
+typedef struct{
+	unsigned factoryCOD 		: 1;	/*<SET after calibration and RESET after COD factory calibration stored in last calibration FRAM*/
+	unsigned factoryTSS 		: 1;	/*<SET after calibration and RESET after TSS factory calibration stored in last calibration FRAM*/
+	unsigned sensorCOD			: 1;	/*<SET after calibration and RESET after COD sensor calibration stored in last calibration FRAM*/
+	unsigned sensorTSS			: 1;	/*<SET after calibration and RESET after TSS sensor calibration stored in last calibration FRAM*/
+	unsigned sensorpH			: 1;	/*<SET after calibration and RESET after pH sensor calibration stored in last calibration FRAM*/
+	unsigned electronicpH		: 1;	/*<SET after calibration and RESET after pH electronic calibration stored in last calibration FRAM*/
+	unsigned electronicPT		: 1;	/*<SET after calibration and RESET after PT electronic calibration stored in last calibration FRAM*/
+	unsigned electronicAO		: 1;	/*<SET after calibration and RESET after AO electronic calibration stored in last calibration FRAM*/
+	unsigned factoryCOD_setzero	: 1;	/*<SET after setting zero and RESET after storing in FRAM*/
+	unsigned factoryTSS_setzero	: 1;	/*<SET after setting zero and RESET after storing in FRAM*/
+}AWADataStoreState_t;
+AWADataStoreState_t	AWADataStoreState;
 
 //typedef struct{
 //	uint16_t pH_ADCCounts;
