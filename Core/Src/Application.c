@@ -219,6 +219,11 @@ void ProcessModesCommands(void)
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Sensor_Calibration_pH)
 				{
 					pHSensorCalibrationmV();
+
+					/*<TODO: Push the slope and intercept to Last Calibration Input register*/
+
+					/*----------------------------------------------------------------------*/
+
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 					AWAOperationStatus_t.CalibrationMode = 0x0;
 					//Flag set as data not saved in the FRAM
@@ -255,6 +260,11 @@ void ProcessModesCommands(void)
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Sensor_Calibrate_COD)
 				{
 					COD_SensorCalibration();
+
+					/*<TODO: Push the slope and intercept to Last Calibration Input register*/
+
+					/*----------------------------------------------------------------------*/
+
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 					//Set the state of which data to store
@@ -288,6 +298,11 @@ void ProcessModesCommands(void)
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Sensor_Calibrate_TSS)
 				{
 					TSS_SensorCalibration();
+
+					/*<TODO: Push the slope and intercept to Last Calibration Input register*/
+
+					/*----------------------------------------------------------------------*/
+
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 					//Set the state of which data to store
@@ -427,6 +442,9 @@ void ProcessModesCommands(void)
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Electronics_Calibration_mV_Calibrate)//change the command
 				{
 					pHElectronicCalibrationmV();
+					/*<TODO: Push the slope and intercept to Last Calibration Input register*/
+
+					/*----------------------------------------------------------------------*/
 					AWAOperationStatus_t.FactoryMode = 0x0;
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
@@ -449,6 +467,11 @@ void ProcessModesCommands(void)
 					HoldingRegister_t.IOUTCalibandTest_t.AO_5mA_temp_value = 0;
 					HoldingRegister_t.IOUTCalibandTest_t.AO_19mA_temp_value = 0;
 					CurrentOutputCalibration(HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command);
+
+					/*<TODO: Push the slope and intercept to Last Calibration Input register*/
+
+					/*----------------------------------------------------------------------*/
+
 					/*18-8-2021*/
 					HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command = 0;
 					//calFlag = 0;/*30/8/2021*/
@@ -553,6 +576,11 @@ void ProcessModesCommands(void)
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Electronic_Calibration_PT)
 				{
 					PT_ElectronicCalibration();
+
+					/*<TODO: Push the slope and intercept to Last Calibration Input register*/
+
+					/*----------------------------------------------------------------------*/
+
 					AWAOperationStatus_t.FactoryMode = 0x0;
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
@@ -582,6 +610,9 @@ void ProcessModesCommands(void)
 
 					gaussEliminationLS(x_mat,y_mat,10,3,1);
 
+					/*<TODO: Push the Coefficients to Last Calibration Input register*/
+
+					/*---------------------------------------------------------------*/
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 					//Set the state of which data to store
@@ -650,6 +681,10 @@ void ProcessModesCommands(void)
 					}
 
 					gaussEliminationLS(x_mat,y_mat,10,2,2);
+
+					/*<TODO: Push the Coefficients to Last Calibration Input register*/
+
+					/*---------------------------------------------------------------*/
 
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
@@ -2053,6 +2088,9 @@ void ModbusSaveConfiguration(uint8_t data)
 			  //COD Factory 10pt calibration data store
 			  FRAM_OperationWrite(FRAM_ADDRESS_COD_FACTORY_CALIB,(uint8_t*)&COD_10ptFactoryCalibrationHandle_t.bytes,96); //Yet to save the COD SF, total bytes 100
 
+			  //Storing in Last calibration Space
+			  FRAM_OperationWrite(FRAM_ADDRESS_LASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t)],16); //Storing only first data of COD factory calibration
+
 			  AWADataStoreState.factoryCOD = RESET;
 		  }
 		  if(AWADataStoreState.factoryCOD_setzero)
@@ -2080,6 +2118,8 @@ void ModbusSaveConfiguration(uint8_t data)
 			  framdata.fData[0] = InputRegister_t.PV_info.TSS_PD2_0;
 			  //TSS PD2(0)
 			  FRAM_OperationWrite(FRAM_ADDRESS_TSS_PD_ZERO,(uint8_t*)&framdata.bytes,4);
+
+			  AWADataStoreState.factoryTSS_setzero = RESET;
 		  }
 	  }
 
@@ -2155,6 +2195,9 @@ void ModbusReadConfiguration(void)
 	//Publish to modbus
 	HoldingRegister_t.SensorCalibration_t.TSS_CF = TSS_SensorCalibration_t.slope;
 	HoldingRegister_t.SensorCalibration_t.TSS_Intercept = TSS_SensorCalibration_t.intercept;
+
+	//Storing in Last calibration Space
+	FRAM_OperationRead(FRAM_ADDRESS_LASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t)],16); //Storing only first data of COD factory calibration
 }
 
 

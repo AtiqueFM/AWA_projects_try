@@ -206,15 +206,15 @@ void HoldingRegisterdefaultData(void)
 	//HoldingRegister_t.ModeCommand_t.Temperature_setPoint = 25.0f;//Temperature set point
 
 	/*<Last Calibration Data*/
-	InputRegister_t.COD_lastCalibration[0].C[0] = 10.2f;
-	InputRegister_t.COD_lastCalibration[0].C[1] = 20.2f;
-	InputRegister_t.COD_lastCalibration[0].C[2] = 30.2f;
-	InputRegister_t.COD_lastCalibration[0].timestamp = 0x12345689;
-
-	InputRegister_t.TSS_lastCalibration[9].C[0] = 10.2f;
-	InputRegister_t.TSS_lastCalibration[9].C[1] = 20.2f;
-	InputRegister_t.TSS_lastCalibration[9].C[2] = 30.2f;
-	InputRegister_t.TSS_lastCalibration[9].timestamp = 0x12345689;
+//	InputRegister_t.COD_lastCalibration[0].C[0] = 10.2f;
+//	InputRegister_t.COD_lastCalibration[0].C[1] = 20.2f;
+//	InputRegister_t.COD_lastCalibration[0].C[2] = 30.2f;
+//	InputRegister_t.COD_lastCalibration[0].timestamp = 0x12345689;
+//
+//	InputRegister_t.TSS_lastCalibration[9].C[0] = 10.2f;
+//	InputRegister_t.TSS_lastCalibration[9].C[1] = 20.2f;
+//	InputRegister_t.TSS_lastCalibration[9].C[2] = 30.2f;
+//	InputRegister_t.TSS_lastCalibration[9].timestamp = 0x12345689;
 
 
 }
