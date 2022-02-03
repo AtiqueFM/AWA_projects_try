@@ -1266,12 +1266,18 @@ uint8_t CODADCCapture(uint8_t command)
 				//Publish the COD_RAW on modbus
 				//InputRegister_t.PV_info.COD_RAW = COD_MeasurementValues_t.RAW_Value;
 				InputRegister_t.PV_info.COD_RAW = COD_RAW;
-				InputRegister_t.PV_info.CODValue = abs(COD_MeasurementValues_t.Cal_Value);	/*<Display to the Customer,only positive value*/
+				if(COD_MeasurementValues_t.Cal_Value < 0)
+					InputRegister_t.PV_info.CODValue = 0.0f;	/*<Display to the Customer,only positive value*/
+				else
+					InputRegister_t.PV_info.CODValue = COD_MeasurementValues_t.Cal_Value;
 				InputRegister_t.PV_info.CODValueUser = COD_MeasurementValues_t.Cal_Value; 	/*<Reference for the Developer, can be negative value*/
 
 				//Publish the TSS value to the modbus
 				InputRegister_t.PV_info.TSS_RAW = TSS_RAW;
-				InputRegister_t.PV_info.TSSValue = abs(TSS_MeasurementValues_t.Cal_Value);	/*<Display to the Customer,only positive value*/
+				if(TSS_MeasurementValues_t.Cal_Value < 0)
+					InputRegister_t.PV_info.TSSValue = 0.0f;	/*<Display to the Customer,only positive value*/
+				else
+					InputRegister_t.PV_info.TSSValue = TSS_MeasurementValues_t.Cal_Value;
 				InputRegister_t.PV_info.TSSValueUser = TSS_MeasurementValues_t.Cal_Value; 	/*<Reference for the Developer, can be negative value*/
 
 			}

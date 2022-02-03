@@ -93,6 +93,15 @@ void HoldingRegisterdefaultData(void)
 	HoldingRegister_t.ModeCommand_t.PUMP2_ONTIME = 10;
 	HoldingRegister_t.ModeCommand_t.PUMP2_DELAY = 1;
 
+	//Testing COD +ve values
+	HoldingRegister_t.ModeCommand_t.C[2] = 0.0002f;
+	HoldingRegister_t.ModeCommand_t.C[1] = 0.27108f;
+	HoldingRegister_t.ModeCommand_t.C[0] = 0.23031f;
+	HoldingRegister_t.SensorCalibration_t.COD_CF = 1.21f;
+	HoldingRegister_t.SensorCalibration_t.COD_Intercept = -3.69f;
+
+	COD_SensorCalibration_t.slope = HoldingRegister_t.SensorCalibration_t.COD_CF;
+	COD_SensorCalibration_t.intercept = HoldingRegister_t.SensorCalibration_t.COD_Intercept;
 	//COD Sensor calibration, should start with capturing x1 and y1
 	COD_SensorCalibration_t.point_flag = 0;
 
@@ -117,9 +126,9 @@ void HoldingRegisterdefaultData(void)
 	//Default PD1 and PD2 Zero
 	//COD_MeasurementValues_t.PD1_Zero = 30988;
 	//COD_MeasurementValues_t.PD2_Zero = 23617;
-#if 0
-	InputRegister_t.PV_info.PD1_0 = 30988;
-	InputRegister_t.PV_info.PD2_0 = 23617;
+#if 1
+	InputRegister_t.PV_info.PD1_0 = 23000;//30988;
+	InputRegister_t.PV_info.PD2_0 = 30000;//23617;
 #endif
 
 	//Set the COD Auto Zero flag as we have default data
