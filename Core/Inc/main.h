@@ -1318,6 +1318,18 @@ typedef struct{
 }AWADataStoreState_t;
 AWADataStoreState_t	AWADataStoreState;
 
+typedef struct{
+	uint8_t factoryCOD_count;			/*<Stores the count of COD factory calibration last calibration stored in the FRAM*/
+	uint8_t factoryTSS_count;			/*<Stores the count of TSS factory calibration last calibration stored in the FRAM*/
+	uint8_t sensorCOD_count;			/*<Stores the count of COD sensor calibration last calibration stored in the FRAM*/
+	uint8_t sensorTSS_count;			/*<Stores the count of TSS sensor calibration last calibration stored in the FRAM*/
+	uint8_t sensorpH_count;				/*<Stores the count of pH sensor calibration last calibration stored in the FRAM*/
+	uint8_t electronicpH_count;			/*<Stores the count of pH electronic calibration last calibration stored in the FRAM*/
+	uint8_t electronicPT_count;			/*<Stores the count of PT electronic calibration last calibration stored in the FRAM*/
+	uint8_t electronicAO_count;			/*<Stores the count of AO electronic calibration last calibration stored in the FRAM*/
+}AWALastCalibrationCount_t;
+AWALastCalibrationCount_t AWALastCalibrationCount;
+
 //typedef struct{
 //	uint16_t pH_ADCCounts;
 //	uint16_t pH_ElectronicCalib_p414V_count;

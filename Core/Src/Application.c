@@ -2340,7 +2340,18 @@ void Application_SetAsZero(uint8_t parameter)
 }
 
 
-
+/*
+ * Function name :- Application_LastCaldataToModbus
+ *
+ */
+void Application_LastCaldataToModbus(void)
+{
+	if(AWADataStoreState.factoryCOD)
+	{
+		AWALastCalibrationCount.factoryCOD_count += 1;
+		/*<TODO: Store coefficients in the Input register*/
+	}
+}
 
 
 

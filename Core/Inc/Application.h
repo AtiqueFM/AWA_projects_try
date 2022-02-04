@@ -59,4 +59,9 @@ void Application_ReadSample(void);
  * Task :- Overwrite the existing PD1(0) and PD2(0) by taking the current PD1 and PD2 values.
  */
 void Application_SetAsZero(uint8_t parameter);
+/*
+ * Function name :- Application_LastCaldataToModbus
+ *
+ */
+void Application_LastCaldataToModbus(void);
 #endif /* INC_APPLICATION_H_ */
