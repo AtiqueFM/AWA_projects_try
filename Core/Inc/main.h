@@ -350,8 +350,9 @@ typedef struct{
 	//uint16_t PWM2;
 //	uint16_t PWM3;
 //	uint16_t PWM4;
-	uint16_t PWM1_offset;
-	uint16_t PWM2_offset;
+	//uint16_t PWM1_offset;
+	//uint16_t PWM2_offset;
+	uint32_t Epoch_Timestamp;		/*<Epoch time stamp from HMI*/
 	uint16_t PWM3_offset;
 	uint16_t PWM4_offset;
 	//uint16_t relay[8];//address : 187

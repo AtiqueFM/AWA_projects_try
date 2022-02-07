@@ -46,6 +46,15 @@ uint16_t dataptr1;
 uint16_t dataptr;
 uint16_t ArrayPtr;
 
+/*Node for sensor calibration*/
+struct Sensornode{
+	float intercept;
+	float slope;
+	uint32_t timestamp;		/*<Epoch time stamp*/
+	struct Sensornode *next;
+};
+
+struct Sensornode *pH_SensorCalhead = NULL; /*<Head for pH Sensor Calibration*/
 
 void ProcessModesCommands(void)
 {
@@ -221,15 +230,16 @@ void ProcessModesCommands(void)
 					pHSensorCalibrationmV();
 
 					/*<TODO: Push the slope and intercept to Last Calibration Input register*/
-
+					//Set the state of which data to store
+					AWADataStoreState.sensorpH = SET;/*<TODO: to RESET after storing the data in FRAM*/
+					Application_LastCaldataToModbus();
 					/*----------------------------------------------------------------------*/
 
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 					AWAOperationStatus_t.CalibrationMode = 0x0;
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
-					//Set the state of which data to store
-					AWADataStoreState.sensorpH = SET;/*<TODO: to RESET after storing the data in FRAM*/
+
 					HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x50;
 				}
 				break;
@@ -2346,6 +2356,14 @@ void Application_SetAsZero(uint8_t parameter)
  */
 void Application_LastCaldataToModbus(void)
 {
+	uint8_t index = 0;
+	if(AWADataStoreState.electronicpH)
+	{
+		index = AWALastCalibrationCount.electronicpH_count += 1;
+		/*<TODO: Store intercept and slope in the Input register*/
+		InputRegister_t.PH_lastCalibration[index].PHCalibIntercept = pH_ElectronicCalibpoints_t.pH_Intercept;
+		InputRegister_t.PH_lastCalibration[index].PHCalibSlope = pH_ElectronicCalibpoints_t.pH_Slope;
+	}
 	if(AWADataStoreState.factoryCOD)
 	{
 		AWALastCalibrationCount.factoryCOD_count += 1;
@@ -2353,8 +2371,35 @@ void Application_LastCaldataToModbus(void)
 	}
 }
 
+#if 0
+void insertSensorCalibrationNode(struct Sensornode *head,float intercept,float slope,uint32_t timestamp)
+{
+  struct Sensornode *newNode;
+  newNode = (struct Sensornode*)malloc(sizeof(struct Sensornode));
+
+  newNode->intercept = intercept;
+  newNode->slope = slope;
+  newNode->timestamp = timestamp;
+  newNode->next = NULL;
+
+  //if 1st node
+  if(head == NULL)
+  {
+    head = newNode;
+  }
+  else
+  {
+    struct Sensornode *temp;
+    temp = head;
+    while(temp->next != NULL)
+    {
+      temp = temp->next;
+    }
+    temp->next = newNode;
+  }
+}
 
 
-
+#endif
 
 

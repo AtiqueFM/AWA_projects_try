@@ -140,6 +140,8 @@ void HoldingRegisterdefaultData(void)
 	InputRegister_t.PV_info.BODValue = 0;//111.23;
 	InputRegister_t.PV_info.TSSValue = 0;//56.88;
 
+	HoldingRegister_t.ModeCommand_t.Epoch_Timestamp = 0x12345678;
+
 #if 0
 	//test
 	HoldingRegister_t.IOUTConfig_t[0].Current_OP_option = 1; //cod

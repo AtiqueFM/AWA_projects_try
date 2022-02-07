@@ -64,4 +64,6 @@ void Application_SetAsZero(uint8_t parameter);
  *
  */
 void Application_LastCaldataToModbus(void);
+
+void insertSensorCalibrationNode(float intercept,float slope,uint32_t timestamp);
 #endif /* INC_APPLICATION_H_ */
