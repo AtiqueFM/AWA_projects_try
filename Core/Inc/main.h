@@ -674,8 +674,6 @@ void Error_Handler(void);
 #define RELAY_3_GPIO_Port GPIOC
 #define RELAY_4_Pin GPIO_PIN_3
 #define RELAY_4_GPIO_Port GPIOC
-#define RESERVE_PA1_Pin GPIO_PIN_1
-#define RESERVE_PA1_GPIO_Port GPIOA
 #define RESERVE_PA3_Pin GPIO_PIN_3
 #define RESERVE_PA3_GPIO_Port GPIOA
 #define RELAY_5_Pin GPIO_PIN_4
