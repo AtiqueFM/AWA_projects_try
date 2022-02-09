@@ -209,8 +209,11 @@ typedef struct{
 
 /*Generic handle for COD and TSS factory calibration*/
 typedef struct{
-	float C[3];				/*<Factory Coefficients*/
-	uint32_t timestamp; 	/*<Epoch time stamp*/
+	float C0[10];
+	float C1[10];
+	float C2[10];
+	uint32_t epochtimestamp[10];
+	uint32_t overflowFlag;
 }LastCalibrationFactoryHanlde_t;
 
 typedef struct{
@@ -272,8 +275,8 @@ typedef struct{
 typedef union{
 #if(MODBUS_1000_BYTES)
 	uint8_t bytes[sizeof(PVhandle_t)
-				  + (10 * sizeof(LastCalibrationFactoryHanlde_t))
-				  + (10 * sizeof(LastCalibrationFactoryHanlde_t))
+				  + (sizeof(LastCalibrationFactoryHanlde_t)) /*<COD Factory calibration*/
+				  + (sizeof(LastCalibrationFactoryHanlde_t)) /*<TSS Factory calibration*/
 				  + (10 * sizeof(LastCalibrationBODHanlde_t))
 				  + (10 * sizeof(LastCalibrationOIWHanlde_t))
 				  + (10 * sizeof(LastCalibrationPHHanlde_t))
@@ -287,8 +290,8 @@ typedef union{
 		//30000
 		PVhandle_t PV_info;
 		//31000
-		LastCalibrationFactoryHanlde_t COD_lastCalibration[10];
-		LastCalibrationFactoryHanlde_t TSS_lastCalibration[10];
+		LastCalibrationFactoryHanlde_t COD_lastCalibration;
+		LastCalibrationFactoryHanlde_t TSS_lastCalibration;
 		LastCalibrationBODHanlde_t BOD_lastCalibration[10];
 		LastCalibrationOIWHanlde_t OIW_lastCalibration[10];
 		LastCalibrationPHHanlde_t PH_lastCalibration[10];
@@ -798,9 +801,9 @@ void Error_Handler(void);
 //Starting addresses
 #define INPUT_REGISTER_ADDRESS_31000	(uint16_t)(sizeof(PVhandle_t))
 #define INPUT_REGISTER_ADDRESS_32000	(uint16_t)(INPUT_REGISTER_ADDRESS_31000\
-													+ (10 * sizeof(LastCalibrationFactoryHanlde_t))\
+													+ (sizeof(LastCalibrationFactoryHanlde_t))\
 													+ (10 * sizeof(LastCalibrationBODHanlde_t))\
-													+ (10 * sizeof(LastCalibrationFactoryHanlde_t))\
+													+ (sizeof(LastCalibrationFactoryHanlde_t))\
 													+ (10 * sizeof(LastCalibrationOIWHanlde_t))\
 													+ (10 * sizeof(LastCalibrationPHHanlde_t))\
 													+ (10 * sizeof(LastCalibrationAI1Hanlde_t))\
@@ -1326,6 +1329,8 @@ typedef struct{
 	uint8_t electronicpH_count;			/*<Stores the count of pH electronic calibration last calibration stored in the FRAM*/
 	uint8_t electronicPT_count;			/*<Stores the count of PT electronic calibration last calibration stored in the FRAM*/
 	uint8_t electronicAO_count;			/*<Stores the count of AO electronic calibration last calibration stored in the FRAM*/
+	unsigned factoryCOD_overflowflag;	/*<Flag will be set to 1 when count exceeds 10*/
+	unsigned factoryTSS_overflowflag;	/*<Flag will be set to 1 when count exceeds 10*/
 }AWALastCalibrationCount_t;
 AWALastCalibrationCount_t AWALastCalibrationCount;
 

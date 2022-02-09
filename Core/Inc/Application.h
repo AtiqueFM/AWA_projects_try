@@ -10,6 +10,23 @@
 
 #include<stdint.h>
 
+/*Node for sensor calibration*/
+struct Sensornode{
+	float intercept;
+	float slope;
+	uint32_t timestamp;		/*<Epoch time stamp*/
+	struct Sensornode *next;
+};
+
+/*Node for factory calibration*/
+struct Factorynode{
+	float c0;
+	float c1;
+	float c2;
+	uint32_t timestamp;		/*<Epoch time stamp*/
+	struct Factorynode *next;
+};
+
 void ProcessModesCommands(void);
 
 void CardAction(uint8_t CardID);
@@ -65,8 +82,11 @@ void Application_SetAsZero(uint8_t parameter);
  */
 void Application_LastCaldataToModbus(void);
 
-void insertNode(struct node **head,float intercept,float slope, unsigned int timestamp);
-void display(struct node **head);
-void deleteNode(struct node **head);
-void dataTransfer(struct node **head);
+void sensor_insertNode(struct Sensornode **head,float intercept,float slope, unsigned int timestamp);
+void factory_insertNode(struct Factorynode **head,float c0,float c1,float c2, unsigned int timestamp);
+//void displayLinkedList(struct Sensornode **head);
+void sensor_deleteNode(struct Sensornode **head);
+void factory_deleteNode(struct Factorynode **head);
+void sensor_dataTransfer(struct Sensornode **head);
+void factory_dataTransfer(struct Factorynode **head);
 #endif /* INC_APPLICATION_H_ */

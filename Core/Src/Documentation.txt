@@ -66,3 +66,12 @@ Updates				:-
 						4. Only positive value for customer and -ve values for developer. (TESTED - 02/02/2022)
 						5. Check Screen.
 						6. Holding register spare resister space for every section.(TESTED)
+						
+Date				:-09/02/2022
+Updates				:-
+						1. DMA Bug solved, wit for TC bit in UART.
+						2. Clear the DMAR bit in UART in DMA ISR.
+						3. DMA Communication eshtablished also during the Lamp flashing.
+						4. COD Factory Calibration (coefficient and timestamp stored).
+						5. Linked List used for the updating the Last 10 calibration on the MODBUS.
+						6. Reading the Last 10 Calibration from FRAM during the first time boot.

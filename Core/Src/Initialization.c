@@ -105,7 +105,7 @@ void HoldingRegisterdefaultData(void)
 	//COD Sensor calibration, should start with capturing x1 and y1
 	COD_SensorCalibration_t.point_flag = 0;
 
-#if 0
+#if 1
 	double data[10] = {95,150,240,360,450,500,620,700,750,800};
 	for(int i = 0;i<10;i++)
 	{
