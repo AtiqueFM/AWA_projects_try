@@ -575,6 +575,7 @@ void DMA2_Stream6_IRQHandler(void)
 	DMAPeripheralEnable(DMA2_Stream6,DISABLE);
 
 	/*Clear the UART6 Transfer complete flag*/
+	while(!(huart6.Instance->SR & USART_SR_TC));
 	huart6.Instance->SR &= !USART_SR_TC;
 
 	/*Disable the UART DMA Tx*/

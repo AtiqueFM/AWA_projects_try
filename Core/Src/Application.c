@@ -54,7 +54,7 @@ struct Sensornode{
 	struct Sensornode *next;
 };
 
-struct Sensornode *pH_SensorCalhead = NULL; /*<Head for pH Sensor Calibration*/
+struct node *CODSensorhead = '\0'; /*<Head for COD Sensor Calibration*/
 
 void ProcessModesCommands(void)
 {
@@ -2371,35 +2371,87 @@ void Application_LastCaldataToModbus(void)
 	}
 }
 
-#if 0
-void insertSensorCalibrationNode(struct Sensornode *head,float intercept,float slope,uint32_t timestamp)
+void insertNode(struct node **head,float intercept,float slope ,unsigned int timestamp)
 {
-  struct Sensornode *newNode;
-  newNode = (struct Sensornode*)malloc(sizeof(struct Sensornode));
+    struct node *t;
+    t = (struct node*)malloc(sizeof(struct node));
+    t->intercept = intercept;
+    t->slope = slope;
+    t->timestamp = timestamp;
+    t->next = NULL;
 
-  newNode->intercept = intercept;
-  newNode->slope = slope;
-  newNode->timestamp = timestamp;
-  newNode->next = NULL;
-
-  //if 1st node
-  if(head == NULL)
-  {
-    head = newNode;
-  }
-  else
-  {
-    struct Sensornode *temp;
-    temp = head;
-    while(temp->next != NULL)
+    if(*head == NULL)
     {
-      temp = temp->next;
+        *head = t;
     }
-    temp->next = newNode;
-  }
+    else{
+        struct node *temp;
+        temp = *head;
+        while(temp->next != NULL)
+        {
+            temp = temp->next;
+        }
+        temp->next = t;
+    }
 }
 
+void deleteNode(struct node **head)
+{
+    struct node *temp,*temp_next;
+    temp = *head;
+    temp_next = temp->next;
+    free(temp);
+    *head = temp_next;
+}
 
-#endif
+void display(struct node **head)
+{
+	struct node *temp;
+	temp = *head;
+	while(temp->next != NULL)
+	{
+		printf("%f, ",temp->intercept);
+		printf("%f, ",temp->slope);
+		printf("%x\n",temp->timestamp);
+		temp = temp->next;
+	}
+	printf("%f, ",temp->intercept);
+	printf("%f, ",temp->slope);
+	printf("%x",temp->timestamp);
+}
+
+void dataTransfer(struct node **head)
+{
+	struct node *temp;
+	temp = *head;
+	char count = 9;
+	int i = 0;
+	while(temp->next != NULL)
+	{
+		printf("%f, ",temp->intercept);
+		printf("%f, ",temp->slope);
+		printf("%x\n",temp->timestamp);
+		/*Insert the data from Linked list to the Last Calibration buffer*/
+		intercept[count] = temp->intercept;
+		slope[count] = temp->slope;
+		timestamp[count] = temp->timestamp;
+		count -= 1; //Decrement the count
+		temp = temp->next;
+	}
+	printf("%f, ",temp->intercept);
+	printf("%f, ",temp->slope);
+	printf("%x",temp->timestamp);
+    /*Insert the data from Linked list to the Last Calibration buffer*/
+		intercept[count] = temp->intercept;
+		slope[count] = temp->slope;
+		timestamp[count] = temp->timestamp;
+    printf("\nRead from the buffer!!!\n");
+    for(i = 0;i<=9;i++)
+    {
+        printf("%f, ",intercept[i]);
+        printf("%f, ",slope[i]);
+        printf("%x\n ",timestamp[i]);
+    }
+}
 
 
