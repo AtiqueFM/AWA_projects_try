@@ -600,6 +600,8 @@ void DMA2_Stream5_IRQHandler(void)
 	static uint8_t multipresetcoilgetdataflag = 0;
 	/*Clear the FLAG*/
 	DMAInterruptHandle(&DMA_UART1_RX_handle_t);
+	/*CLear DMAR*/
+	huart1.Instance->CR3 &= !USART_CR3_DMAR;
 
 	if(!MODBUS_DMA_querry_count)
 	{
@@ -671,7 +673,8 @@ void DMA2_Stream5_IRQHandler(void)
 			break;
 		}
 		}
-
+		/*Enable the DMAR*/
+		huart1.Instance->CR3 |= USART_CR3_DMAR;
 		//TODO: Increment the MODBUS_DMA_querry_count to 1.
 		DMAPeripheralEnable(DMA2_Stream5,ENABLE);
 
@@ -716,6 +719,7 @@ void DMA2_Stream7_IRQHandler(void)
 	DMAPeripheralEnable(DMA2_Stream7,DISABLE);
 
 	/*Clear the UART1 Transfer complete flag*/
+	while(!(huart1.Instance->SR & USART_SR_TC));
 	huart1.Instance->SR &= !USART_SR_TC;
 
 	/*Disable the UART DMA Tx*/

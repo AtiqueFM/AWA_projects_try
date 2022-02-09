@@ -61,7 +61,7 @@ void DMAInit(DMA_Handle_t *pDMAHandle)
 	//pDMAHanlde->pDMAx->S7PAR |= (pDMAHanlde->pDMAConfig.DestinationAddress << 0);
 #endif
 	//Configure the number of transaction
-	pDMAHandle->pDMAStreamx->NDTR |= (pDMAHandle->pDMAConfig.NumberOfTransaction << 0);
+	pDMAHandle->pDMAStreamx->NDTR = (pDMAHandle->pDMAConfig.NumberOfTransaction << 0);
 	//pDMAHanlde->pDMAx->S7NDTR |= (pDMAHanlde->pDMAConfig.NumberOfTransaction << 0);
 	//Configure the FIFO configuration register
 	pDMAHandle->pDMAStreamx->FCR = 0;
