@@ -9,6 +9,7 @@
 #define INC_APPLICATION_H_
 
 #include<stdint.h>
+#include "main.h"
 
 /*Node for sensor calibration*/
 struct Sensornode{
@@ -83,10 +84,43 @@ void Application_SetAsZero(uint8_t parameter);
 void Application_LastCaldataToModbus(void);
 
 void sensor_insertNode(struct Sensornode **head,float intercept,float slope, unsigned int timestamp);
+/*
+ * Function name :- factory_insertNode
+ * Arguments :-
+ * 				1. Head of the respective linked list.
+ * 				2. c0-c2 = Factory Calibration.
+ * 				3. epoch time stamp.
+ * Return	:-
+ * 				None.
+ * Description :-
+ * 				Inserts node at the end of the linked list of the respective linked list head provided.
+ */
 void factory_insertNode(struct Factorynode **head,float c0,float c1,float c2, unsigned int timestamp);
 //void displayLinkedList(struct Sensornode **head);
 void sensor_deleteNode(struct Sensornode **head);
+/*
+ * Function name	:- facroty_deleteNode
+ * Arguments		:-
+ * 						1. Head of the respective linked list.
+ * 	Return			:-
+ * 						None
+ * 	Description		:-
+ * 						1. Deletes the node from the last of the respective head provided.
+ */
 void factory_deleteNode(struct Factorynode **head);
 void sensor_dataTransfer(struct Sensornode **head);
-void factory_dataTransfer(struct Factorynode **head);
+/*
+ * Function name	:- factory_dataTransfer
+ * Arguments		:-
+ * 						1. Head of the respective linked list.
+ * 						2. pointer to LastCalibrationFactoryHanlde_t.
+ * 						3. unsigned data for overflow flag.
+ * 						4. index count for the data that is to be stored in the linked list.
+ * Return			:-
+ * 						None.
+ * Description		:-
+ * 						New factory calibration coefficient is stored in the linked list and then transfer to the Input register by sorting
+ * 						it from recent value to old value.
+ */
+void factory_dataTransfer(struct Factorynode **head,LastCalibrationFactoryHanlde_t *pLastCalibration_t,unsigned overflowFlag,uint8_t indexCount);
 #endif /* INC_APPLICATION_H_ */

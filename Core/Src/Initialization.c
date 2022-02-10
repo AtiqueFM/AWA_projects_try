@@ -111,6 +111,9 @@ void HoldingRegisterdefaultData(void)
 	{
 		HoldingRegister_t.ModeCommand_t.COD_X[i] = (i+1)*100;
 		HoldingRegister_t.ModeCommand_t.COD_Y[i] = data[i];
+
+		HoldingRegister_t.ModeCommand_t.TSS_F[i] = (i+1)*100;
+		HoldingRegister_t.ModeCommand_t.TSS_G[i] = data[i];
 	}
 #endif
 	//PT100

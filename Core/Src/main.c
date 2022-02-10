@@ -222,7 +222,9 @@ int main(void)
   TimerStart = 0x02;
   //printf("Hello AWA!!!\n");
   //memset(InputRegister_t.bytes,'\0',sizeof(InputRegister_t.bytes));
-  //FRAM_OperationWrite(FRAM_ADDRESS_LASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t)],164);
+  //FRAM_OperationWrite(FRAM_ADDRESS_TSSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 164],164);
+  //int size = sizeof(PVhandle_t) + sizeof(InputRegister_t.COD_lastCalibration);
+
   while (1)
   {
 	  //Process the commands from the HMI

@@ -75,3 +75,8 @@ Updates				:-
 						4. COD Factory Calibration (coefficient and timestamp stored).
 						5. Linked List used for the updating the Last 10 calibration on the MODBUS.
 						6. Reading the Last 10 Calibration from FRAM during the first time boot.
+						
+Date				:- 10/02/2022
+Updates				:-
+						1. Storing of TSS into FRAM and reading from FRAM.
+						2. MODBUS MAP updated.

@@ -49,6 +49,7 @@ uint16_t ArrayPtr;
 
 struct Sensornode *CODSensorhead = '\0'; /*<Head for COD Sensor Calibration*/
 struct Factorynode *CODFactoryhead = '\0'; /*<Head for COD Sensor Calibration*/
+struct Factorynode *TSSFactoryhead = '\0'; /*<Head for COD Sensor Calibration*/
 
 void ProcessModesCommands(void)
 {
@@ -616,7 +617,7 @@ void ProcessModesCommands(void)
 
 					/*<TODO: Push the Coefficients to Last Calibration Input register*/
 					//Set the state of which data to store
-					AWADataStoreState.factoryCOD = SET;/*<TODO: to RESET after storing the data in FRAM*/
+					AWADataStoreState.factoryCOD = SET;
 					Application_LastCaldataToModbus();
 					/*---------------------------------------------------------------*/
 					//Flag set as data not saved in the FRAM
@@ -688,13 +689,14 @@ void ProcessModesCommands(void)
 					gaussEliminationLS(x_mat,y_mat,10,2,2);
 
 					/*<TODO: Push the Coefficients to Last Calibration Input register*/
-
+					//Set the state of which data to store
+					AWADataStoreState.factoryTSS = SET;
+					Application_LastCaldataToModbus();
 					/*---------------------------------------------------------------*/
 
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
-					//Set the state of which data to store
-					AWADataStoreState.factoryTSS = SET;/*<TODO: to RESET after storing the data in FRAM*/
+
 
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
@@ -2114,6 +2116,9 @@ void ModbusSaveConfiguration(uint8_t data)
 			  //TSS Factory 10pt calibration data store
 			  FRAM_OperationWrite(FRAM_ADDRESS_TSS_FACTORY_CALIB,(uint8_t*)&TSS_10ptFactoryCalibrationHandle_t.bytes,96); //Yet to save the COD SF, total bytes 100
 
+			  //Storing in Last calibration Space
+			  FRAM_OperationWrite(FRAM_ADDRESS_TSSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 164],164); //Storing COD factory calibration with overflow flag
+
 			  AWADataStoreState.factoryTSS = RESET;
 		  }
 		  if(AWADataStoreState.factoryTSS_setzero)
@@ -2203,7 +2208,6 @@ void ModbusReadConfiguration(void)
 
 	//Storing in Last calibration Space
 	FRAM_OperationRead(FRAM_ADDRESS_LASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t)],164); //Storing only COD factory calibration with overflow flag
-#if 1
 	/*<TODO: Store the data from Input registers to Linked List*/
 	for(int i = 9;(InputRegister_t.COD_lastCalibration.epochtimestamp[i] != 0) & (i >=0 );i--)
 	{
@@ -2216,7 +2220,22 @@ void ModbusReadConfiguration(void)
 	}
 	/*Read the overflow flag*/
 	AWALastCalibrationCount.factoryCOD_overflowflag = InputRegister_t.COD_lastCalibration.overflowFlag;
-#endif
+
+	//Storing in Last calibration Space
+	FRAM_OperationRead(FRAM_ADDRESS_TSSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 164],164); //Storing only COD factory calibration with overflow flag
+
+	/*<TODO: Store the data from Input registers to Linked List*/
+	for(int i = 9;(InputRegister_t.TSS_lastCalibration.epochtimestamp[i] != 0) & (i >=0 );i--)
+	{
+		/*Create new node and insert at the end*/
+		factory_insertNode(&TSSFactoryhead,
+							InputRegister_t.TSS_lastCalibration.C0[i],
+							InputRegister_t.TSS_lastCalibration.C1[i],
+							InputRegister_t.TSS_lastCalibration.C2[i],
+							InputRegister_t.TSS_lastCalibration.epochtimestamp[i]);
+	}
+	/*Read the overflow flag*/
+	AWALastCalibrationCount.factoryTSS_overflowflag = InputRegister_t.TSS_lastCalibration.overflowFlag;
 }
 
 
@@ -2396,25 +2415,35 @@ void sensor_deleteNode(struct Sensornode **head)
 
 void factory_insertNode(struct Factorynode **head,float c0,float c1,float c2, unsigned int timestamp)
 {
+	/*Create a new node and allocate the memory*/
     struct Factorynode *t;
     t = (struct Factorynode*)calloc(1,sizeof(struct Factorynode));
+
+    /*Store the coefficients and epoch time stamp*/
     t->c0 = c0;
     t->c1 = c1;
     t->c2 = c2;
     t->timestamp = timestamp;
+    /*Point to NULL address*/
     t->next = NULL;
 
+    /*Check if the the linked list has no nodes*/
     if(*head == NULL)
     {
+    	/*If no nodes are affable then assign the new node address to the head.*/
         *head = t;
     }
+    /*If nodes are present*/
     else{
+    	/*Make the copy of the linked list by assigning the head address to the temporary nodes*/
         struct Factorynode *temp;
         temp = *head;
+        /*Traverse until it reaches the last node*/
         while(temp->next != NULL)
         {
             temp = temp->next;
         }
+        /*Assign the address of the new node to the last node.*/
         temp->next = t;
     }
 }
@@ -2428,42 +2457,30 @@ void factory_deleteNode(struct Factorynode **head)
     *head = temp_next;
 }
 
-void factory_dataTransfer(struct Factorynode **head)
+void factory_dataTransfer(struct Factorynode **head,LastCalibrationFactoryHanlde_t *pLastCalibration_t,unsigned overflowFlag,uint8_t indexCount)
 {
 	struct Factorynode *temp;
 	temp = *head;
-//	char count = 9;
-	int i = 0;
 	uint8_t index = 0;
-	if(AWALastCalibrationCount.factoryCOD_overflowflag)
+	if(overflowFlag)
 		index = 9;
 	else
-		index = AWALastCalibrationCount.factoryCOD_count - 1;
+		index = indexCount - 1;
 	while(temp->next != NULL)
 	{
 		/*Insert the data from Linked list to the Last Calibration buffer*/
-		InputRegister_t.COD_lastCalibration.C0[index] = temp->c0;
-		InputRegister_t.COD_lastCalibration.C1[index] = temp->c1;
-		InputRegister_t.COD_lastCalibration.C2[index] = temp->c2;
-		InputRegister_t.COD_lastCalibration.epochtimestamp[index] = temp->timestamp;
+		pLastCalibration_t->C0[index] = temp->c0;
+		pLastCalibration_t->C1[index] = temp->c1;
+		pLastCalibration_t->C2[index] = temp->c2;
+		pLastCalibration_t->epochtimestamp[index] = temp->timestamp;
 		index -= 1; //Decrement the count
 		temp = temp->next;
 	}
-//	printf("%f, ",temp->intercept);
-//	printf("%f, ",temp->slope);
-//	printf("%x",temp->timestamp);
     /*Insert the data from Linked list to the Last Calibration buffer*/
-	InputRegister_t.COD_lastCalibration.C0[index] = temp->c0;
-	InputRegister_t.COD_lastCalibration.C1[index] = temp->c1;
-	InputRegister_t.COD_lastCalibration.C2[index] = temp->c2;
-	InputRegister_t.COD_lastCalibration.epochtimestamp[index] = temp->timestamp;
-//    printf("\nRead from the buffer!!!\n");
-//    for(i = 0;i<=9;i++)
-//    {
-//        printf("%f, ",intercept[i]);
-//        printf("%f, ",slope[i]);
-//        printf("%x\n ",timestamp[i]);
-//    }
+	pLastCalibration_t->C0[index] = temp->c0;
+	pLastCalibration_t->C1[index] = temp->c1;
+	pLastCalibration_t->C2[index] = temp->c2;
+	pLastCalibration_t->epochtimestamp[index] = temp->timestamp;
 }
 #if 0
 void displayLinkedList(struct node **head)
@@ -2540,7 +2557,7 @@ void Application_LastCaldataToModbus(void)
 		if(index >10)
 		{
 			AWALastCalibrationCount.factoryCOD_overflowflag = SET;/*Set the overflow flag*/
-			AWALastCalibrationCount.electronicpH_count = 0;/*Reset the count to 0*/
+			AWALastCalibrationCount.factoryCOD_count = 0;/*Reset the count to 0*/
 		}
 
 		/*Create new node and insert at the end*/
@@ -2556,10 +2573,46 @@ void Application_LastCaldataToModbus(void)
 			factory_deleteNode(&CODFactoryhead);
 		}
 
-		/*<TODO: Write the into MODBUS*/
-		factory_dataTransfer(&CODFactoryhead);
+		/*Write the into MODBUS*/
+		factory_dataTransfer(&CODFactoryhead,
+								&InputRegister_t.COD_lastCalibration,
+								AWALastCalibrationCount.factoryCOD_overflowflag,
+								AWALastCalibrationCount.factoryCOD_count);
 
 		/*Store the overflow flag*/
 		InputRegister_t.COD_lastCalibration.overflowFlag = AWALastCalibrationCount.factoryCOD_overflowflag;
+	}
+	if(AWADataStoreState.factoryTSS)
+	{
+		AWALastCalibrationCount.factoryTSS_count += 1;
+		index = AWALastCalibrationCount.factoryTSS_count;
+		/*If calibration data exceeds 10 pairs, set the overflow flag and reset the index count*/
+		if(index >10)
+		{
+			AWALastCalibrationCount.factoryTSS_overflowflag = SET;/*Set the overflow flag*/
+			AWALastCalibrationCount.factoryTSS_count = 0;/*Reset the count to 0*/
+		}
+
+		/*Create new node and insert at the end*/
+		factory_insertNode(&TSSFactoryhead,
+				TSS_10ptFactoryCalibrationHandle_t.c[0],
+				TSS_10ptFactoryCalibrationHandle_t.c[1],
+				TSS_10ptFactoryCalibrationHandle_t.c[2],
+				timestamp);/*<TODO: Fetch the time stamp from Holding register*/
+
+		/*If the overflow flag is set then delete the first node from the liked list.*/
+		if(AWALastCalibrationCount.factoryTSS_overflowflag)
+		{
+			factory_deleteNode(&TSSFactoryhead);
+		}
+
+		/*Write the into MODBUS*/
+		factory_dataTransfer(&TSSFactoryhead,
+								&InputRegister_t.TSS_lastCalibration,
+								AWALastCalibrationCount.factoryTSS_overflowflag,
+								AWALastCalibrationCount.factoryTSS_count);
+
+		/*Store the overflow flag*/
+		InputRegister_t.TSS_lastCalibration.overflowFlag = AWALastCalibrationCount.factoryTSS_overflowflag;
 	}
 }
