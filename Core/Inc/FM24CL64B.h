@@ -43,6 +43,8 @@
 #define FRAM_ADDRESS_LASTCALIB_HISTORY		FRAM_ADDRESS_AI2_SENS_CALIB + 8 //takes 164 bytes (c- 0:2 and time stamp)
 //TSS factory Last Calibration data
 #define FRAM_ADDRESS_TSSLASTCALIB_HISTORY	FRAM_ADDRESS_LASTCALIB_HISTORY + 164 //takes 164 bytes (c- 0:2 and time stamp)
+//COD sensor calibration data
+#define FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY	FRAM_ADDRESS_TSSLASTCALIB_HISTORY + 164 //take 124 bytes
 
 
 

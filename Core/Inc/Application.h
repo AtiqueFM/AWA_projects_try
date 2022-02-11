@@ -108,7 +108,6 @@ void sensor_deleteNode(struct Sensornode **head);
  * 						1. Deletes the node from the last of the respective head provided.
  */
 void factory_deleteNode(struct Factorynode **head);
-void sensor_dataTransfer(struct Sensornode **head);
 /*
  * Function name	:- factory_dataTransfer
  * Arguments		:-
@@ -123,4 +122,6 @@ void sensor_dataTransfer(struct Sensornode **head);
  * 						it from recent value to old value.
  */
 void factory_dataTransfer(struct Factorynode **head,LastCalibrationFactoryHanlde_t *pLastCalibration_t,unsigned overflowFlag,uint8_t indexCount);
+
+void sensor_dataTransfer(struct Sensornode **head,LastCalibrationSensorHandle_t *pLastCalibration_t,unsigned overflowFlag,uint8_t indexCount);
 #endif /* INC_APPLICATION_H_ */

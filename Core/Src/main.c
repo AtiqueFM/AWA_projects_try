@@ -221,8 +221,8 @@ int main(void)
   //this is set to 0x01 when the start ADC command is received
   TimerStart = 0x02;
   //printf("Hello AWA!!!\n");
-  //memset(InputRegister_t.bytes,'\0',sizeof(InputRegister_t.bytes));
-  //FRAM_OperationWrite(FRAM_ADDRESS_TSSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 164],164);
+  //memset(&InputRegister_t.bytes[sizeof(PVhandle_t) + 328],'\0',124);
+  //FRAM_OperationWrite(FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 328],124);
   //int size = sizeof(PVhandle_t) + sizeof(InputRegister_t.COD_lastCalibration);
 
   while (1)
