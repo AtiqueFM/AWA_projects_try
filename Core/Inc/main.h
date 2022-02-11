@@ -286,7 +286,7 @@ typedef union{
 				  + (sizeof(LastCalibrationFactoryHanlde_t))	/*<COD Factory calibration*/
 				  + (sizeof(LastCalibrationFactoryHanlde_t))	/*<TSS Factory calibration*/
 				  + (sizeof(LastCalibrationSensorHandle_t))		/*<COD Sensor calibration*/
-				  + (10 * sizeof(LastCalibrationOIWHanlde_t))
+				  + (sizeof(LastCalibrationSensorHandle_t))		/*<TSS Sensor calibration*/
 				  + (10 * sizeof(LastCalibrationPHHanlde_t))
 				  + (10 * sizeof(LastCalibrationAI1Hanlde_t))
 				  + (10 * sizeof(LastCalibrationAI2Hanlde_t))
@@ -301,7 +301,7 @@ typedef union{
 		LastCalibrationFactoryHanlde_t COD_lastCalibration;
 		LastCalibrationFactoryHanlde_t TSS_lastCalibration;
 		LastCalibrationSensorHandle_t COD_lastSensorCalibration;
-		LastCalibrationOIWHanlde_t OIW_lastCalibration[10];
+		LastCalibrationSensorHandle_t TSS_lastSensorCalibration;
 		LastCalibrationPHHanlde_t PH_lastCalibration[10];
 		LastCalibrationAI1Hanlde_t AI1_lastCalibration[10];
 		LastCalibrationAI2Hanlde_t AI2_lastCalibration[10];
@@ -812,7 +812,7 @@ void Error_Handler(void);
 													+ (sizeof(LastCalibrationFactoryHanlde_t))\
 													+ (sizeof(LastCalibrationFactoryHanlde_t))\
 													+ (sizeof(LastCalibrationSensorHandle_t))\
-													+ (10 * sizeof(LastCalibrationOIWHanlde_t))\
+													+ (sizeof(LastCalibrationSensorHandle_t))\
 													+ (10 * sizeof(LastCalibrationPHHanlde_t))\
 													+ (10 * sizeof(LastCalibrationAI1Hanlde_t))\
 													+ (10 * sizeof(LastCalibrationAI2Hanlde_t)))
@@ -1340,6 +1340,7 @@ typedef struct{
 	unsigned factoryCOD_overflowflag;	/*<Flag will be set to 1 when count exceeds 10*/
 	unsigned factoryTSS_overflowflag;	/*<Flag will be set to 1 when count exceeds 10*/
 	unsigned sensorCOD_overflowflag;	/*<Flag will be set to 1 when count exceeds 10*/
+	unsigned sensorTSS_overflowflag;	/*<Flag will be set to 1 when count exceeds 10*/
 }AWALastCalibrationCount_t;
 AWALastCalibrationCount_t AWALastCalibrationCount;
 

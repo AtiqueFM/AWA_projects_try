@@ -48,6 +48,7 @@ uint16_t dataptr;
 uint16_t ArrayPtr;
 
 struct Sensornode *CODSensorhead = '\0'; 	/*<Head for COD Sensor Calibration*/
+struct Sensornode *TSSSensorhead = '\0'; 	/*<Head for COD Sensor Calibration*/
 struct Factorynode *CODFactoryhead = '\0'; 	/*<Head for COD Sensor Calibration*/
 struct Factorynode *TSSFactoryhead = '\0'; 	/*<Head for COD Sensor Calibration*/
 
@@ -306,13 +307,15 @@ void ProcessModesCommands(void)
 					TSS_SensorCalibration();
 
 					/*<TODO: Push the slope and intercept to Last Calibration Input register*/
+					//Set the state of which data to store
+					AWADataStoreState.sensorTSS = SET;/*<TODO: to RESET after storing the data in FRAM*/
+					Application_LastCaldataToModbus();
 
 					/*----------------------------------------------------------------------*/
 
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
-					//Set the state of which data to store
-					AWADataStoreState.sensorTSS = SET;/*<TODO: to RESET after storing the data in FRAM*/
+
 				}
 				break;
 			}
@@ -2085,6 +2088,8 @@ void ModbusSaveConfiguration(uint8_t data)
 			  //TSS Sensor calibration data store
 			  FRAM_OperationWrite(FRAM_ADDRESS_TSS_SENS_CALIB,(uint8_t*)&TSS_SensorCalibration_t.byte,8);
 
+			  //Storing in Last calibration Space
+			  FRAM_OperationWrite(FRAM_ADDRESS_TSSSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 452],124); //Storing COD factory calibration with overflow flag
 			  AWADataStoreState.sensorTSS = RESET;
 		  }
 		  if(AWADataStoreState.sensorpH)
@@ -2256,6 +2261,22 @@ void ModbusReadConfiguration(void)
 	}
 	/*Read the overflow flag*/
 	AWALastCalibrationCount.sensorCOD_overflowflag = InputRegister_t.COD_lastSensorCalibration.overflowFlag;
+
+	/*For TSS Sensor last Calibration reading from FRAM*/
+	//Storing in Last calibration Space
+	FRAM_OperationRead(FRAM_ADDRESS_TSSSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 452],124); //Storing only COD factory calibration with overflow flag
+
+	/*<TODO: Store the data from Input registers to Linked List*/
+	for(int i = 9;(InputRegister_t.TSS_lastSensorCalibration.epochtimestamp[i] != 0) & (i >=0 );i--)
+	{
+		/*Create new node and insert at the end*/
+		sensor_insertNode(&TSSSensorhead,
+							InputRegister_t.TSS_lastSensorCalibration.intercept[i],
+							InputRegister_t.TSS_lastSensorCalibration.slope[i],
+							InputRegister_t.TSS_lastSensorCalibration.epochtimestamp[i]);
+	}
+	/*Read the overflow flag*/
+	AWALastCalibrationCount.sensorTSS_overflowflag = InputRegister_t.TSS_lastSensorCalibration.overflowFlag;
 
 }
 
@@ -2703,5 +2724,37 @@ void Application_LastCaldataToModbus(void)
 
 		/*Store the overflow flag*/
 		InputRegister_t.COD_lastSensorCalibration.overflowFlag = AWALastCalibrationCount.sensorCOD_overflowflag;
+	}
+	if(AWADataStoreState.sensorTSS)
+	{
+		AWALastCalibrationCount.sensorTSS_count += 1;
+		index = AWALastCalibrationCount.sensorTSS_count;
+		/*If calibration data exceeds 10 pairs, set the overflow flag and reset the index count*/
+		if(index >10)
+		{
+			AWALastCalibrationCount.sensorTSS_overflowflag = SET;/*Set the overflow flag*/
+			AWALastCalibrationCount.sensorTSS_count = 0;/*Reset the count to 0*/
+		}
+
+		/*Create new node and insert at the end*/
+		sensor_insertNode(&TSSSensorhead,
+							TSS_SensorCalibration_t.intercept,
+							TSS_SensorCalibration_t.slope,
+							timestamp);/*<TODO: Fetch the time stamp from Holding register*/
+
+		/*If the overflow flag is set then delete the first node from the liked list.*/
+		if(AWALastCalibrationCount.sensorTSS_overflowflag)
+		{
+			sensor_deleteNode(&TSSSensorhead);
+		}
+
+		/*Write the into MODBUS*/
+		sensor_dataTransfer(&TSSSensorhead,
+							&InputRegister_t.TSS_lastSensorCalibration,
+							AWALastCalibrationCount.sensorTSS_overflowflag,
+							AWALastCalibrationCount.sensorTSS_count);
+
+		/*Store the overflow flag*/
+		InputRegister_t.TSS_lastSensorCalibration.overflowFlag = AWALastCalibrationCount.sensorTSS_overflowflag;
 	}
 }
