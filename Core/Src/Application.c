@@ -664,6 +664,7 @@ void ProcessModesCommands(void)
 					InputRegister_t.PV_info.PD2_0 = COD_MeasurementValues_t.PD2_Zero;
 					//Reset the command
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+					AWADataStoreState.factoryCOD_setzero = SET;
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 				}
@@ -737,6 +738,7 @@ void ProcessModesCommands(void)
 					InputRegister_t.PV_info.TSS_PD2_0 = TSS_MeasurementValues_t.PD2_Zero;
 					//Reset the command
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+					AWADataStoreState.factoryTSS_setzero = SET;
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 				}
@@ -1750,6 +1752,8 @@ uint8_t CODADCCapture_Sensor(uint8_t command,uint8_t sens_calib_point)
 
 			//Reset the HMI inter-locking flag
 			HMIInterlockingFlag(HMI_INTERLOCK_SENSOR_MEASURE,RESET);
+
+			HMIInterlockingFlag(HMI_INTERLOCKING_RESETALL, SET);
 		}
 
 	  }
@@ -1813,13 +1817,53 @@ void HMIInterlockingFlag(uint8_t lock,uint8_t state)
 	switch(lock)
 	{
 		case HMI_INTERLOCK_ACID_PUMP:
-			CoilStatusRegister_t.CoilStatus_t.acid_pump = state;
+			if(state == SET)
+			{
+				CoilStatusRegister_t.CoilStatus_t.acid_pump = !state;
+				CoilStatusRegister_t.CoilStatus_t.sample_pump = state;
+				CoilStatusRegister_t.CoilStatus_t.measure = state;
+			}else
+			{
+				CoilStatusRegister_t.CoilStatus_t.acid_pump = RESET;
+				CoilStatusRegister_t.CoilStatus_t.sample_pump = RESET;
+				CoilStatusRegister_t.CoilStatus_t.measure = RESET;
+			}
 			break;
 		case HMI_INTERLOCK_SAMPLE_PUMP:
-			CoilStatusRegister_t.CoilStatus_t.sample_pump = state;
+			if(state == SET)
+			{
+				CoilStatusRegister_t.CoilStatus_t.acid_pump = state;
+				CoilStatusRegister_t.CoilStatus_t.sample_pump = !state;
+				CoilStatusRegister_t.CoilStatus_t.measure = state;
+			}else
+			{
+				CoilStatusRegister_t.CoilStatus_t.acid_pump = RESET;
+				CoilStatusRegister_t.CoilStatus_t.sample_pump = RESET;
+				CoilStatusRegister_t.CoilStatus_t.measure = RESET;
+			}
 			break;
 		case HMI_INTERLOCK_MEASURE:
-			CoilStatusRegister_t.CoilStatus_t.measure = state;
+			if(state == SET)
+			{
+				CoilStatusRegister_t.CoilStatus_t.acid_pump = state;
+				CoilStatusRegister_t.CoilStatus_t.sample_pump = state;
+				CoilStatusRegister_t.CoilStatus_t.measure = !state;
+			}else
+			{
+				CoilStatusRegister_t.CoilStatus_t.acid_pump = RESET;
+				CoilStatusRegister_t.CoilStatus_t.sample_pump = RESET;
+				CoilStatusRegister_t.CoilStatus_t.measure = RESET;
+			}
+			break;
+		case HMI_INTERLOCK_SENSOR_READACID:
+			CoilStatusRegister_t.CoilStatus_t.read_sample = SET;
+			break;
+		case HMI_INTERLOCK_SENSOR_READSAMPLE:
+			CoilStatusRegister_t.CoilStatus_t.read_acid = SET;
+			break;
+		case HMI_INTERLOCKING_RESETALL:
+			CoilStatusRegister_t.CoilStatus_t.read_acid = RESET;
+			CoilStatusRegister_t.CoilStatus_t.read_sample = RESET;
 			break;
 	}
 
@@ -2284,10 +2328,16 @@ void ModbusReadConfiguration(void)
 static inline void COD_SensorCalib_ypoint(uint8_t pt)
 {
 	if(pt == 1 || pt == 4)
+	{
+		HMIInterlockingFlag(HMI_INTERLOCK_SENSOR_READACID, SET);
 	//First operate the sample pump
 		PumpOperation(0x01);
+	}
 	else
+	{
+		HMIInterlockingFlag(HMI_INTERLOCK_SENSOR_READSAMPLE, SET);
 		PumpOperation(0x02);
+	}
 
 	//perform the ADC measurement action when the pump action is completed
 	if(!PUMPControlHandle_t.u8Flag_measurement)

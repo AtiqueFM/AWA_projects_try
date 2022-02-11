@@ -499,7 +499,8 @@ typedef struct{
 	uint8_t acid_pump;
 	uint8_t sample_pump;
 	uint8_t measure;
-	uint8_t no_mode;
+	uint8_t read_acid;
+	uint8_t read_sample;
 }CoilStatusHandle_t;
 
 typedef union{
@@ -1270,6 +1271,9 @@ void Error_Handler(void);
 #define HMI_INTERLOCK_SENSOR_SAMPLE_PUMP		4
 #define HMI_INTERLOCK_SENSOR_ACID_PUMP			5
 #define HMI_INTERLOCK_SENSOR_MEASURE			6
+#define HMI_INTERLOCK_SENSOR_READACID			7	/*<For acid pump and flashing*/
+#define HMI_INTERLOCK_SENSOR_READSAMPLE			8	/*<For sample pump and flashing*/
+#define HMI_INTERLOCKING_RESETALL				9	/*<For resetting all the buttons to orignal state*/
 /*Control status bits*/
 typedef union{
 	uint16_t status;
