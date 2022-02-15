@@ -2191,6 +2191,8 @@ void ModbusSaveConfiguration(uint8_t data)
 
 void ModbusReadConfiguration(void)
 {
+	//Index count for last calibration data
+	uint8_t index_count = 0;
 	//Read the complete MODBUS configuration from FRAM
 	FRAM_OperationRead(FRAM_ADDRESS_MIN, (uint8_t*)&HoldingRegister_t.bytes, sizeof(HoldingRegister_t.bytes));
 
@@ -2262,7 +2264,30 @@ void ModbusReadConfiguration(void)
 	//Storing in Last calibration Space
 	FRAM_OperationRead(FRAM_ADDRESS_LASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t)],164); //Storing only COD factory calibration with overflow flag
 	/*<TODO: Store the data from Input registers to Linked List*/
-	for(int i = 9;(InputRegister_t.COD_lastCalibration.epochtimestamp[i] != 0) & (i >=0 );i--)
+	/*If the overflow flag is not set*/
+	if(InputRegister_t.COD_lastCalibration.overflowFlag != SET)
+	{
+		/*
+		 * Last calibration data is within 10
+		 */
+		for(int i = 0;i<10;i++)
+		{
+			if(InputRegister_t.COD_lastCalibration.epochtimestamp[i] != 0)
+			{
+				index_count += 1;
+			}
+		}
+
+		/*Store the index count in the index*/
+		AWALastCalibrationCount.factoryCOD_count = index_count;
+	}
+	/*If the overflow flag is SET*/
+	else
+	{
+		index_count = 10;
+	}
+
+	for(int i = (index_count - 1);(InputRegister_t.COD_lastCalibration.epochtimestamp[i] != 0) & (i >=0 );i--)
 	{
 		/*Create new node and insert at the end*/
 		factory_insertNode(&CODFactoryhead,
@@ -2273,12 +2298,36 @@ void ModbusReadConfiguration(void)
 	}
 	/*Read the overflow flag*/
 	AWALastCalibrationCount.factoryCOD_overflowflag = InputRegister_t.COD_lastCalibration.overflowFlag;
+	/*Reset the local variable*/
+	index_count = 0;
 
 	//Storing in Last calibration Space
 	FRAM_OperationRead(FRAM_ADDRESS_TSSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 164],164); //Storing only COD factory calibration with overflow flag
 
 	/*<TODO: Store the data from Input registers to Linked List*/
-	for(int i = 9;(InputRegister_t.TSS_lastCalibration.epochtimestamp[i] != 0) & (i >=0 );i--)
+	/*If the overflow flag is not set*/
+	if(InputRegister_t.TSS_lastCalibration.overflowFlag != SET)
+	{
+		/*
+		 * Last calibration data is within 10
+		 */
+		for(int i = 0;i<10;i++)
+		{
+			if(InputRegister_t.TSS_lastCalibration.epochtimestamp[i] != 0)
+			{
+				index_count += 1;
+			}
+		}
+
+		/*Store the index count in the index*/
+		AWALastCalibrationCount.factoryTSS_count = index_count;
+	}
+	/*If the overflow flag is SET*/
+	else
+	{
+		index_count = 10;
+	}
+	for(int i = (index_count - 1);(InputRegister_t.TSS_lastCalibration.epochtimestamp[i] != 0) & (i >=0 );i--)
 	{
 		/*Create new node and insert at the end*/
 		factory_insertNode(&TSSFactoryhead,
@@ -2289,6 +2338,8 @@ void ModbusReadConfiguration(void)
 	}
 	/*Read the overflow flag*/
 	AWALastCalibrationCount.factoryTSS_overflowflag = InputRegister_t.TSS_lastCalibration.overflowFlag;
+	/*Reset the local variable*/
+	index_count = 0;
 
 	/*For COD Sensor last Calibration reading from FRAM*/
 	//Storing in Last calibration Space
