@@ -2346,7 +2346,29 @@ void ModbusReadConfiguration(void)
 	FRAM_OperationRead(FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 328],124); //Storing only COD factory calibration with overflow flag
 
 	/*<TODO: Store the data from Input registers to Linked List*/
-	for(int i = 9;(InputRegister_t.COD_lastSensorCalibration.epochtimestamp[i] != 0) & (i >=0 );i--)
+	/*If the overflow flag is not set*/
+	if(InputRegister_t.COD_lastSensorCalibration.overflowFlag != SET)
+	{
+		/*
+		 * Last calibration data is within 10
+		 */
+		for(int i = 0;i<10;i++)
+		{
+			if(InputRegister_t.COD_lastSensorCalibration.epochtimestamp[i] != 0)
+			{
+				index_count += 1;
+			}
+		}
+
+		/*Store the index count in the index*/
+		AWALastCalibrationCount.sensorCOD_count = index_count;
+	}
+	/*If the overflow flag is SET*/
+	else
+	{
+		index_count = 10;
+	}
+	for(int i = (index_count - 1);(InputRegister_t.COD_lastSensorCalibration.epochtimestamp[i] != 0) & (i >=0 );i--)
 	{
 		/*Create new node and insert at the end*/
 		sensor_insertNode(&CODSensorhead,
@@ -2356,13 +2378,37 @@ void ModbusReadConfiguration(void)
 	}
 	/*Read the overflow flag*/
 	AWALastCalibrationCount.sensorCOD_overflowflag = InputRegister_t.COD_lastSensorCalibration.overflowFlag;
+	/*Reset the local variable*/
+	index_count = 0;
 
 	/*For TSS Sensor last Calibration reading from FRAM*/
 	//Storing in Last calibration Space
 	FRAM_OperationRead(FRAM_ADDRESS_TSSSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 452],124); //Storing only COD factory calibration with overflow flag
 
 	/*<TODO: Store the data from Input registers to Linked List*/
-	for(int i = 9;(InputRegister_t.TSS_lastSensorCalibration.epochtimestamp[i] != 0) & (i >=0 );i--)
+	/*If the overflow flag is not set*/
+	if(InputRegister_t.TSS_lastSensorCalibration.overflowFlag != SET)
+	{
+		/*
+		 * Last calibration data is within 10
+		 */
+		for(int i = 0;i<10;i++)
+		{
+			if(InputRegister_t.TSS_lastSensorCalibration.epochtimestamp[i] != 0)
+			{
+				index_count += 1;
+			}
+		}
+
+		/*Store the index count in the index*/
+		AWALastCalibrationCount.sensorTSS_count = index_count;
+	}
+	/*If the overflow flag is SET*/
+	else
+	{
+		index_count = 10;
+	}
+	for(int i = (index_count - 1);(InputRegister_t.TSS_lastSensorCalibration.epochtimestamp[i] != 0) & (i >=0 );i--)
 	{
 		/*Create new node and insert at the end*/
 		sensor_insertNode(&TSSSensorhead,
