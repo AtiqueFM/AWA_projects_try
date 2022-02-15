@@ -221,8 +221,8 @@ int main(void)
   //this is set to 0x01 when the start ADC command is received
   TimerStart = 0x02;
   //printf("Hello AWA!!!\n");
-  //memset(&InputRegister_t.bytes[sizeof(PVhandle_t) + 328],'\0',124);
-  //FRAM_OperationWrite(FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 328],124);
+  //memset(&InputRegister_t.bytes[sizeof(PVhandle_t)],'\0',164 + 164 + 124 + 124);
+  //FRAM_OperationWrite(FRAM_ADDRESS_LASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t)],164 + 164 + 124 + 124);
   //int size = sizeof(PVhandle_t) + sizeof(InputRegister_t.COD_lastCalibration);
 
   while (1)
@@ -746,7 +746,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 19200;
+  huart1.Init.BaudRate = 9600;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;

@@ -2669,7 +2669,7 @@ void dataTransfer(struct node **head)
 void Application_LastCaldataToModbus(void)
 {
 	uint8_t index = 0;
-	uint32_t timestamp = 0x12345678;
+	uint32_t timestamp = HoldingRegister_t.ModeCommand_t.Epoch_Timestamp;
 	if(AWADataStoreState.electronicpH)
 	{
 		index = AWALastCalibrationCount.electronicpH_count += 1;
