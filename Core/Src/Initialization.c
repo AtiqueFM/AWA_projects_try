@@ -18,6 +18,7 @@ TIM_OC_InitTypeDef sConfigOC_PWM3 = {0};//moved
 TIM_OC_InitTypeDef sConfigOC_PWM4 = {0};//moved
 
 extern TIM_HandleTypeDef htim1;
+extern ADC_HandleTypeDef hadc1;
 
 DMA_Handle_t DMA_UART6_RX_handle_t;
 DMA_Handle_t DMA_UART6_TX_handle_t;
@@ -392,4 +393,24 @@ void DMA_UART1_TX_Init(void)
 	HAL_NVIC_EnableIRQ(DMA2_Stream7_IRQn);
 
 	DMAInit(&DMA_UART1_TX_handle_t);//configuration
+}
+
+uint16_t InternalADCRead(void)
+{
+	uint16_t readingADCcounts = 0;
+
+	/*Poll for the ADC conversion*/
+	HAL_ADC_PollForConversion(&hadc1, 1000);
+	/*Get the ADC converted data*/
+	readingADCcounts = HAL_ADC_GetValue(&hadc1);
+	/*Stop the ADC*/
+	//HAL_ADC_Stop(&hadc1);
+
+	return(readingADCcounts);
+}
+
+void InternalADCStartConversion(void)
+{
+	/*Start the ADC*/
+	HAL_ADC_Start(&hadc1);
 }

@@ -53,4 +53,9 @@ void DMA_UART1_RX_Init(uint32_t *pDestinationBuff, uint16_t noTrasaction);
 /*Initialization of UART1 Transmission*/
 void DMA_UART1_TX_Init(void);
 
+/*Internal ADC read*/
+uint16_t InternalADCRead(void);
+
+/*Internal ADC start conversion*/
+void InternalADCStartConversion(void);
 #endif /* INC_INITIALIZATION_H_ */

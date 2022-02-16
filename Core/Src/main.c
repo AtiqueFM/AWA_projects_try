@@ -225,6 +225,7 @@ int main(void)
   //FRAM_OperationWrite(FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 164 + 164],124);
   //int size = sizeof(PVhandle_t) + sizeof(InputRegister_t.COD_lastCalibration);
 
+
   while (1)
   {
 	  //Process the commands from the HMI
@@ -298,6 +299,10 @@ int main(void)
 		  dma_tx_flag_uart1 = 0;
 	  }
 
+	  /*Start the internal ADC*/
+	  InternalADCStartConversion();
+	  //Set the data on the TOC HMI screen
+	  InputRegister_t.PV_info.TOC = InternalADCRead();
   }
   /* USER CODE END 3 */
 }
@@ -381,9 +386,9 @@ static void MX_ADC1_Init(void)
   }
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
   */
-  sConfig.Channel = ADC_CHANNEL_1;
+  sConfig.Channel = ADC_CHANNEL_3;
   sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_28CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -923,19 +928,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : RESERVE_PA3_Pin CARD_5_ID1_Pin CARD_5_ID2_Pin CARD_5_ID3_Pin
-                           CARD_3_ID1_Pin CARD_3_ID2_Pin */
-  GPIO_InitStruct.Pin = RESERVE_PA3_Pin|CARD_5_ID1_Pin|CARD_5_ID2_Pin|CARD_5_ID3_Pin
-                          |CARD_3_ID1_Pin|CARD_3_ID2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
   /*Configure GPIO pins : RELAY_5_Pin ADM_CLTR_Pin CARD_3_SEL2_Pin */
   GPIO_InitStruct.Pin = RELAY_5_Pin|ADM_CLTR_Pin|CARD_3_SEL2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : CARD_5_ID1_Pin CARD_5_ID2_Pin CARD_5_ID3_Pin CARD_3_ID1_Pin
+                           CARD_3_ID2_Pin */
+  GPIO_InitStruct.Pin = CARD_5_ID1_Pin|CARD_5_ID2_Pin|CARD_5_ID3_Pin|CARD_3_ID1_Pin
+                          |CARD_3_ID2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : CARD_5_PWR_Pin CARD_5_SPI_SS_Pin SYS_LED_STATUS_Pin RELAY_1_Pin
