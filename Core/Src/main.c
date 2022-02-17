@@ -275,6 +275,12 @@ int main(void)
 		  UHolding_Modbus_2.TOC_Value = InputRegister_t.PV_info.TOC;
 		  UHolding_Modbus_2.pH_mV = InputRegister_t.PV_info.pH_value;
 		  UHolding_Modbus_2.Temperature = InputRegister_t.PV_info.temp_pH;
+		  UHolding_Modbus_2.COD_slope = COD_SensorCalibration_t.slope;
+		  UHolding_Modbus_2.COD_intercept = COD_SensorCalibration_t.intercept;
+		  UHolding_Modbus_2.TSS_slope = TSS_SensorCalibration_t.slope;
+		  UHolding_Modbus_2.TSS_intercept = TSS_SensorCalibration_t.intercept;
+		  UHolding_Modbus_2.pH_slope = pH_SensorCalibpoints_t.pH_Solpe;
+		  UHolding_Modbus_2.pH_intercept = pH_SensorCalibpoints_t.pH_Intercept;
 		  MOD2_RxFlag = 0;
 		  //ProcessMOD2_ModbusQuery();
 		  ProcessMOD2_ModbusQuery_DMA();
@@ -298,10 +304,12 @@ int main(void)
 		  dma_tx_flag_uart1 = 0;
 	  }
 
+	  GPIOB->ODR |= (1<<5);
 	  /*Start the internal ADC*/
 	  InternalADCStartConversion();
+	  GPIOB->ODR &= ~(1<<5);
 	  //Set the data on the TOC HMI screen
-	  InputRegister_t.PV_info.TOC = InternalADCRead();
+	  InputRegister_t.PV_info.TOC = InternalADCRead() * (3.3f/4096.0f);
   }
   /* USER CODE END 3 */
 }

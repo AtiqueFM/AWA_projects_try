@@ -536,6 +536,13 @@ typedef union{
 		float TOC_Value;
 		float pH_mV;
 		float Temperature;
+		/*2-pt calibration*/
+		float COD_slope;
+		float COD_intercept;
+		float TSS_slope;
+		float TSS_intercept;
+		float pH_slope;
+		float pH_intercept;
 	};
 }UHolding_Modbus_2_t;
 UHolding_Modbus_2_t UHolding_Modbus_2;
