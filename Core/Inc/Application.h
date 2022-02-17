@@ -124,4 +124,8 @@ void factory_deleteNode(struct Factorynode **head);
 void factory_dataTransfer(struct Factorynode **head,LastCalibrationFactoryHanlde_t *pLastCalibration_t,unsigned overflowFlag,uint8_t indexCount);
 
 void sensor_dataTransfer(struct Sensornode **head,LastCalibrationSensorHandle_t *pLastCalibration_t,unsigned overflowFlag,uint8_t indexCount);
+
+void CODCalculateValue(void);
+
+void TSScalculateValue(void);
 #endif /* INC_APPLICATION_H_ */

@@ -85,3 +85,8 @@ Date				:- 11/02/2022
 Updates				:-
 						1. COD sensor calibration, implemented last 10 Calibration.
 						2. Updated interlocking for COD and TSS sensor calibration buttons.
+						
+Date				:- 17/02/2022
+Updates				:- 
+						1. Added BOD SF to the formaul and defalut va;ue of 0.5 in initialization.
+						2. ADC in polling mode. yet to interate with the sennsor and Clean pump operation.

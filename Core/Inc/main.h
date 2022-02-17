@@ -501,6 +501,7 @@ typedef struct{
 	uint8_t measure;
 	uint8_t read_acid;
 	uint8_t read_sample;
+	uint8_t button_press;//34
 }CoilStatusHandle_t;
 
 typedef union{

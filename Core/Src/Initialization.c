@@ -106,6 +106,8 @@ void HoldingRegisterdefaultData(void)
 	//COD Sensor calibration, should start with capturing x1 and y1
 	COD_SensorCalibration_t.point_flag = 0;
 
+	HoldingRegister_t.ModeCommand_t.BOD_CF = 0.2f;
+
 #if 1
 	double data[10] = {95,150,240,360,450,500,620,700,750,800};
 	for(int i = 0;i<10;i++)
@@ -414,3 +416,26 @@ void InternalADCStartConversion(void)
 	/*Start the ADC*/
 	HAL_ADC_Start(&hadc1);
 }
+
+///**
+//  * @brief  Regular conversion complete callback in non blocking mode
+//  * @param  hadc pointer to a ADC_HandleTypeDef structure that contains
+//  *         the configuration information for the specified ADC.
+//  * @retval None
+//  */
+//void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
+//{
+//	uint16_t readingADCcounts = 0;
+//
+//	/*Get the ADC converted data*/
+//	readingADCcounts = HAL_ADC_GetValue(&hadc1);
+//
+//	/*Start the ADC interrupt*/
+//	//HAL_ADC_Stop_IT(hadc);
+//
+//	/*Start the ADC interrupt*/
+//	//HAL_ADC_Start_IT(hadc);
+//
+//	InputRegister_t.PV_info.TOC = readingADCcounts;
+//
+//}

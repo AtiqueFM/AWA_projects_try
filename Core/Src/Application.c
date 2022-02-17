@@ -266,7 +266,8 @@ void ProcessModesCommands(void)
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Sensor_Calibrate_COD)
 				{
 					COD_SensorCalibration();
-
+					/*Re-calculate the values of COD from the new 2-pt calibration*/
+					CODCalculateValue();
 					/*<TODO: Push the slope and intercept to Last Calibration Input register*/
 					//Set the state of which data to store
 					AWADataStoreState.sensorCOD = SET;/*<TODO: to RESET after storing the data in FRAM*/
@@ -305,7 +306,8 @@ void ProcessModesCommands(void)
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Sensor_Calibrate_TSS)
 				{
 					TSS_SensorCalibration();
-
+					/*Calculate the new TSS value from the new 2-pt calibration*/
+					TSScalculateValue();
 					/*<TODO: Push the slope and intercept to Last Calibration Input register*/
 					//Set the state of which data to store
 					AWADataStoreState.sensorTSS = SET;/*<TODO: to RESET after storing the data in FRAM*/
@@ -1331,10 +1333,19 @@ uint8_t CODADCCapture(uint8_t command)
 				//InputRegister_t.PV_info.COD_RAW = COD_MeasurementValues_t.RAW_Value;
 				InputRegister_t.PV_info.COD_RAW = COD_RAW;
 				if(COD_MeasurementValues_t.Cal_Value < 0)
+				{
 					InputRegister_t.PV_info.CODValue = 0.0f;	/*<Display to the Customer,only positive value*/
+					//BOD value
+					InputRegister_t.PV_info.BODValue = 0;		/*<Display to the Customer,only positive value*/
+				}
 				else
+				{
 					InputRegister_t.PV_info.CODValue = COD_MeasurementValues_t.Cal_Value;
+					//BOD value
+					InputRegister_t.PV_info.BODValue = HoldingRegister_t.ModeCommand_t.BOD_CF * COD_MeasurementValues_t.Cal_Value;//factory_cod_value;
+				}
 				InputRegister_t.PV_info.CODValueUser = COD_MeasurementValues_t.Cal_Value; 	/*<Reference for the Developer, can be negative value*/
+				InputRegister_t.PV_info.BODValueUser = HoldingRegister_t.ModeCommand_t.BOD_CF * COD_MeasurementValues_t.Cal_Value;
 
 				//Publish the TSS value to the modbus
 				InputRegister_t.PV_info.TSS_RAW = TSS_RAW;
@@ -1753,7 +1764,7 @@ uint8_t CODADCCapture_Sensor(uint8_t command,uint8_t sens_calib_point)
 			//Reset the HMI inter-locking flag
 			HMIInterlockingFlag(HMI_INTERLOCK_SENSOR_MEASURE,RESET);
 
-			HMIInterlockingFlag(HMI_INTERLOCKING_RESETALL, SET);
+			HMIInterlockingFlag(HMI_INTERLOCKING_RESETALL, RESET);
 		}
 
 	  }
@@ -1817,54 +1828,26 @@ void HMIInterlockingFlag(uint8_t lock,uint8_t state)
 	switch(lock)
 	{
 		case HMI_INTERLOCK_ACID_PUMP:
-			if(state == SET)
-			{
-				CoilStatusRegister_t.CoilStatus_t.acid_pump = !state;
-				CoilStatusRegister_t.CoilStatus_t.sample_pump = state;
-				CoilStatusRegister_t.CoilStatus_t.measure = state;
-			}else
-			{
-				CoilStatusRegister_t.CoilStatus_t.acid_pump = RESET;
-				CoilStatusRegister_t.CoilStatus_t.sample_pump = RESET;
-				CoilStatusRegister_t.CoilStatus_t.measure = RESET;
-			}
-			break;
 		case HMI_INTERLOCK_SAMPLE_PUMP:
-			if(state == SET)
-			{
-				CoilStatusRegister_t.CoilStatus_t.acid_pump = state;
-				CoilStatusRegister_t.CoilStatus_t.sample_pump = !state;
-				CoilStatusRegister_t.CoilStatus_t.measure = state;
-			}else
-			{
-				CoilStatusRegister_t.CoilStatus_t.acid_pump = RESET;
-				CoilStatusRegister_t.CoilStatus_t.sample_pump = RESET;
-				CoilStatusRegister_t.CoilStatus_t.measure = RESET;
-			}
-			break;
 		case HMI_INTERLOCK_MEASURE:
-			if(state == SET)
-			{
-				CoilStatusRegister_t.CoilStatus_t.acid_pump = state;
-				CoilStatusRegister_t.CoilStatus_t.sample_pump = state;
-				CoilStatusRegister_t.CoilStatus_t.measure = !state;
-			}else
-			{
-				CoilStatusRegister_t.CoilStatus_t.acid_pump = RESET;
-				CoilStatusRegister_t.CoilStatus_t.sample_pump = RESET;
-				CoilStatusRegister_t.CoilStatus_t.measure = RESET;
-			}
-			break;
 		case HMI_INTERLOCK_SENSOR_READACID:
-			CoilStatusRegister_t.CoilStatus_t.read_sample = SET;
-			break;
 		case HMI_INTERLOCK_SENSOR_READSAMPLE:
-			CoilStatusRegister_t.CoilStatus_t.read_acid = SET;
-			break;
 		case HMI_INTERLOCKING_RESETALL:
-			CoilStatusRegister_t.CoilStatus_t.read_acid = RESET;
-			CoilStatusRegister_t.CoilStatus_t.read_sample = RESET;
+			if(state == SET)
+				CoilStatusRegister_t.CoilStatus_t.button_press = SET;
+			else
+				CoilStatusRegister_t.CoilStatus_t.button_press = RESET;
 			break;
+//		case HMI_INTERLOCK_SENSOR_READACID:
+//			CoilStatusRegister_t.CoilStatus_t.read_sample = SET;
+//			break;
+//		case HMI_INTERLOCK_SENSOR_READSAMPLE:
+//			CoilStatusRegister_t.CoilStatus_t.read_acid = SET;
+//			break;
+//		case HMI_INTERLOCKING_RESETALL:
+//			CoilStatusRegister_t.CoilStatus_t.read_acid = RESET;
+//			CoilStatusRegister_t.CoilStatus_t.read_sample = RESET;
+//			break;
 	}
 
 }
@@ -2904,4 +2887,66 @@ void Application_LastCaldataToModbus(void)
 		/*Store the overflow flag*/
 		InputRegister_t.TSS_lastSensorCalibration.overflowFlag = AWALastCalibrationCount.sensorTSS_overflowflag;
 	}
+}
+
+
+void CODCalculateValue(void)
+{
+	//Quadratic equation - compensation (Factory Calibration)
+	float c[4];//BOD
+
+	//Calculations for COD raw
+	float COD_RAW = HoldingRegister_t.ModeCommand_t.COD_SF *(log(COD_MeasurementValues_t.PD1_Zero/PD1_new) - log(COD_MeasurementValues_t.PD2_Zero/PD2_new));
+
+	//COD coefficient
+	for(int i = 0;i<4;i++)
+		c[i] = HoldingRegister_t.ModeCommand_t.C[i];
+
+	//COD_RAW = pow(COD_RAW,3) *c[3] + pow(COD_RAW,2) *c[2] + pow(COD_RAW,1) *c[1] + c[0];
+	float factory_cod_value = pow(COD_RAW,3) *c[3] + pow(COD_RAW,2) *c[2] + pow(COD_RAW,1) *c[1] + c[0];
+
+	//COD actual value
+	COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope + COD_SensorCalibration_t.intercept;
+
+	InputRegister_t.PV_info.COD_RAW = COD_RAW;
+	if(COD_MeasurementValues_t.Cal_Value < 0)
+	{
+		InputRegister_t.PV_info.CODValue = 0.0f;	/*<Display to the Customer,only positive value*/
+		//BOD value
+		InputRegister_t.PV_info.BODValue = 0;		/*<Display to the Customer,only positive value*/
+	}
+	else
+	{
+		InputRegister_t.PV_info.CODValue = COD_MeasurementValues_t.Cal_Value;
+		//BOD value
+		InputRegister_t.PV_info.BODValue = HoldingRegister_t.ModeCommand_t.BOD_CF * COD_MeasurementValues_t.Cal_Value;//factory_cod_value;
+	}
+	InputRegister_t.PV_info.CODValueUser = COD_MeasurementValues_t.Cal_Value; 	/*<Reference for the Developer, can be negative value*/
+	InputRegister_t.PV_info.BODValueUser = HoldingRegister_t.ModeCommand_t.BOD_CF * COD_MeasurementValues_t.Cal_Value;
+
+
+
+}
+
+void TSScalculateValue(void)
+{
+	float k[3];//TSS
+	//Calculation of TSS raw
+	float TSS_RAW = HoldingRegister_t.ModeCommand_t.TSS_SF *(log(TSS_MeasurementValues_t.PD2_Zero/PD2_new));
+	//TSS coefficient
+	for(int i = 0;i<3;i++)
+		k[i] = HoldingRegister_t.ModeCommand_t.TSS_K[i];
+	//TSS factory equation
+	float factory_tss_value = pow(TSS_RAW,2) *k[2] + pow(TSS_RAW,1) *k[1] + k[0];
+	//TSS value
+	TSS_MeasurementValues_t.Cal_Value = factory_tss_value * TSS_SensorCalibration_t.slope + TSS_SensorCalibration_t.intercept;
+
+	//Publish the TSS value to the modbus
+	InputRegister_t.PV_info.TSS_RAW = TSS_RAW;
+	if(TSS_MeasurementValues_t.Cal_Value < 0)
+		InputRegister_t.PV_info.TSSValue = 0.0f;	/*<Display to the Customer,only positive value*/
+	else
+		InputRegister_t.PV_info.TSSValue = TSS_MeasurementValues_t.Cal_Value;
+	InputRegister_t.PV_info.TSSValueUser = TSS_MeasurementValues_t.Cal_Value; 	/*<Reference for the Developer, can be negative value*/
+
 }
