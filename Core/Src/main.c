@@ -36,6 +36,7 @@
 
 
 #define ITM_Port32(n)	(*((volatile unsigned long *)(0xe0000000 +4*n)))
+#define SINGLE_SHOT 0
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -224,7 +225,16 @@ int main(void)
   //memset(&InputRegister_t.bytes[sizeof(PVhandle_t) + 164 + 164],'\0',124);
   //FRAM_OperationWrite(FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 164 + 164],124);
   //int size = sizeof(PVhandle_t) + sizeof(InputRegister_t.COD_lastCalibration);
+#if 0
+  float arrayADC [1000];
+  uint16_t samples = 100;
+  float avgs = (float)samples;
 
+#if !SINGLE_SHOT
+  /*Start the internal ADC*/
+  InternalADCStartConversion();
+#endif
+#endif
   while (1)
   {
 	  //Process the commands from the HMI
@@ -304,12 +314,58 @@ int main(void)
 		  dma_tx_flag_uart1 = 0;
 	  }
 
-	  GPIOB->ODR |= (1<<5);
-	  /*Start the internal ADC*/
-	  InternalADCStartConversion();
-	  GPIOB->ODR &= ~(1<<5);
-	  //Set the data on the TOC HMI screen
-	  InputRegister_t.PV_info.TOC = InternalADCRead() * (3.3f/4096.0f);
+
+
+
+#if SINGLE_SHOT
+	  /*
+	   * 100 samples - 3.96 ms
+	   * with averaging - 4.16 ms
+	   * for averaging - 200 us
+	   * single mode :-
+	   * 				1. Starting of ADC - 9 us
+	   * 				2. with 100 sampling - 900us
+	   */
+	  GPIOB->ODR |= (1<<4);
+	  for(int i = 0;i<100;i++)
+	  {
+		  /*Start the internal ADC*/
+		  InternalADCStartConversion();
+		  //Set the data on the TOC HMI screen
+		   arrayADC[i] = InternalADCRead() * (3.3f/4096.0f);
+	  }
+
+	  float avgADC = 0;
+	  for(int i = 0;i<100;i++)
+		  avgADC += arrayADC[i] / 100.0f;
+
+	  InputRegister_t.PV_info.TOC = avgADC;
+	  GPIOB->ODR &= ~(1<<4);
+//#endif
+
+//#if !SINGLE_SHOT
+	  /*
+	   * 500 samples - 1.7 ms
+	   * with averaging - 2.7 ms
+	   * for averaging - 1 ms
+	   */
+	  GPIOB->ODR |= (1<<4);
+	  for(int i = 0;i<samples;i++)
+	  {
+		  //Set the data on the TOC HMI screen
+		   arrayADC[i] = InternalADCRead() * (3.3f/4096.0f);
+	  }
+	  GPIOB->ODR &= ~(1<<4);
+	  float avgADC = 0;
+	  for(int i = 0;i<samples;i++)
+		  avgADC += arrayADC[i] / avgs;
+
+	  InputRegister_t.PV_info.TOC = avgADC;
+
+
+	  /*Stop the ADC*/
+//	  HAL_ADC_Stop(&hadc1);
+#endif
   }
   /* USER CODE END 3 */
 }
@@ -386,7 +442,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.NbrOfConversion = 1;
   hadc1.Init.DMAContinuousRequests = DISABLE;
-  hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     Error_Handler();
@@ -395,7 +451,7 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_3;
   sConfig.Rank = 1;
-  sConfig.SamplingTime = ADC_SAMPLETIME_28CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();

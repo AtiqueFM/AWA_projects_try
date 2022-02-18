@@ -402,7 +402,7 @@ uint16_t InternalADCRead(void)
 	uint16_t readingADCcounts = 0;
 
 	/*Poll for the ADC conversion*/
-	HAL_ADC_PollForConversion(&hadc1, 1000);
+	//HAL_ADC_PollForConversion(&hadc1, 1000);
 	/*Get the ADC converted data*/
 	readingADCcounts = HAL_ADC_GetValue(&hadc1);
 	/*Stop the ADC*/
