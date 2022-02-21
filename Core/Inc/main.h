@@ -277,6 +277,7 @@ typedef struct{
 	float pH_Temperature_Live_Voltage;
 	float PD1_Voltage;/*14/10/2021*/
 	float PD2_Voltage;/*19/10/2021*/
+	float FlowSensorVolatge;			/*<Sensor voltage output; For diagnostics*/
 }SlotParametersHandle_t;
 
 
@@ -364,8 +365,9 @@ typedef struct{
 	//uint16_t PWM1_offset;
 	//uint16_t PWM2_offset;
 	uint32_t Epoch_Timestamp;		/*<Epoch time stamp from HMI*/
-	uint16_t PWM3_offset;
-	uint16_t PWM4_offset;
+	float FlowSensorCutoff;			/*<HMI access for cutoff setting*/
+	//uint16_t PWM3_offset;
+	//uint16_t PWM4_offset;
 	//uint16_t relay[8];//address : 187
 }ModeCommandHandle_t;
 
@@ -487,21 +489,21 @@ typedef struct{
 	uint8_t p[8]; //p5-p12
 	uint8_t relay[8];//relay 1 - relay 8
 	uint8_t spare[2];
-	uint8_t COD_USECOEFF;
-	uint8_t TSS_USECOEFF;
-	uint8_t pH_USECOEFF;
-	uint8_t OIW_USECOEFF;
-	uint8_t AUTOCLEAN;
-	uint8_t AUTOZERO;
-	uint8_t MeasureReady;
-	uint8_t CleanReady;
-	uint8_t ADCReadStart;
-	uint8_t acid_pump;
-	uint8_t sample_pump;
-	uint8_t measure;
-	uint8_t read_acid;
-	uint8_t read_sample;
-	uint8_t button_press;//34
+	uint8_t COD_USECOEFF;		/*<NA*/
+	uint8_t TSS_USECOEFF;		/*<NA*/
+	uint8_t pH_USECOEFF;		/*<NA*/
+	uint8_t OIW_USECOEFF;		/*<NA*/
+	uint8_t AUTOCLEAN;			/*<NA*/
+	uint8_t AUTOZERO;			/*<If set; Perform zeroing of PD1 and PD2 Zero*/
+	uint8_t MeasureReady;		/*<NA*/
+	uint8_t CleanReady;			/*<NA*/
+	uint8_t ADCReadStart;		/*<NA*/
+	uint8_t CleaningTankEmpty;	/*<Bit Set if Cleaning tank is empty*/
+	uint8_t sample_pump;		/*<NA*/
+	uint8_t measure;			/*<NA*/
+	uint8_t read_acid;			/*<NA*/
+	uint8_t read_sample;		/*<NA*/
+	uint8_t button_press;		/*<Button inter-locking*/
 }CoilStatusHandle_t;
 
 typedef union{

@@ -225,16 +225,14 @@ int main(void)
   //memset(&InputRegister_t.bytes[sizeof(PVhandle_t) + 164 + 164],'\0',124);
   //FRAM_OperationWrite(FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 164 + 164],124);
   //int size = sizeof(PVhandle_t) + sizeof(InputRegister_t.COD_lastCalibration);
-#if 1
+
   float arrayADC [1000];
   uint16_t samples = 100;
   float avgs = (float)samples;
 
-#if !SINGLE_SHOT
   /*Start the internal ADC*/
   InternalADCStartConversion();
-#endif
-#endif
+
   while (1)
   {
 	  //Process the commands from the HMI
@@ -314,36 +312,6 @@ int main(void)
 		  dma_tx_flag_uart1 = 0;
 	  }
 
-
-
-
-#if SINGLE_SHOT
-	  /*
-	   * 100 samples - 3.96 ms
-	   * with averaging - 4.16 ms
-	   * for averaging - 200 us
-	   * single mode :-
-	   * 				1. Starting of ADC - 9 us
-	   * 				2. with 100 sampling - 900us
-	   */
-	  GPIOB->ODR |= (1<<4);
-	  for(int i = 0;i<100;i++)
-	  {
-		  /*Start the internal ADC*/
-		  InternalADCStartConversion();
-		  //Set the data on the TOC HMI screen
-		   arrayADC[i] = InternalADCRead() * (3.3f/4096.0f);
-	  }
-
-	  float avgADC = 0;
-	  for(int i = 0;i<100;i++)
-		  avgADC += arrayADC[i] / 100.0f;
-
-	  InputRegister_t.PV_info.TOC = avgADC;
-	  GPIOB->ODR &= ~(1<<4);
-#endif
-
-#if !SINGLE_SHOT
 	  /*
 	   * 500 samples - 1.7 ms
 	   * with averaging - 2.7 ms
@@ -362,20 +330,19 @@ int main(void)
 
 	  //For reference
 	  InputRegister_t.PV_info.TOC = avgADC;
+	  InputRegister_t.SlotParameter.FlowSensorVolatge = avgADC;
 	  /*Cleaning tank is not empty*/
-	  if(avgADC <= 2.3f)
+	  if(avgADC <= HoldingRegister_t.ModeCommand_t.FlowSensorCutoff) //Limit can by set from HMI.
 	  {
 		  AWAOperationStatus_t.CleaningTankEmpty = RESET;
+		  CoilStatusRegister_t.CoilStatus_t.CleaningTankEmpty = RESET;
 	  }
 	  /* Cleaning tank is empty*/
 	  else
 	  {
 		  AWAOperationStatus_t.CleaningTankEmpty = SET;
+		  CoilStatusRegister_t.CoilStatus_t.CleaningTankEmpty = SET;/*Will display warning in HMI*/
 	  }
-
-	  /*Stop the ADC*/
-//	  HAL_ADC_Stop(&hadc1);
-#endif
   }
   /* USER CODE END 3 */
 }

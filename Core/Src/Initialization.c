@@ -212,6 +212,7 @@ void HoldingRegisterdefaultData(void)
 
 	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0x03;//Manual temp input
 	HoldingRegister_t.ModeCommand_t.Temperature_setPoint = 25.0f;//Temperature set point
+	HoldingRegister_t.ModeCommand_t.FlowSensorCutoff = 2.3f;
 
 	/*<Last Calibration Data*/
 //	InputRegister_t.COD_lastCalibration[0].C[0] = 10.2f;
