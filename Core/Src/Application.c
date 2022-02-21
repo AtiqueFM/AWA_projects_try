@@ -812,6 +812,7 @@ void ProcessModesCommands(void)
 void CardAction(uint8_t CardID)
 {
 	float cableResistance = 0;
+	float pH = 0;
 	switch(CardID)
 	{
 	case MPH:
@@ -832,8 +833,14 @@ void CardAction(uint8_t CardID)
 				else
 					adc = AdCounts_pH * pH_ElectronicCalibpoints_t.pH_Slope + pH_ElectronicCalibpoints_t.pH_Intercept;
 				//pH value with temperature compensation
-				InputRegister_t.PV_info.pH_value = (adc * pH_SensorCalibpoints_t.pH_Solpe * (1.0 / (1.0 + 0.003351686 * (InputRegister_t.PV_info.temp_pH - 25))) + pH_SensorCalibpoints_t.pH_Intercept);
+				pH = (adc * pH_SensorCalibpoints_t.pH_Solpe * (1.0 / (1.0 + 0.003351686 * (InputRegister_t.PV_info.temp_pH - 25))) + pH_SensorCalibpoints_t.pH_Intercept);
 
+				if(pH < 0)
+					InputRegister_t.PV_info.pH_value = 0;
+				else if(pH > 14)
+					InputRegister_t.PV_info.pH_value = 14.0f;
+				else
+					InputRegister_t.PV_info.pH_value= pH;
 				//For test - Temperature at 25degC
 				//InputRegister_t.PV_info.pH_value = (adc * pH_SensorCalibpoints_t.pH_Solpe * (1.0 / (1.0 + 0.003351686 * (25 - 25))) + pH_SensorCalibpoints_t.pH_Intercept);
 
