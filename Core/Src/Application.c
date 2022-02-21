@@ -652,7 +652,8 @@ void ProcessModesCommands(void)
 					//operate the sample pump
 					PumpOperation(0x02);
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO)
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO
+						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
 				{
 					//set the current PD1 and PD2 mean values to the PD1(0) and PD2(0)
 					COD_MeasurementValues_t.PD1_Zero = COD_MeasurementValues_t.PD1_New;
@@ -727,7 +728,8 @@ void ProcessModesCommands(void)
 					//operate the sample pump
 					PumpOperation(0x02);
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_FACTORY_SETASZERO)
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_FACTORY_SETASZERO
+						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
 				{
 					//set the current PD1 and PD2 mean values to the PD1(0) and PD2(0)
 					//COD_MeasurementValues_t.PD1_Zero = COD_MeasurementValues_t.PD1_New;
@@ -773,7 +775,8 @@ void ProcessModesCommands(void)
 					CODADCCapture(COD_Measure);
 				}
 				//Set as zero
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO)
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO
+						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
 				{
 					Application_SetAsZero(1);
 				}
@@ -795,7 +798,8 @@ void ProcessModesCommands(void)
 					CODADCCapture(TSS_Measure);
 				}
 				//Set as zero
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO)
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO
+						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
 				{
 					Application_SetAsZero(2);
 				}

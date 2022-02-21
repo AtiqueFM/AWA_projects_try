@@ -90,3 +90,9 @@ Date				:- 17/02/2022
 Updates				:- 
 						1. Added BOD SF to the formaul and defalut va;ue of 0.5 in initialization.
 						2. ADC in polling mode. yet to interate with the sennsor and Clean pump operation.
+Date				:- 21/02/2022
+Updates				:-
+						1. Button interlocking for Sensor and Factory calibration fot COD and TSS.
+						2. Internal ADC for flow sensor and interlocking for SET AS ZERO.
+							if cleaning tank is empty then wont be able to set that PD values as zero.
+							(if the voltage values are below 2.3V then cleaning tank is not empty.)						

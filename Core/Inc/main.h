@@ -1319,6 +1319,8 @@ typedef union{
 		unsigned CalibrationMode			: 1;/*2/9/2021*/
 		unsigned CODFlashOperation			: 1;
 		unsigned AWADataSave_Calibration	: 1;//if not saved '1', else '0'
+		unsigned CleaningTankEmpty			: 1;	/*<If SET then Set As Zero won't be accessible
+		 	 	 	 	 	 	 	 	 	 	 	 	 Warning on the HMI*/
 	};
 }AWAOperationHandle_t;
 AWAOperationHandle_t AWAOperationStatus_t;

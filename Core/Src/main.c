@@ -225,7 +225,7 @@ int main(void)
   //memset(&InputRegister_t.bytes[sizeof(PVhandle_t) + 164 + 164],'\0',124);
   //FRAM_OperationWrite(FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 164 + 164],124);
   //int size = sizeof(PVhandle_t) + sizeof(InputRegister_t.COD_lastCalibration);
-#if 0
+#if 1
   float arrayADC [1000];
   uint16_t samples = 100;
   float avgs = (float)samples;
@@ -341,27 +341,37 @@ int main(void)
 
 	  InputRegister_t.PV_info.TOC = avgADC;
 	  GPIOB->ODR &= ~(1<<4);
-//#endif
+#endif
 
-//#if !SINGLE_SHOT
+#if !SINGLE_SHOT
 	  /*
 	   * 500 samples - 1.7 ms
 	   * with averaging - 2.7 ms
 	   * for averaging - 1 ms
 	   */
-	  GPIOB->ODR |= (1<<4);
+	  //GPIOB->ODR |= (1<<4);
 	  for(int i = 0;i<samples;i++)
 	  {
 		  //Set the data on the TOC HMI screen
 		   arrayADC[i] = InternalADCRead() * (3.3f/4096.0f);
 	  }
-	  GPIOB->ODR &= ~(1<<4);
+	  //GPIOB->ODR &= ~(1<<4);
 	  float avgADC = 0;
 	  for(int i = 0;i<samples;i++)
 		  avgADC += arrayADC[i] / avgs;
 
+	  //For reference
 	  InputRegister_t.PV_info.TOC = avgADC;
-
+	  /*Cleaning tank is not empty*/
+	  if(avgADC <= 2.3f)
+	  {
+		  AWAOperationStatus_t.CleaningTankEmpty = RESET;
+	  }
+	  /* Cleaning tank is empty*/
+	  else
+	  {
+		  AWAOperationStatus_t.CleaningTankEmpty = SET;
+	  }
 
 	  /*Stop the ADC*/
 //	  HAL_ADC_Stop(&hadc1);
