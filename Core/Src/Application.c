@@ -16,6 +16,7 @@
 #include <string.h>
 #include "FM24CL64B.h"
 #include <stdio.h>
+#include "Initialization.h"
 
 uint16_t CurrentTestValues_mA[5] = {4,8,12,16,20};
 
@@ -2960,4 +2961,51 @@ void TSScalculateValue(void)
 		InputRegister_t.PV_info.TSSValue = TSS_MeasurementValues_t.Cal_Value;
 	InputRegister_t.PV_info.TSSValueUser = TSS_MeasurementValues_t.Cal_Value; 	/*<Reference for the Developer, can be negative value*/
 
+}
+
+void FlowSensorReadStatus(void)
+{
+
+	  float arrayADC [1000];
+	  uint16_t samples = 100;
+	  float avgs = (float)samples;
+
+	  /*
+	   * 500 samples - 1.7 ms
+	   * with averaging - 2.7 ms
+	   * for averaging - 1 ms
+	   */
+	  //GPIOB->ODR |= (1<<4);
+	  for(int i = 0;i<samples;i++)
+	  {
+		  //Set the data on the TOC HMI screen
+		   arrayADC[i] = InternalADCRead() * (3.3f/4096.0f);
+	  }
+	  //GPIOB->ODR &= ~(1<<4);
+	  float avgADC = 0;
+	  for(int i = 0;i<samples;i++)
+		  avgADC += arrayADC[i] / avgs;
+
+	  //For reference
+	  InputRegister_t.PV_info.TOC = avgADC;
+	  InputRegister_t.SlotParameter.FlowSensorVolatge = avgADC;
+	  /*Cleaning tank is not empty*/
+	  if(avgADC <= HoldingRegister_t.ModeCommand_t.FlowSensorCutoff) //Limit can by set from HMI.
+	  {
+		  AWAOperationStatus_t.CleaningTankEmpty = RESET;
+		  CoilStatusRegister_t.CoilStatus_t.CleaningTankEmpty = RESET;
+	  }
+	  /* Cleaning tank is empty*/
+	  else
+	  {
+		  AWAOperationStatus_t.CleaningTankEmpty = SET;
+		  CoilStatusRegister_t.CoilStatus_t.CleaningTankEmpty = SET;/*Will display warning in HMI*/
+	  }
+}
+void MILSwitchReadStatus(void)
+{
+	/*MIL switch*/
+	uint32_t MIL_switch_status = HAL_GPIO_ReadPin(MIL_SWITCH_GPIO_Port, MIL_SWITCH_Pin);
+	CoilStatusRegister_t.CoilStatus_t.MILSwitchState = MIL_switch_status;
+//	InputRegister_t.PV_info.TOC = MIL_switch_status;//Testing
 }

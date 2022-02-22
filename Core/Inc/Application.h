@@ -128,4 +128,8 @@ void sensor_dataTransfer(struct Sensornode **head,LastCalibrationSensorHandle_t 
 void CODCalculateValue(void);
 
 void TSScalculateValue(void);
+
+void FlowSensorReadStatus(void);
+
+void MILSwitchReadStatus(void);
 #endif /* INC_APPLICATION_H_ */

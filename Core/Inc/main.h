@@ -499,7 +499,7 @@ typedef struct{
 	uint8_t CleanReady;			/*<NA*/
 	uint8_t ADCReadStart;		/*<NA*/
 	uint8_t CleaningTankEmpty;	/*<Bit Set if Cleaning tank is empty*/
-	uint8_t sample_pump;		/*<NA*/
+	uint8_t MILSwitchState;		/*<State - Yet to be defined.*/
 	uint8_t measure;			/*<NA*/
 	uint8_t read_acid;			/*<NA*/
 	uint8_t read_sample;		/*<NA*/
@@ -696,6 +696,8 @@ void Error_Handler(void);
 #define RELAY_3_GPIO_Port GPIOC
 #define RELAY_4_Pin GPIO_PIN_3
 #define RELAY_4_GPIO_Port GPIOC
+#define MIL_SWITCH_Pin GPIO_PIN_0
+#define MIL_SWITCH_GPIO_Port GPIOA
 #define RELAY_5_Pin GPIO_PIN_4
 #define RELAY_5_GPIO_Port GPIOA
 #define CARD_5_ID1_Pin GPIO_PIN_5

@@ -329,7 +329,7 @@ int main(void)
 		  avgADC += arrayADC[i] / avgs;
 
 	  //For reference
-	  InputRegister_t.PV_info.TOC = avgADC;
+	  //InputRegister_t.PV_info.TOC = avgADC;
 	  InputRegister_t.SlotParameter.FlowSensorVolatge = avgADC;
 	  /*Cleaning tank is not empty*/
 	  if(avgADC <= HoldingRegister_t.ModeCommand_t.FlowSensorCutoff) //Limit can by set from HMI.
@@ -343,6 +343,9 @@ int main(void)
 		  AWAOperationStatus_t.CleaningTankEmpty = SET;
 		  CoilStatusRegister_t.CoilStatus_t.CleaningTankEmpty = SET;/*Will display warning in HMI*/
 	  }
+
+	  /*COD process controls*/
+	  MILSwitchReadStatus();
   }
   /* USER CODE END 3 */
 }
@@ -968,19 +971,19 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : MIL_SWITCH_Pin CARD_5_ID1_Pin CARD_5_ID2_Pin CARD_5_ID3_Pin
+                           CARD_3_ID1_Pin CARD_3_ID2_Pin */
+  GPIO_InitStruct.Pin = MIL_SWITCH_Pin|CARD_5_ID1_Pin|CARD_5_ID2_Pin|CARD_5_ID3_Pin
+                          |CARD_3_ID1_Pin|CARD_3_ID2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   /*Configure GPIO pins : RELAY_5_Pin ADM_CLTR_Pin CARD_3_SEL2_Pin */
   GPIO_InitStruct.Pin = RELAY_5_Pin|ADM_CLTR_Pin|CARD_3_SEL2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : CARD_5_ID1_Pin CARD_5_ID2_Pin CARD_5_ID3_Pin CARD_3_ID1_Pin
-                           CARD_3_ID2_Pin */
-  GPIO_InitStruct.Pin = CARD_5_ID1_Pin|CARD_5_ID2_Pin|CARD_5_ID3_Pin|CARD_3_ID1_Pin
-                          |CARD_3_ID2_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : CARD_5_PWR_Pin CARD_5_SPI_SS_Pin SYS_LED_STATUS_Pin RELAY_1_Pin
