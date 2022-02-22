@@ -37,8 +37,8 @@ extern "C" {
 #define MODBUS_1000_BYTES					1
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1500
 #define UART_6_RX_DESTINATION_ADDR			(uint32_t)0x20005000
-uint8_t dma_tx_flag_AT;
-uint8_t dma_tx_flag_uart1;
+uint8_t DMA_TX_FLAG;
+uint8_t DMA_TX_FLAG_HMI;
 //If you want to skip the auto zero process for the HMI testing
 //#define HMI_TEST
 // Card IDs
@@ -538,6 +538,11 @@ typedef union{
 		float TOC_Value;
 		float pH_mV;
 		float Temperature;
+		float FlowSensorVoltage;
+		float FlowSensorStatus;
+		float MILSwitchStatus;
+		uint16_t main_cmd;
+		uint16_t common_cmd;
 		/*2-pt calibration*/
 		float COD_slope;
 		float COD_intercept;
@@ -1325,6 +1330,7 @@ typedef union{
 		unsigned AWADataSave_Calibration	: 1;//if not saved '1', else '0'
 		unsigned CleaningTankEmpty			: 1;	/*<If SET then Set As Zero won't be accessible
 		 	 	 	 	 	 	 	 	 	 	 	 	 Warning on the HMI*/
+		unsigned MILSwitchState				: 1;
 	};
 }AWAOperationHandle_t;
 AWAOperationHandle_t AWAOperationStatus_t;

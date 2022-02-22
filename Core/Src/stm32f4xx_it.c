@@ -591,7 +591,7 @@ void DMA2_Stream6_IRQHandler(void)
 	DMAPeripheralEnable(DMA2_Stream2,ENABLE);
 
 	/*Make the Direction GPIO pin LOW*/
-	dma_tx_flag_AT = 1;
+	DMA_TX_FLAG = 1;
 }
 
 /*UART 1 RX*/
@@ -739,7 +739,7 @@ void DMA2_Stream7_IRQHandler(void)
 	DMAPeripheralEnable(DMA2_Stream5,ENABLE);
 
 	/*Make the Direction GPIO pin LOW*/
-	dma_tx_flag_uart1 = 1;
+	DMA_TX_FLAG_HMI = 1;
 }
 
 

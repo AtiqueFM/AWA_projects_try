@@ -289,6 +289,11 @@ int main(void)
 		  UHolding_Modbus_2.TSS_intercept = TSS_SensorCalibration_t.intercept;
 		  UHolding_Modbus_2.pH_slope = pH_SensorCalibpoints_t.pH_Solpe;
 		  UHolding_Modbus_2.pH_intercept = pH_SensorCalibpoints_t.pH_Intercept;
+		  UHolding_Modbus_2.FlowSensorStatus = AWAOperationStatus_t.CleaningTankEmpty;
+		  UHolding_Modbus_2.FlowSensorVoltage = InputRegister_t.SlotParameter.FlowSensorVolatge;
+		  UHolding_Modbus_2.MILSwitchStatus = AWAOperationStatus_t.MILSwitchState;
+		  UHolding_Modbus_2.main_cmd = (HoldingRegister_t.ModeCommand_t.ModeCommand_H<<8) | (HoldingRegister_t.ModeCommand_t.ModeCommand_L);
+		  UHolding_Modbus_2.common_cmd = HoldingRegister_t.ModeCommand_t.CommonCommand;
 		  MOD2_RxFlag = 0;
 		  //ProcessMOD2_ModbusQuery();
 		  ProcessMOD2_ModbusQuery_DMA();
@@ -300,51 +305,20 @@ int main(void)
 	  }
 
 	  //RTU
-	  if(dma_tx_flag_AT == 1)
+	  if(DMA_TX_FLAG == 1)
 	  {
 		  ADM_2_CLTR_LOW();
-		  dma_tx_flag_AT = 0;
+		  DMA_TX_FLAG = 0;
 	  }
 	  //HMI
-	  if(dma_tx_flag_uart1 == 1)
+	  if(DMA_TX_FLAG_HMI == 1)
 	  {
 		  ADM_CLTR_LOW();
-		  dma_tx_flag_uart1 = 0;
-	  }
-
-	  /*
-	   * 500 samples - 1.7 ms
-	   * with averaging - 2.7 ms
-	   * for averaging - 1 ms
-	   */
-	  //GPIOB->ODR |= (1<<4);
-	  for(int i = 0;i<samples;i++)
-	  {
-		  //Set the data on the TOC HMI screen
-		   arrayADC[i] = InternalADCRead() * (3.3f/4096.0f);
-	  }
-	  //GPIOB->ODR &= ~(1<<4);
-	  float avgADC = 0;
-	  for(int i = 0;i<samples;i++)
-		  avgADC += arrayADC[i] / avgs;
-
-	  //For reference
-	  //InputRegister_t.PV_info.TOC = avgADC;
-	  InputRegister_t.SlotParameter.FlowSensorVolatge = avgADC;
-	  /*Cleaning tank is not empty*/
-	  if(avgADC <= HoldingRegister_t.ModeCommand_t.FlowSensorCutoff) //Limit can by set from HMI.
-	  {
-		  AWAOperationStatus_t.CleaningTankEmpty = RESET;
-		  CoilStatusRegister_t.CoilStatus_t.CleaningTankEmpty = RESET;
-	  }
-	  /* Cleaning tank is empty*/
-	  else
-	  {
-		  AWAOperationStatus_t.CleaningTankEmpty = SET;
-		  CoilStatusRegister_t.CoilStatus_t.CleaningTankEmpty = SET;/*Will display warning in HMI*/
+		  DMA_TX_FLAG_HMI = 0;
 	  }
 
 	  /*COD process controls*/
+	  FlowSensorReadStatus();
 	  MILSwitchReadStatus();
   }
   /* USER CODE END 3 */
