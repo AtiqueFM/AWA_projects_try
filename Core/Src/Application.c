@@ -52,6 +52,13 @@ struct Sensornode *TSSSensorhead = '\0'; 	/*<Head for COD Sensor Calibration*/
 struct Factorynode *CODFactoryhead = '\0'; 	/*<Head for COD Sensor Calibration*/
 struct Factorynode *TSSFactoryhead = '\0'; 	/*<Head for COD Sensor Calibration*/
 
+/*
+ * Analyzer range:- Parameter limit select
+ */
+float COD_UpperLimit;
+float BOD_UpperLimit;
+float TSS_UpperLimit;
+
 void ProcessModesCommands(void)
 {
 	if(HoldingRegister_t.ModeCommand_t.ModeCommand_H == RUN_MODE)
@@ -753,6 +760,9 @@ void ProcessModesCommands(void)
 				RelayToggle();
 				//RelayToggleCoilInputUpdate();
 			}
+			case Select_Range:
+				AWA_RangeSelect();
+			break;
 		}
 	}
 	else if(HoldingRegister_t.ModeCommand_t.ModeCommand_H == CHECK_MODE)
@@ -1349,6 +1359,11 @@ uint8_t CODADCCapture(uint8_t command)
 					//BOD value
 					InputRegister_t.PV_info.BODValue = 0;		/*<Display to the Customer,only positive value*/
 				}
+				else if(COD_MeasurementValues_t.Cal_Value > COD_UpperLimit)
+				{
+					InputRegister_t.PV_info.CODValue = COD_UpperLimit;
+					InputRegister_t.PV_info.BODValue = HoldingRegister_t.ModeCommand_t.BOD_CF * BOD_UpperLimit;
+				}
 				else
 				{
 					InputRegister_t.PV_info.CODValue = COD_MeasurementValues_t.Cal_Value;
@@ -1362,6 +1377,10 @@ uint8_t CODADCCapture(uint8_t command)
 				InputRegister_t.PV_info.TSS_RAW = TSS_RAW;
 				if(TSS_MeasurementValues_t.Cal_Value < 0)
 					InputRegister_t.PV_info.TSSValue = 0.0f;	/*<Display to the Customer,only positive value*/
+				else if(TSS_MeasurementValues_t.Cal_Value > TSS_UpperLimit)
+				{
+					InputRegister_t.PV_info.TSSValue = TSS_UpperLimit;
+				}
 				else
 					InputRegister_t.PV_info.TSSValue = TSS_MeasurementValues_t.Cal_Value;
 				InputRegister_t.PV_info.TSSValueUser = TSS_MeasurementValues_t.Cal_Value; 	/*<Reference for the Developer, can be negative value*/
@@ -2960,4 +2979,21 @@ void TSScalculateValue(void)
 		InputRegister_t.PV_info.TSSValue = TSS_MeasurementValues_t.Cal_Value;
 	InputRegister_t.PV_info.TSSValueUser = TSS_MeasurementValues_t.Cal_Value; 	/*<Reference for the Developer, can be negative value*/
 
+}
+
+void AWA_RangeSelect(void)
+{
+	uint8_t AnalyzerRange = HoldingRegister_t.ModeCommand_t.RANGESELECT;
+
+	switch(AnalyzerRange)
+	{
+	case MODEL_3021_3022:
+		/*TODO: Load the default calibration and device configurations*/
+
+		/*TODO: Set the parameter display limit.*/
+		COD_UpperLimit = (float)COD_800_UPPER;
+		BOD_UpperLimit = COD_UpperLimit / 2.0f;
+		TSS_UpperLimit = (float)TSS_750_UPPER;
+		break;
+	}
 }

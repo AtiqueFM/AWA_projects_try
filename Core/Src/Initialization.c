@@ -108,7 +108,7 @@ void HoldingRegisterdefaultData(void)
 
 	HoldingRegister_t.ModeCommand_t.BOD_CF = 0.2f;
 
-#if 1
+#if 0
 	double data[10] = {95,150,240,360,450,500,620,700,750,800};
 	for(int i = 0;i<10;i++)
 	{
@@ -213,6 +213,7 @@ void HoldingRegisterdefaultData(void)
 	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0x03;//Manual temp input
 	HoldingRegister_t.ModeCommand_t.Temperature_setPoint = 25.0f;//Temperature set point
 	HoldingRegister_t.ModeCommand_t.FlowSensorCutoff = 2.3f;
+	HoldingRegister_t.ModeCommand_t.RANGESELECT = MODEL_3021_3022;/*<COD:800; TSS:750*/
 
 	/*<Last Calibration Data*/
 //	InputRegister_t.COD_lastCalibration[0].C[0] = 10.2f;

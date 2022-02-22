@@ -324,7 +324,7 @@ typedef struct{
 	uint16_t PUMP1_DELAY;
 	uint16_t PUMP2_ONTIME;
 	uint16_t PUMP2_DELAY;
-	uint16_t SPARE;
+	uint16_t RANGESELECT; 			/*<Range select for the Analyzer; @ref RANGE_SELECT_MACRO*/
 	uint16_t AI1_unit;
 	uint16_t AI2_unit;
 	float AI1_SF;
@@ -913,6 +913,7 @@ void Error_Handler(void);
 #define CalibrateCOD							0x32
 #define TSSCoeffs								0x33
 #define CalibrateTSS							0x34
+#define Select_Range							0x41 /*<Set button*/
 
 
 /*CHECK*/
@@ -1282,6 +1283,26 @@ void Error_Handler(void);
 #define HMI_INTERLOCK_SENSOR_READACID			7	/*<For acid pump and flashing*/
 #define HMI_INTERLOCK_SENSOR_READSAMPLE			8	/*<For sample pump and flashing*/
 #define HMI_INTERLOCKING_RESETALL				9	/*<For resetting all the buttons to orignal state*/
+
+
+/*
+ * @ref RANGE_SELECT_MACRO
+ */
+#define MODEL_3041_3042			1	/*<COD : 20000 mg/l*/
+#define MODEL_3051_3052			2	/*<COD : 05000 mg/l*/
+#define MODEL_3031_3032			3	/*<COD : 02000 mg/l*/
+#define MODEL_3021_3022			4	/*<COD : 00800 mg/l*/
+#define MODEL_3011_3012			5	/*<COD : 00200 mg/l*/
+
+/*Enum for parameter limit*/
+typedef enum{
+	COD_20000_UPPER	= 20000,
+	COD_5000_UPPER	= 5000,
+	COD_2000_UPPER	= 2000,
+	COD_800_UPPER	= 800,
+	COD_200_UPPER	= 200,
+	TSS_750_UPPER	= 750
+}AWA_RangeSelect_t;
 /*Control status bits*/
 typedef union{
 	uint16_t status;

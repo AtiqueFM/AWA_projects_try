@@ -128,4 +128,6 @@ void sensor_dataTransfer(struct Sensornode **head,LastCalibrationSensorHandle_t 
 void CODCalculateValue(void);
 
 void TSScalculateValue(void);
+
+void AWA_RangeSelect(void);
 #endif /* INC_APPLICATION_H_ */
