@@ -84,16 +84,20 @@ void HoldingRegisterdefaultData(void)
 	HoldingRegister_t.ModeCommand_t.ModeCommand_H = 0x22;
 	HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x01;
 
-	HoldingRegister_t.ModeCommand_t.PUMP1_ONTIME = 1;
+//	HoldingRegister_t.ModeCommand_t.PUMP1_ONTIME = 1;
 	//depricated code
 	g_u8PUMP_action = 0x01;//pump-on time
 	//default value for the pump action, this will start from the pump on and off then it will enter to the de-gas time (pump delay)
 	PUMPControlHandle_t.u8PUMP_action = 0x01;
-	HoldingRegister_t.ModeCommand_t.PUMP1_ONTIME = 10;
-	HoldingRegister_t.ModeCommand_t.PUMP1_DELAY = 1;
-	HoldingRegister_t.ModeCommand_t.PUMP2_ONTIME = 10;
-	HoldingRegister_t.ModeCommand_t.PUMP2_DELAY = 1;
 
+#if 0
+	HoldingRegister_t.ModeCommand_t.PUMP1_ONTIME = 20;
+	HoldingRegister_t.ModeCommand_t.PUMP1_DELAY = 1;
+	HoldingRegister_t.ModeCommand_t.PUMP2_ONTIME = 20;
+	HoldingRegister_t.ModeCommand_t.PUMP2_DELAY = 1;
+#endif
+
+#if 0
 	//Testing COD +ve values
 	HoldingRegister_t.ModeCommand_t.C[2] = 0.0002f;
 	HoldingRegister_t.ModeCommand_t.C[1] = 0.27108f;
@@ -103,12 +107,13 @@ void HoldingRegisterdefaultData(void)
 
 	COD_SensorCalibration_t.slope = HoldingRegister_t.SensorCalibration_t.COD_CF;
 	COD_SensorCalibration_t.intercept = HoldingRegister_t.SensorCalibration_t.COD_Intercept;
+#endif
 	//COD Sensor calibration, should start with capturing x1 and y1
 	COD_SensorCalibration_t.point_flag = 0;
 
-	HoldingRegister_t.ModeCommand_t.BOD_CF = 0.2f;
+	HoldingRegister_t.ModeCommand_t.BOD_CF = 0.5f;
 
-#if 1
+#if 0
 	double data[10] = {95,150,240,360,450,500,620,700,750,800};
 	for(int i = 0;i<10;i++)
 	{
@@ -132,7 +137,7 @@ void HoldingRegisterdefaultData(void)
 	//Default PD1 and PD2 Zero
 	//COD_MeasurementValues_t.PD1_Zero = 30988;
 	//COD_MeasurementValues_t.PD2_Zero = 23617;
-#if 1
+#if 0
 	InputRegister_t.PV_info.PD1_0 = 23000;//30988;
 	InputRegister_t.PV_info.PD2_0 = 30000;//23617;
 #endif
@@ -210,8 +215,8 @@ void HoldingRegisterdefaultData(void)
 	HoldingRegister_t.RelayOUTConfig_t[7].Relay_OP_HIGHLOW = 2;//HIGH = 1; LOW = 2
 #endif
 
-	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0x03;//Manual temp input
-	HoldingRegister_t.ModeCommand_t.Temperature_setPoint = 25.0f;//Temperature set point
+//	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0x03;//Manual temp input
+//	HoldingRegister_t.ModeCommand_t.Temperature_setPoint = 25.0f;//Temperature set point
 	HoldingRegister_t.ModeCommand_t.FlowSensorCutoff = 2.3f;
 
 	/*<Last Calibration Data*/

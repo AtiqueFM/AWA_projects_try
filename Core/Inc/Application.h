@@ -132,4 +132,6 @@ void TSScalculateValue(void);
 void FlowSensorReadStatus(void);
 
 void MILSwitchReadStatus(void);
+
+void pumpOperationStop(void);
 #endif /* INC_APPLICATION_H_ */
