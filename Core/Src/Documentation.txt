@@ -102,4 +102,9 @@ Date				:- 24/02/2022
 Updates				:-
 						1. MIL, Flow sensor and Stop button command for sampling and cleaning up added to COD 10 point calibration.	
 						2. Delay b/t value on and pump 1 on changed from 1000 to 500ms
-						3. Commented all the default calibration parameters.		
+						3. Commented all the default calibration parameters.	
+						
+Date 				:- 28/02/2022
+Updates				:- 
+						1. Added interlocking of MIL state in Sensor calibration of COD and TSS.
+						2. Moved the DMA TC flag in main loop from ISR -> caused the delay in pH card ADC reading.	

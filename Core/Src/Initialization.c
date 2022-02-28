@@ -89,6 +89,7 @@ void HoldingRegisterdefaultData(void)
 	g_u8PUMP_action = 0x01;//pump-on time
 	//default value for the pump action, this will start from the pump on and off then it will enter to the de-gas time (pump delay)
 	PUMPControlHandle_t.u8PUMP_action = 0x01;
+	SEL1_PT100();
 
 #if 0
 	HoldingRegister_t.ModeCommand_t.PUMP1_ONTIME = 20;
@@ -102,8 +103,10 @@ void HoldingRegisterdefaultData(void)
 	HoldingRegister_t.ModeCommand_t.C[2] = 0.0002f;
 	HoldingRegister_t.ModeCommand_t.C[1] = 0.27108f;
 	HoldingRegister_t.ModeCommand_t.C[0] = 0.23031f;
-	HoldingRegister_t.SensorCalibration_t.COD_CF = 1.21f;
-	HoldingRegister_t.SensorCalibration_t.COD_Intercept = -3.69f;
+#endif
+#if 0
+	HoldingRegister_t.SensorCalibration_t.COD_CF = 1.0f;
+	HoldingRegister_t.SensorCalibration_t.COD_Intercept = 0.4f;
 
 	COD_SensorCalibration_t.slope = HoldingRegister_t.SensorCalibration_t.COD_CF;
 	COD_SensorCalibration_t.intercept = HoldingRegister_t.SensorCalibration_t.COD_Intercept;

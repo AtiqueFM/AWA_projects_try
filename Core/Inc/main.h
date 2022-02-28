@@ -888,6 +888,7 @@ void Error_Handler(void);
 #define COD_SENSOR_MEASURE_pt1			0x18
 #define COD_SENSOR_MEASURE_pt2			0x19
 #define COD_SENSOR_MEASURE_pt3			0x20
+#define STOP_RUNNING_PUMP				0x99
 
 #define SETTING_CONFIG_MODE				0x23
 #define Default							0x11

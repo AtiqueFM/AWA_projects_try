@@ -307,19 +307,54 @@ int main(void)
 	  //RTU
 	  if(DMA_TX_FLAG == 1)
 	  {
-		  ADM_2_CLTR_LOW();
-		  DMA_TX_FLAG = 0;
+		/*Clear the UART6 Transfer complete flag*/
+		while(!(huart6.Instance->SR & USART_SR_TC));
+		huart6.Instance->SR &= !USART_SR_TC;
+
+		/*Disable the UART DMA Tx*/
+		huart6.Instance->CR3 &= !USART_CR3_DMAT;
+
+		/*Enable the UART DMA Rx*/
+		huart6.Instance->CR3 |= USART_CR3_DMAR;
+
+		/*Enable the Stream 2 IRQ*/
+		HAL_NVIC_EnableIRQ(DMA2_Stream2_IRQn);
+
+		/*Enable the Stream 2*/
+		DMAPeripheralEnable(DMA2_Stream2,ENABLE);
+		ADM_2_CLTR_LOW();
+		DMA_TX_FLAG = 0;
 	  }
 	  //HMI
 	  if(DMA_TX_FLAG_HMI == 1)
 	  {
-		  ADM_CLTR_LOW();
-		  DMA_TX_FLAG_HMI = 0;
+		/*Clear the UART1 Transfer complete flag*/
+		while(!(huart1.Instance->SR & USART_SR_TC));
+		huart1.Instance->SR &= !USART_SR_TC;
+
+		/*Disable the UART DMA Tx*/
+		huart1.Instance->CR3 &= !USART_CR3_DMAT;
+
+		/*Enable the UART DMA Rx*/
+		huart1.Instance->CR3 |= USART_CR3_DMAR;
+
+		/*Configure the Stream 5 Rx with DMA_FIRST_TRANSACTION_NO*/
+		DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),DMA_FIRST_TRANSACTION_NO);
+
+		/*Enable the Stream 5 IRQ*/
+		//HAL_NVIC_EnableIRQ(DMA2_Stream5_IRQn);
+
+		/*Enable the Stream 5*/
+		DMAPeripheralEnable(DMA2_Stream5,ENABLE);
+
+		ADM_CLTR_LOW();
+		DMA_TX_FLAG_HMI = 0;
 	  }
 
 	  /*COD process controls*/
 	  FlowSensorReadStatus();
 	  MILSwitchReadStatus();
+
   }
   /* USER CODE END 3 */
 }

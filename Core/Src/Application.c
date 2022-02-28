@@ -66,7 +66,7 @@ void ProcessModesCommands(void)
 				AWAOperationStatus_t.CalibrationMode = 0;
 				AWAOperationStatus_t.FactoryMode = 0;
 				//Auto measurement, background process
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == AUTO_COD_MEASURE)
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == AUTO_COD_MEASURE  && AWAOperationStatus_t.MILSwitchState == SET)
 				{
 					//First operate the sample pump
 					PumpOperation(0x02);
@@ -74,11 +74,18 @@ void ProcessModesCommands(void)
 					//perform the ADC measurement action when the pump action is completed
 					if(!PUMPControlHandle_t.u8Flag_measurement)
 						HoldingRegister_t.ModeCommand_t.CommonCommand = COD_Measure;
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == AUTO_COD_MEASURE && AWAOperationStatus_t.MILSwitchState == RESET)
+				{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+					pumpOperationStop();
 				}
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
 				{
 					CODADCCapture(COD_Measure);
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && PUMPControlHandle_t.u8Flag_measurement)
+				{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
 				//Perform the Auto Zero process
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == AUTO_COD_ZERO)
@@ -253,6 +260,16 @@ void ProcessModesCommands(void)
 				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt3)
 					COD_SensorCalib_ypoint(3);
 
+				/*Stop sampling pump, if MIL state is RESET*/
+				if((HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt1
+					|| HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt2
+					|| HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt3)
+					&& AWAOperationStatus_t.MILSwitchState == RESET)
+				{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+					pumpOperationStop();
+				}
+
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
 				{
@@ -292,6 +309,16 @@ void ProcessModesCommands(void)
 				//Measure sample 2
 				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt3)
 					COD_SensorCalib_ypoint(3);
+
+				/*Stop sampling pump, if MIL state is RESET*/
+				if((HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt1
+					|| HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt2
+					|| HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt3)
+					&& AWAOperationStatus_t.MILSwitchState == RESET)
+				{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+					pumpOperationStop();
+				}
 
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
@@ -711,7 +738,7 @@ void ProcessModesCommands(void)
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
 				/*Emergency Pump Stop*/
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == 0x99)
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
 					pumpOperationStop();
 				break;
 			}
@@ -754,21 +781,23 @@ void ProcessModesCommands(void)
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_Measure && !PUMPControlHandle_t.u8Flag_measurement)
 				{
-#ifdef HMI_TEST
-					CODADCCapture(AUTO_COD_ZERO);
-#else
 					CODADCCapture(TSS_Measure);
-#endif
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_Measure && PUMPControlHandle_t.u8Flag_measurement)
+				{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION)
 				{
 					//operate the cleaning pump
 					PumpOperation(0x01);
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION)
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == SET)
 				{
 					//operate the sample pump
 					PumpOperation(0x02);
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == RESET)
+				{
+					pumpOperationStop();
 				}
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_FACTORY_SETASZERO
 						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
@@ -788,6 +817,9 @@ void ProcessModesCommands(void)
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 				}
+				/*Emergency Pump Stop*/
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
+					pumpOperationStop();
 				break;
 			}
 			case Relay_test:
@@ -1076,13 +1108,14 @@ void CardAction(uint8_t CardID)
 
 	case MI420:
 		AdCounts_pH = 0;
+#if 0
 		//Software PT100 select SEL1 pin HIGH
 		if(HoldingRegister_t.IOUTCalibandTest_t.CalibrationType == TEMP_TYPE_PT100)//PT100
 			SEL1_PT100();
 		//Software PT1000 select SEL1 pin LOW
 		else
 			SEL1_PT1000();
-
+#endif
 		//Initialize the ADC for temperature configuration
 		ADS1115_OperationInit_Temperature();
 
