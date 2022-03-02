@@ -2539,7 +2539,7 @@ void ParameterIOutProcess(void)
 
 void ParameterRelayAlarmProcess(void)
 {
-	for(int relay = 0;relay <7; relay++)
+	for(int relay = 0;relay <8; relay++)
 	{
 		float threshold = HoldingRegister_t.RelayOUTConfig_t[relay].Relay_OP_Threshold;
 		uint16_t parameterIndex = HoldingRegister_t.RelayOUTConfig_t[relay].Relay_OP_Parameter - 1;

@@ -88,7 +88,7 @@ void HoldingRegisterdefaultData(void)
 	//depricated code
 	g_u8PUMP_action = 0x01;//pump-on time
 	//default value for the pump action, this will start from the pump on and off then it will enter to the de-gas time (pump delay)
-	PUMPControlHandle_t.u8PUMP_action = 0x01;
+//	PUMPControlHandle_t.u8PUMP_action = 0x01;
 	SEL1_PT100();
 
 #if 0

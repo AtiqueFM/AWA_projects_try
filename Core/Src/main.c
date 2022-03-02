@@ -252,7 +252,7 @@ int main(void)
 			ParameterIOutProcess();
 
 			//Relay Output
-			//ParameterRelayAlarmProcess();
+			ParameterRelayAlarmProcess();
 		  }
 
 	  }

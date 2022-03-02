@@ -108,3 +108,7 @@ Date 				:- 28/02/2022
 Updates				:- 
 						1. Added interlocking of MIL state in Sensor calibration of COD and TSS.
 						2. Moved the DMA TC flag in main loop from ISR -> caused the delay in pH card ADC reading.	
+						
+Date				:- 2/2/2022
+Updates				:-
+						1. uncommented the Relay operations, and tested with masibus for pH parameter.
