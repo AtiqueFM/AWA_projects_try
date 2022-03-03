@@ -114,7 +114,7 @@ void HoldingRegisterdefaultData(void)
 	//COD Sensor calibration, should start with capturing x1 and y1
 	COD_SensorCalibration_t.point_flag = 0;
 
-	HoldingRegister_t.ModeCommand_t.BOD_CF = 0.5f;
+//	HoldingRegister_t.ModeCommand_t.BOD_CF = 0.5f;
 
 #if 0
 	double data[10] = {95,150,240,360,450,500,620,700,750,800};
@@ -128,15 +128,15 @@ void HoldingRegisterdefaultData(void)
 	}
 #endif
 	//PT100
-	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0X01;
+//	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0X01;
 //	HoldingRegister_t.ModeCommand_t.COD_Y[] = {95,150,240,360,450,500,620,700,750,800};
 
 	//When the system is rebooted or booted for the first time user is supposed to measure the PD1 and PD2 zero values
 	COD_MeasurementStatus.COD_ZERO = 0x00;
 
 	//COD SF default value
-	HoldingRegister_t.ModeCommand_t.COD_SF = 100.0f;
-	HoldingRegister_t.ModeCommand_t.TSS_SF = 500.0f;
+//	HoldingRegister_t.ModeCommand_t.COD_SF = 100.0f;
+//	HoldingRegister_t.ModeCommand_t.TSS_SF = 500.0f;
 	//Default PD1 and PD2 Zero
 	//COD_MeasurementValues_t.PD1_Zero = 30988;
 	//COD_MeasurementValues_t.PD2_Zero = 23617;
@@ -220,7 +220,7 @@ void HoldingRegisterdefaultData(void)
 
 //	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0x03;//Manual temp input
 //	HoldingRegister_t.ModeCommand_t.Temperature_setPoint = 25.0f;//Temperature set point
-	HoldingRegister_t.ModeCommand_t.FlowSensorCutoff = 2.3f;
+//	HoldingRegister_t.ModeCommand_t.FlowSensorCutoff = 2.3f;
 
 	/*<Last Calibration Data*/
 //	InputRegister_t.COD_lastCalibration[0].C[0] = 10.2f;

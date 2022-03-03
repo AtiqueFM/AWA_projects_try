@@ -2545,8 +2545,9 @@ void ParameterRelayAlarmProcess(void)
 		uint16_t parameterIndex = HoldingRegister_t.RelayOUTConfig_t[relay].Relay_OP_Parameter - 1;
 //		if(parameterIndex >	5)
 //			return 0;
-		float hysterisis =  HoldingRegister_t.RelayOUTConfig_t[relay].Relay_OP_Hysterisis;
+		float hysterisis =  HoldingRegister_t.RelayOUTConfig_t[relay].Relay_OP_Hysterisis; /*<Percentage*/
 		float parameterValue = ParameterValues_t.value[parameterIndex];
+		hysterisis = threshold * hysterisis / 100.0f; /*<Value of hysteresis from percentage*/
 		if(HoldingRegister_t.RelayOUTConfig_t[relay].Relay_OP_HIGHLOW == 0x01)//high
 		{
 			if(parameterValue >= threshold)
@@ -3065,7 +3066,7 @@ void FlowSensorReadStatus(void)
 		  avgADC += arrayADC[i] / avgs;
 
 	  //For reference
-	  InputRegister_t.PV_info.TOC = avgADC;
+//	  InputRegister_t.PV_info.TOC = avgADC;
 	  InputRegister_t.SlotParameter.FlowSensorVolatge = avgADC;
 	  /*Cleaning tank is not empty*/
 	  if(avgADC <= HoldingRegister_t.ModeCommand_t.FlowSensorCutoff) //Limit can by set from HMI.
