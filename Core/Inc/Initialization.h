@@ -58,4 +58,7 @@ uint16_t InternalADCRead(void);
 
 /*Internal ADC start conversion*/
 void InternalADCStartConversion(void);
+
+/*Default calibration values*/
+void CalibrationDefaultValue(uint8_t AnalyzerRange);
 #endif /* INC_INITIALIZATION_H_ */

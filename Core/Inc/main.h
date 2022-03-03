@@ -1300,7 +1300,7 @@ void Error_Handler(void);
 #define MODEL_3051_3052			2	/*<COD : 05000 mg/l*/
 #define MODEL_3031_3032			3	/*<COD : 02000 mg/l*/
 #define MODEL_3021_3022			4	/*<COD : 00800 mg/l*/
-#define MODEL_3011_3012			5	/*<COD : 00200 mg/l*/
+#define MODEL_3011_3012			5	/*<COD : 00300 mg/l*/
 
 /*Enum for parameter limit*/
 typedef enum{
