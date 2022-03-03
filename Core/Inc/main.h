@@ -541,8 +541,6 @@ typedef union{
 		float FlowSensorVoltage;
 		float FlowSensorStatus;
 		float MILSwitchStatus;
-		uint16_t main_cmd;
-		uint16_t common_cmd;
 		/*2-pt calibration*/
 		float COD_slope;
 		float COD_intercept;
@@ -550,6 +548,11 @@ typedef union{
 		float TSS_intercept;
 		float pH_slope;
 		float pH_intercept;
+		float PD_1;
+		float PD_2;
+		float RES[50];
+		uint16_t main_cmd;
+		uint16_t common_cmd;
 	};
 }UHolding_Modbus_2_t;
 UHolding_Modbus_2_t UHolding_Modbus_2;

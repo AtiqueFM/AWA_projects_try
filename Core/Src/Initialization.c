@@ -84,164 +84,23 @@ void HoldingRegisterdefaultData(void)
 	//Device will start from RUN->Batch mode
 	HoldingRegister_t.ModeCommand_t.ModeCommand_H = 0x22;
 	HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x01;
-
 //	HoldingRegister_t.ModeCommand_t.PUMP1_ONTIME = 1;
 	//depricated code
 	g_u8PUMP_action = 0x01;//pump-on time
 	//default value for the pump action, this will start from the pump on and off then it will enter to the de-gas time (pump delay)
 	PUMPControlHandle_t.u8PUMP_action = 0x01;
 	SEL1_PT100();
-
-#if 0
-	HoldingRegister_t.ModeCommand_t.PUMP1_ONTIME = 20;
-	HoldingRegister_t.ModeCommand_t.PUMP1_DELAY = 1;
-	HoldingRegister_t.ModeCommand_t.PUMP2_ONTIME = 20;
-	HoldingRegister_t.ModeCommand_t.PUMP2_DELAY = 1;
-#endif
-
-#if 0
-	//Testing COD +ve values
-	HoldingRegister_t.ModeCommand_t.C[2] = 0.0002f;
-	HoldingRegister_t.ModeCommand_t.C[1] = 0.27108f;
-	HoldingRegister_t.ModeCommand_t.C[0] = 0.23031f;
-#endif
-#if 0
-	HoldingRegister_t.SensorCalibration_t.COD_CF = 1.0f;
-	HoldingRegister_t.SensorCalibration_t.COD_Intercept = 0.4f;
-
-	COD_SensorCalibration_t.slope = HoldingRegister_t.SensorCalibration_t.COD_CF;
-	COD_SensorCalibration_t.intercept = HoldingRegister_t.SensorCalibration_t.COD_Intercept;
-#endif
 	//COD Sensor calibration, should start with capturing x1 and y1
 	COD_SensorCalibration_t.point_flag = 0;
-
-//	HoldingRegister_t.ModeCommand_t.BOD_CF = 0.5f;
-
-#if 0
-	double data[10] = {95,150,240,360,450,500,620,700,750,800};
-	for(int i = 0;i<10;i++)
-	{
-		HoldingRegister_t.ModeCommand_t.COD_X[i] = (i+1)*100;
-		HoldingRegister_t.ModeCommand_t.COD_Y[i] = data[i];
-
-		HoldingRegister_t.ModeCommand_t.TSS_F[i] = (i+1)*100;
-		HoldingRegister_t.ModeCommand_t.TSS_G[i] = data[i];
-	}
-#endif
-	//PT100
-//	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0X01;
-//	HoldingRegister_t.ModeCommand_t.COD_Y[] = {95,150,240,360,450,500,620,700,750,800};
-
 	//When the system is rebooted or booted for the first time user is supposed to measure the PD1 and PD2 zero values
 	COD_MeasurementStatus.COD_ZERO = 0x00;
-
-	//COD SF default value
-//	HoldingRegister_t.ModeCommand_t.COD_SF = 100.0f;
-//	HoldingRegister_t.ModeCommand_t.TSS_SF = 500.0f;
-	//Default PD1 and PD2 Zero
-	//COD_MeasurementValues_t.PD1_Zero = 30988;
-	//COD_MeasurementValues_t.PD2_Zero = 23617;
-#if 0
-	InputRegister_t.PV_info.PD1_0 = 23000;//30988;
-	InputRegister_t.PV_info.PD2_0 = 30000;//23617;
-#endif
-
 	//Set the COD Auto Zero flag as we have default data
 	COD_MeasurementStatus.COD_ZERO = 0x01;
-
 
 	//testing purpose
 	InputRegister_t.PV_info.CODValue = 0;//12.99;
 	InputRegister_t.PV_info.BODValue = 0;//111.23;
 	InputRegister_t.PV_info.TSSValue = 0;//56.88;
-
-	//HoldingRegister_t.ModeCommand_t.Epoch_Timestamp = 0x12345678;
-
-#if 0
-	//test
-	HoldingRegister_t.IOUTConfig_t[0].Current_OP_option = 1; //cod
-	HoldingRegister_t.IOUTConfig_t[0].Current_OP_MIN_Value = 0.0f;
-	HoldingRegister_t.IOUTConfig_t[0].Current_OP_MAX_Value = 160.0f;
-
-	HoldingRegister_t.IOUTConfig_t[1].Current_OP_option = 2; //BOD
-	HoldingRegister_t.IOUTConfig_t[1].Current_OP_MIN_Value = 0.0f;
-	HoldingRegister_t.IOUTConfig_t[1].Current_OP_MAX_Value = 100.0f;
-
-	HoldingRegister_t.IOUTConfig_t[2].Current_OP_option = 4;
-	HoldingRegister_t.IOUTConfig_t[2].Current_OP_MIN_Value = 0.0f;
-	HoldingRegister_t.IOUTConfig_t[2].Current_OP_MAX_Value = 14.0f;
-
-	HoldingRegister_t.IOUTConfig_t[3].Current_OP_option = 4;
-	HoldingRegister_t.IOUTConfig_t[3].Current_OP_MIN_Value = 0.0f;
-	HoldingRegister_t.IOUTConfig_t[3].Current_OP_MAX_Value = 14.0f;
-#endif
-
-#if 0
-	//Default data for Alarm output
-	HoldingRegister_t.RelayOUTConfig_t[0].Relay_OP_Parameter = 1; //COD
-	HoldingRegister_t.RelayOUTConfig_t[0].Relay_OP_Hysterisis = 50;//ppm
-	HoldingRegister_t.RelayOUTConfig_t[0].Relay_OP_Threshold = 500;//ppm
-	HoldingRegister_t.RelayOUTConfig_t[0].Relay_OP_HIGHLOW = 1;//HIGH = 1; LOW = 2
-
-	HoldingRegister_t.RelayOUTConfig_t[1].Relay_OP_Parameter = 1; //COD
-	HoldingRegister_t.RelayOUTConfig_t[1].Relay_OP_Hysterisis = 50;//ppm
-	HoldingRegister_t.RelayOUTConfig_t[1].Relay_OP_Threshold = 500;//ppm
-	HoldingRegister_t.RelayOUTConfig_t[1].Relay_OP_HIGHLOW = 2;//HIGH = 1; LOW = 2
-
-	HoldingRegister_t.RelayOUTConfig_t[2].Relay_OP_Parameter = 2; //BOD
-	HoldingRegister_t.RelayOUTConfig_t[2].Relay_OP_Hysterisis = 50;//ppm
-	HoldingRegister_t.RelayOUTConfig_t[2].Relay_OP_Threshold = 500;//ppm
-	HoldingRegister_t.RelayOUTConfig_t[2].Relay_OP_HIGHLOW = 1;//HIGH = 1; LOW = 2
-
-	HoldingRegister_t.RelayOUTConfig_t[3].Relay_OP_Parameter = 2; //BOD
-	HoldingRegister_t.RelayOUTConfig_t[3].Relay_OP_Hysterisis = 50;//ppm
-	HoldingRegister_t.RelayOUTConfig_t[3].Relay_OP_Threshold = 500;//ppm
-	HoldingRegister_t.RelayOUTConfig_t[3].Relay_OP_HIGHLOW = 2;//HIGH = 1; LOW = 2
-
-	HoldingRegister_t.RelayOUTConfig_t[4].Relay_OP_Parameter = 3; //TSS
-	HoldingRegister_t.RelayOUTConfig_t[4].Relay_OP_Hysterisis = 50;//ppm
-	HoldingRegister_t.RelayOUTConfig_t[4].Relay_OP_Threshold = 500;//ppm
-	HoldingRegister_t.RelayOUTConfig_t[4].Relay_OP_HIGHLOW = 1;//HIGH = 1; LOW = 2
-
-	HoldingRegister_t.RelayOUTConfig_t[5].Relay_OP_Parameter = 3; //TSS
-	HoldingRegister_t.RelayOUTConfig_t[5].Relay_OP_Hysterisis = 50;//ppm
-	HoldingRegister_t.RelayOUTConfig_t[5].Relay_OP_Threshold = 500;//ppm
-	HoldingRegister_t.RelayOUTConfig_t[5].Relay_OP_HIGHLOW = 1;//HIGH = 1; LOW = 2
-
-	HoldingRegister_t.RelayOUTConfig_t[6].Relay_OP_Parameter = 4; //pH
-	HoldingRegister_t.RelayOUTConfig_t[6].Relay_OP_Hysterisis = 10;//ph
-	HoldingRegister_t.RelayOUTConfig_t[6].Relay_OP_Threshold = 1;//pH
-	HoldingRegister_t.RelayOUTConfig_t[6].Relay_OP_HIGHLOW = 1;//HIGH = 1; LOW = 2
-
-	HoldingRegister_t.RelayOUTConfig_t[7].Relay_OP_Parameter = 4; //pH
-	HoldingRegister_t.RelayOUTConfig_t[7].Relay_OP_Hysterisis = 2;//pH
-	HoldingRegister_t.RelayOUTConfig_t[7].Relay_OP_Threshold = 1;//pH
-	HoldingRegister_t.RelayOUTConfig_t[7].Relay_OP_HIGHLOW = 2;//HIGH = 1; LOW = 2
-#endif
-
-
-//	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0x03;//Manual temp input
-//	HoldingRegister_t.ModeCommand_t.Temperature_setPoint = 25.0f;//Temperature set point
-//	HoldingRegister_t.ModeCommand_t.FlowSensorCutoff = 2.3f;
-//	HoldingRegister_t.ModeCommand_t.RANGESELECT = MODEL_3021_3022;/*<COD:800; TSS:750*/
-//	COD_UpperLimit = (float)COD_800_UPPER;
-//	BOD_UpperLimit = COD_UpperLimit / 2.0f;
-//	TSS_UpperLimit = (float)TSS_750_UPPER;
-//	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0x03;//Manual temp input
-//	HoldingRegister_t.ModeCommand_t.Temperature_setPoint = 25.0f;//Temperature set point
-//	HoldingRegister_t.ModeCommand_t.FlowSensorCutoff = 2.3f
-
-	/*<Last Calibration Data*/
-//	InputRegister_t.COD_lastCalibration[0].C[0] = 10.2f;
-//	InputRegister_t.COD_lastCalibration[0].C[1] = 20.2f;
-//	InputRegister_t.COD_lastCalibration[0].C[2] = 30.2f;
-//	InputRegister_t.COD_lastCalibration[0].timestamp = 0x12345689;
-//
-//	InputRegister_t.TSS_lastCalibration[9].C[0] = 10.2f;
-//	InputRegister_t.TSS_lastCalibration[9].C[1] = 20.2f;
-//	InputRegister_t.TSS_lastCalibration[9].C[2] = 30.2f;
-//	InputRegister_t.TSS_lastCalibration[9].timestamp = 0x12345689;
-
 
 }
 

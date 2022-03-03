@@ -295,6 +295,8 @@ int main(void)
 		  UHolding_Modbus_2.MILSwitchStatus = AWAOperationStatus_t.MILSwitchState;
 		  UHolding_Modbus_2.main_cmd = (HoldingRegister_t.ModeCommand_t.ModeCommand_H<<8) | (HoldingRegister_t.ModeCommand_t.ModeCommand_L);
 		  UHolding_Modbus_2.common_cmd = HoldingRegister_t.ModeCommand_t.CommonCommand;
+		  UHolding_Modbus_2.PD_1 = InputRegister_t.PV_info.PD1_MEAN;
+		  UHolding_Modbus_2.PD_2 = InputRegister_t.PV_info.PD2_MEAN;
 		  MOD2_RxFlag = 0;
 		  //ProcessMOD2_ModbusQuery();
 		  ProcessMOD2_ModbusQuery_DMA();
