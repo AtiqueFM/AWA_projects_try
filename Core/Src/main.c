@@ -223,7 +223,8 @@ int main(void)
   TimerStart = 0x02;
   //printf("Hello AWA!!!\n");
   //memset(&InputRegister_t.bytes[sizeof(PVhandle_t) + 164 + 164],'\0',124);
-  //FRAM_OperationWrite(FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 164 + 164],124);
+//  int flag_= 0;
+//  FRAM_OperationWrite(FRAM_ADDRESS_RANGESELECT_FLAG,(uint8_t*)&flag_,1);
   //int size = sizeof(PVhandle_t) + sizeof(InputRegister_t.COD_lastCalibration);
 
   float arrayADC [1000];

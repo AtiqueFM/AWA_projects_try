@@ -112,3 +112,8 @@ Updates				:-
 Date				:- 2/3/2022
 Updates				:-
 						1. uncommented the Relay operations, and tested with masibus for pH parameter.
+
+Date				:- 3/3/2022
+Updates				:-
+						1. Analyzer range selection added to the State machine, data will be stored in the FRAM.
+						2. On fist boot the default data will be loaded for the parameter COD : 300 mg/l.

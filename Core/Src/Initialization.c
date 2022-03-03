@@ -223,10 +223,10 @@ void HoldingRegisterdefaultData(void)
 //	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0x03;//Manual temp input
 //	HoldingRegister_t.ModeCommand_t.Temperature_setPoint = 25.0f;//Temperature set point
 //	HoldingRegister_t.ModeCommand_t.FlowSensorCutoff = 2.3f;
-	HoldingRegister_t.ModeCommand_t.RANGESELECT = MODEL_3021_3022;/*<COD:800; TSS:750*/
-	COD_UpperLimit = (float)COD_800_UPPER;
-	BOD_UpperLimit = COD_UpperLimit / 2.0f;
-	TSS_UpperLimit = (float)TSS_750_UPPER;
+//	HoldingRegister_t.ModeCommand_t.RANGESELECT = MODEL_3021_3022;/*<COD:800; TSS:750*/
+//	COD_UpperLimit = (float)COD_800_UPPER;
+//	BOD_UpperLimit = COD_UpperLimit / 2.0f;
+//	TSS_UpperLimit = (float)TSS_750_UPPER;
 //	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0x03;//Manual temp input
 //	HoldingRegister_t.ModeCommand_t.Temperature_setPoint = 25.0f;//Temperature set point
 //	HoldingRegister_t.ModeCommand_t.FlowSensorCutoff = 2.3f
@@ -458,8 +458,187 @@ void InternalADCStartConversion(void)
 //
 //}
 
+void transfer_CODdatatoLiveBuffer(void)
+{
+	for(int i =0;i<10;i++)
+	{
+		COD_10ptFactoryCalibrationHandle_t.x[i] = HoldingRegister_t.ModeCommand_t.COD_X[i];
+		COD_10ptFactoryCalibrationHandle_t.y[i] = HoldingRegister_t.ModeCommand_t.COD_Y[i];
+	}
+
+	for(int i = 0;i<4;i++)
+		COD_10ptFactoryCalibrationHandle_t.c[i] = HoldingRegister_t.ModeCommand_t.C[i];
+
+	COD_SensorCalibration_t.x1 = HoldingRegister_t.SensorCalibration_t.COD_X1;
+	COD_SensorCalibration_t.x2 = HoldingRegister_t.SensorCalibration_t.COD_X2;
+	COD_SensorCalibration_t.y1 = HoldingRegister_t.SensorCalibration_t.COD_Y1;
+	COD_SensorCalibration_t.y2 = HoldingRegister_t.SensorCalibration_t.COD_Y2;
+
+	COD_SensorCalibration_t.slope = HoldingRegister_t.SensorCalibration_t.COD_CF;
+	COD_SensorCalibration_t.intercept = HoldingRegister_t.SensorCalibration_t.COD_Intercept;
+
+	COD_10ptFactoryCalibrationHandle_t.SF = HoldingRegister_t.ModeCommand_t.COD_SF;
+}
+
+void transfer_TSSdatatoLiveBuffer(void)
+{
+
+	for(int i = 0;i<10;i++)
+	{
+		TSS_10ptFactoryCalibrationHandle_t.x[i] = HoldingRegister_t.ModeCommand_t.TSS_F[i];
+		TSS_10ptFactoryCalibrationHandle_t.y[i] = HoldingRegister_t.ModeCommand_t.TSS_G[i];
+	}
+
+	for(int i = 0;i<3;i++)
+		TSS_10ptFactoryCalibrationHandle_t.c[i] = HoldingRegister_t.ModeCommand_t.TSS_K[i];
+
+	TSS_SensorCalibration_t.x1 = HoldingRegister_t.SensorCalibration_t.TSS_X1;
+	TSS_SensorCalibration_t.x2 = HoldingRegister_t.SensorCalibration_t.TSS_X2;
+	TSS_SensorCalibration_t.y1 = HoldingRegister_t.SensorCalibration_t.TSS_Y1;
+	TSS_SensorCalibration_t.y2 = HoldingRegister_t.SensorCalibration_t.TSS_Y2;
+
+	TSS_SensorCalibration_t.slope = HoldingRegister_t.SensorCalibration_t.TSS_CF;
+	TSS_SensorCalibration_t.intercept = HoldingRegister_t.SensorCalibration_t.TSS_Intercept;
+
+	TSS_10ptFactoryCalibrationHandle_t.SF = HoldingRegister_t.ModeCommand_t.TSS_SF;
+}
+
+void setRelayCofigurationData(uint8_t model)
+{
+	switch(model)
+	{
+	case MODEL_3021_3022: // COD	800 mg/l
+		//Default data for Alarm output
+		HoldingRegister_t.RelayOUTConfig_t[0].Relay_OP_Parameter = 1; //COD
+		HoldingRegister_t.RelayOUTConfig_t[0].Relay_OP_Hysterisis = 20;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[0].Relay_OP_Threshold = 500;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[0].Relay_OP_HIGHLOW = 1;//HIGH = 1; LOW = 2
+
+		HoldingRegister_t.RelayOUTConfig_t[1].Relay_OP_Parameter = 1; //COD
+		HoldingRegister_t.RelayOUTConfig_t[1].Relay_OP_Hysterisis = 20;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[1].Relay_OP_Threshold = 500;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[1].Relay_OP_HIGHLOW = 2;//HIGH = 1; LOW = 2
+
+		HoldingRegister_t.RelayOUTConfig_t[2].Relay_OP_Parameter = 2; //BOD
+		HoldingRegister_t.RelayOUTConfig_t[2].Relay_OP_Hysterisis = 20;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[2].Relay_OP_Threshold = 250;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[2].Relay_OP_HIGHLOW = 1;//HIGH = 1; LOW = 2
+
+		HoldingRegister_t.RelayOUTConfig_t[3].Relay_OP_Parameter = 2; //BOD
+		HoldingRegister_t.RelayOUTConfig_t[3].Relay_OP_Hysterisis = 20;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[3].Relay_OP_Threshold = 250;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[3].Relay_OP_HIGHLOW = 2;//HIGH = 1; LOW = 2
+
+		HoldingRegister_t.RelayOUTConfig_t[4].Relay_OP_Parameter = 3; //TSS
+		HoldingRegister_t.RelayOUTConfig_t[4].Relay_OP_Hysterisis = 20;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[4].Relay_OP_Threshold = 300;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[4].Relay_OP_HIGHLOW = 1;//HIGH = 1; LOW = 2
+
+		HoldingRegister_t.RelayOUTConfig_t[5].Relay_OP_Parameter = 3; //TSS
+		HoldingRegister_t.RelayOUTConfig_t[5].Relay_OP_Hysterisis = 20;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[5].Relay_OP_Threshold = 300;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[5].Relay_OP_HIGHLOW = 1;//HIGH = 1; LOW = 2
+
+		HoldingRegister_t.RelayOUTConfig_t[6].Relay_OP_Parameter = 4; //pH
+		HoldingRegister_t.RelayOUTConfig_t[6].Relay_OP_Hysterisis = 20;//ph
+		HoldingRegister_t.RelayOUTConfig_t[6].Relay_OP_Threshold = 10;//pH
+		HoldingRegister_t.RelayOUTConfig_t[6].Relay_OP_HIGHLOW = 1;//HIGH = 1; LOW = 2
+
+		HoldingRegister_t.RelayOUTConfig_t[7].Relay_OP_Parameter = 4; //pH
+		HoldingRegister_t.RelayOUTConfig_t[7].Relay_OP_Hysterisis = 20;//pH
+		HoldingRegister_t.RelayOUTConfig_t[7].Relay_OP_Threshold = 5;//pH
+		HoldingRegister_t.RelayOUTConfig_t[7].Relay_OP_HIGHLOW = 2;//HIGH = 1; LOW = 2
+		break;
+	case MODEL_3011_3012: // COD	300 mg/l
+		//Default data for Alarm output
+		HoldingRegister_t.RelayOUTConfig_t[0].Relay_OP_Parameter = 1; //COD
+		HoldingRegister_t.RelayOUTConfig_t[0].Relay_OP_Hysterisis = 20;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[0].Relay_OP_Threshold = 250;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[0].Relay_OP_HIGHLOW = 1;//HIGH = 1; LOW = 2
+
+		HoldingRegister_t.RelayOUTConfig_t[1].Relay_OP_Parameter = 1; //COD
+		HoldingRegister_t.RelayOUTConfig_t[1].Relay_OP_Hysterisis = 20;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[1].Relay_OP_Threshold = 100;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[1].Relay_OP_HIGHLOW = 2;//HIGH = 1; LOW = 2
+
+		HoldingRegister_t.RelayOUTConfig_t[2].Relay_OP_Parameter = 2; //BOD
+		HoldingRegister_t.RelayOUTConfig_t[2].Relay_OP_Hysterisis = 20;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[2].Relay_OP_Threshold = 125;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[2].Relay_OP_HIGHLOW = 1;//HIGH = 1; LOW = 2
+
+		HoldingRegister_t.RelayOUTConfig_t[3].Relay_OP_Parameter = 2; //BOD
+		HoldingRegister_t.RelayOUTConfig_t[3].Relay_OP_Hysterisis = 20;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[3].Relay_OP_Threshold = 75;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[3].Relay_OP_HIGHLOW = 2;//HIGH = 1; LOW = 2
+
+		HoldingRegister_t.RelayOUTConfig_t[4].Relay_OP_Parameter = 3; //TSS
+		HoldingRegister_t.RelayOUTConfig_t[4].Relay_OP_Hysterisis = 20;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[4].Relay_OP_Threshold = 400;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[4].Relay_OP_HIGHLOW = 1;//HIGH = 1; LOW = 2
+
+		HoldingRegister_t.RelayOUTConfig_t[5].Relay_OP_Parameter = 3; //TSS
+		HoldingRegister_t.RelayOUTConfig_t[5].Relay_OP_Hysterisis = 20;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[5].Relay_OP_Threshold = 200;//ppm
+		HoldingRegister_t.RelayOUTConfig_t[5].Relay_OP_HIGHLOW = 1;//HIGH = 1; LOW = 2
+
+		HoldingRegister_t.RelayOUTConfig_t[6].Relay_OP_Parameter = 4; //pH
+		HoldingRegister_t.RelayOUTConfig_t[6].Relay_OP_Hysterisis = 20;//ph
+		HoldingRegister_t.RelayOUTConfig_t[6].Relay_OP_Threshold = 10;//pH
+		HoldingRegister_t.RelayOUTConfig_t[6].Relay_OP_HIGHLOW = 1;//HIGH = 1; LOW = 2
+
+		HoldingRegister_t.RelayOUTConfig_t[7].Relay_OP_Parameter = 4; //pH
+		HoldingRegister_t.RelayOUTConfig_t[7].Relay_OP_Hysterisis = 20;//pH
+		HoldingRegister_t.RelayOUTConfig_t[7].Relay_OP_Threshold = 5;//pH
+		HoldingRegister_t.RelayOUTConfig_t[7].Relay_OP_HIGHLOW = 2;//HIGH = 1; LOW = 2
+		break;
+	}
+}
+
+void setAOCofigurationData(uint8_t model)
+{
+	switch(model)
+	{
+	case MODEL_3021_3022: // COD	800 mg/l
+		//test
+		HoldingRegister_t.IOUTConfig_t[0].Current_OP_option = 1; //cod
+		HoldingRegister_t.IOUTConfig_t[0].Current_OP_MIN_Value = 0.0f;
+		HoldingRegister_t.IOUTConfig_t[0].Current_OP_MAX_Value = 800.0f;
+
+		HoldingRegister_t.IOUTConfig_t[1].Current_OP_option = 2; //BOD
+		HoldingRegister_t.IOUTConfig_t[1].Current_OP_MIN_Value = 0.0f;
+		HoldingRegister_t.IOUTConfig_t[1].Current_OP_MAX_Value = 400.0f;
+
+		HoldingRegister_t.IOUTConfig_t[2].Current_OP_option = 3; //TSS
+		HoldingRegister_t.IOUTConfig_t[2].Current_OP_MIN_Value = 0.0f;
+		HoldingRegister_t.IOUTConfig_t[2].Current_OP_MAX_Value = 750.0f;
+
+		HoldingRegister_t.IOUTConfig_t[3].Current_OP_option = 4; //pH
+		HoldingRegister_t.IOUTConfig_t[3].Current_OP_MIN_Value = 0.0f;
+		HoldingRegister_t.IOUTConfig_t[3].Current_OP_MAX_Value = 14.0f;
+		break;
+	case MODEL_3011_3012: // COD	300 mg/l
+		HoldingRegister_t.IOUTConfig_t[0].Current_OP_option = 1; //cod
+		HoldingRegister_t.IOUTConfig_t[0].Current_OP_MIN_Value = 0.0f;
+		HoldingRegister_t.IOUTConfig_t[0].Current_OP_MAX_Value = 300.0f;
+
+		HoldingRegister_t.IOUTConfig_t[1].Current_OP_option = 2; //BOD
+		HoldingRegister_t.IOUTConfig_t[1].Current_OP_MIN_Value = 0.0f;
+		HoldingRegister_t.IOUTConfig_t[1].Current_OP_MAX_Value = 150.0f;
+
+		HoldingRegister_t.IOUTConfig_t[2].Current_OP_option = 3; //TSS
+		HoldingRegister_t.IOUTConfig_t[2].Current_OP_MIN_Value = 0.0f;
+		HoldingRegister_t.IOUTConfig_t[2].Current_OP_MAX_Value = 450.0f;
+
+		HoldingRegister_t.IOUTConfig_t[3].Current_OP_option = 4; //pH
+		HoldingRegister_t.IOUTConfig_t[3].Current_OP_MIN_Value = 0.0f;
+		HoldingRegister_t.IOUTConfig_t[3].Current_OP_MAX_Value = 14.0f;
+		break;
+	}
+}
+
 void CalibrationDefaultValue(uint8_t AnalyzerRange)
 {
+
 	switch(AnalyzerRange)
 	{
 	/*
@@ -511,6 +690,10 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 		/*COD Scaling factors*/
 		HoldingRegister_t.ModeCommand_t.COD_SF = 100.0f;
 
+		/*Transfer the data from MODBUS to live buffer*/
+		transfer_CODdatatoLiveBuffer();
+
+
 		/*TSS factory 10 point calibration*/
 		HoldingRegister_t.ModeCommand_t.TSS_F[0] =	0.31f;
 		HoldingRegister_t.ModeCommand_t.TSS_F[1] =	32.64f;
@@ -551,6 +734,15 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 
 		/*COD Scaling factors*/
 		HoldingRegister_t.ModeCommand_t.TSS_SF = 100.0f;
+
+		/*Load the data into TSS factory calibration live buffer*/
+		transfer_TSSdatatoLiveBuffer();
+
+		/*Relay configurations*/
+		setRelayCofigurationData(MODEL_3021_3022);
+
+		/*AO configuration*/
+		setAOCofigurationData(MODEL_3021_3022);
 		break;
 	/*
 	 * Range	:
@@ -601,6 +793,9 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 		/*COD Scaling factors*/
 		HoldingRegister_t.ModeCommand_t.COD_SF = 100.0f;
 
+		/*Transfer the data from MODBUS to live buffer*/
+		transfer_CODdatatoLiveBuffer();
+
 		/*TSS factory 10 point calibration*/
 		HoldingRegister_t.ModeCommand_t.TSS_F[0] =	0.31f;
 		HoldingRegister_t.ModeCommand_t.TSS_F[1] =	32.64f;
@@ -635,12 +830,21 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 		HoldingRegister_t.SensorCalibration_t.TSS_Y1 = 1.163f;
 		HoldingRegister_t.SensorCalibration_t.TSS_Y2 = 203.622f;
 
-		/*COD 2 point calibration data*/
+		/*TSS 2 point calibration data*/
 		HoldingRegister_t.SensorCalibration_t.TSS_CF = -1.15f;
 		HoldingRegister_t.SensorCalibration_t.TSS_Intercept = 0.94f;
 
-		/*COD Scaling factors*/
+		/*TSS Scaling factors*/
 		HoldingRegister_t.ModeCommand_t.TSS_SF = 100.0f;
+
+		/*Load the data into TSS factory calibration live buffer*/
+		transfer_TSSdatatoLiveBuffer();
+
+		/*Relay configurations*/
+		setRelayCofigurationData(MODEL_3011_3012);
+
+		/*AO configuration*/
+		setAOCofigurationData(MODEL_3011_3012);
 		break;
 	}
 }

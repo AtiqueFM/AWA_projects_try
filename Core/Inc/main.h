@@ -931,6 +931,9 @@ void Error_Handler(void);
 #define Read_acid								0x01
 #define Read_sample								0x02
 
+/*SOFTWARE REST*/
+#define SOFTWARE_RESET							0x5A
+
 /*COMMON COMMANDS*/
 #define Sample_pump								0x01
 #define Clean_pump								0x02
@@ -1308,8 +1311,9 @@ typedef enum{
 	COD_5000_UPPER	= 5000,
 	COD_2000_UPPER	= 2000,
 	COD_800_UPPER	= 800,
-	COD_200_UPPER	= 200,
-	TSS_750_UPPER	= 750
+	COD_300_UPPER	= 200,
+	TSS_750_UPPER	= 750,
+	TSS_450_UPPER	= 450
 }AWA_RangeSelect_t;
 /*Control status bits*/
 typedef union{
@@ -1369,6 +1373,7 @@ typedef struct{
 	unsigned electronicAO		: 1;	/*<SET after calibration and RESET after AO electronic calibration stored in last calibration FRAM*/
 	unsigned factoryCOD_setzero	: 1;	/*<SET after setting zero and RESET after storing in FRAM*/
 	unsigned factoryTSS_setzero	: 1;	/*<SET after setting zero and RESET after storing in FRAM*/
+	unsigned analyzerRangeSelect: 1;	/*<SEt after selecting the analyzer range from the factory menu, will be reset for the first time.*/
 }AWADataStoreState_t;
 AWADataStoreState_t	AWADataStoreState;
 
@@ -1385,6 +1390,7 @@ typedef struct{
 	unsigned factoryTSS_overflowflag;	/*<Flag will be set to 1 when count exceeds 10*/
 	unsigned sensorCOD_overflowflag;	/*<Flag will be set to 1 when count exceeds 10*/
 	unsigned sensorTSS_overflowflag;	/*<Flag will be set to 1 when count exceeds 10*/
+	unsigned analyzerRangeSelectflag;	/*<SET when Range is selected from Factory menu, RESET when the analyzer is programmed for the first time*/
 }AWALastCalibrationCount_t;
 AWALastCalibrationCount_t AWALastCalibrationCount;
 

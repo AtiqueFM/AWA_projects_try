@@ -835,7 +835,17 @@ void ProcessModesCommands(void)
 				//RelayToggleCoilInputUpdate();
 			}
 			case Select_Range:
-				AWA_RangeSelect();
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == 0x98)
+				{
+					AWA_RangeSelect();
+					//Reset the common command
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0x0;
+					//Store the data in FRAM
+					AWADataStoreState.analyzerRangeSelect = SET;
+					//Flag set as data not saved in the FRAM
+					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+				}
+
 			break;
 		}
 	}
@@ -890,6 +900,11 @@ void ProcessModesCommands(void)
 				break;
 			}
 		}
+	}
+	else if(HoldingRegister_t.ModeCommand_t.ModeCommand_H == SOFTWARE_RESET)
+	{
+		if(HoldingRegister_t.ModeCommand_t.ModeCommand_L == SOFTWARE_RESET)
+			HAL_NVIC_SystemReset();
 	}
 }
 
@@ -2172,6 +2187,19 @@ void currentOutputTest(uint8_t CurrentChannel)
 	PWMCurrentCalibOutput(CurrentChannel,PWM_count);
 }
 
+void analyzerRangeSelectFRAMSaveData(void)
+{
+	  //COD Sensor calibration data store
+	  FRAM_OperationWrite(FRAM_ADDRESS_COD_SENS_CALIB,(uint8_t*)&COD_SensorCalibration_t.byte,8);
+	  //TSS Sensor calibration data store
+	  FRAM_OperationWrite(FRAM_ADDRESS_TSS_SENS_CALIB,(uint8_t*)&TSS_SensorCalibration_t.byte,8);
+	  //COD Factory 10pt calibration data store
+	  FRAM_OperationWrite(FRAM_ADDRESS_COD_FACTORY_CALIB,(uint8_t*)&COD_10ptFactoryCalibrationHandle_t.bytes,96);
+	  //TSS Factory 10pt calibration data store
+	  FRAM_OperationWrite(FRAM_ADDRESS_TSS_FACTORY_CALIB,(uint8_t*)&TSS_10ptFactoryCalibrationHandle_t.bytes,96);
+	  //Complete MODBUS data storage
+	  FRAM_OperationWrite(FRAM_ADDRESS_MIN, (uint8_t*)&HoldingRegister_t.bytes, sizeof(HoldingRegister_t.bytes));
+}
 void ModbusSaveConfiguration(uint8_t data)
 {
 	  HAL_Delay(10);
@@ -2275,6 +2303,15 @@ void ModbusSaveConfiguration(uint8_t data)
 			  FRAM_OperationWrite(FRAM_ADDRESS_TSS_PD_ZERO,(uint8_t*)&framdata.bytes,4);
 
 			  AWADataStoreState.factoryTSS_setzero = RESET;
+		  }
+		  if(AWADataStoreState.analyzerRangeSelect)
+		  {
+			  uint8_t flag = 0;
+			  flag = SET;
+			  FRAM_OperationWrite(FRAM_ADDRESS_RANGESELECT_FLAG,(uint8_t*)&flag,1);
+			  AWADataStoreState.analyzerRangeSelect = RESET;
+			  /*Save the new configuration data into FRAM*/
+			  analyzerRangeSelectFRAMSaveData();
 		  }
 	  }
 
@@ -2511,6 +2548,21 @@ void ModbusReadConfiguration(void)
 	/*Read the overflow flag*/
 	AWALastCalibrationCount.sensorTSS_overflowflag = InputRegister_t.TSS_lastSensorCalibration.overflowFlag;
 
+
+	/*Reading the default range select option*/
+	uint8_t flag = 0;
+	FRAM_OperationRead(FRAM_ADDRESS_RANGESELECT_FLAG,(uint8_t*)&flag,1);
+	/*Check if flag is SET*/
+	if(flag)
+	{
+	  //if the flag is set then do not load with default analyzer configuration i.e; COD 300 mg/l
+	  AWALastCalibrationCount.analyzerRangeSelectflag = SET;
+	}else
+	{
+	  /*Booting first time or analyzer range is not selected by the user, load with the default configuration COD = 300 mg/l*/
+		HoldingRegister_t.ModeCommand_t.RANGESELECT = MODEL_3011_3012;
+	  AWA_RangeSelect();
+	}
 }
 
 
@@ -3069,14 +3121,24 @@ void AWA_RangeSelect(void)
 	switch(AnalyzerRange)
 	{
 	case MODEL_3021_3022:
-		/*TODO: Load the default calibration and device configurations*/
-
-		/*TODO: Set the parameter display limit.*/
+		/*Load the default calibration and device configurations*/
+		CalibrationDefaultValue(MODEL_3021_3022);
+		/*Set the parameter display limit.*/
 		COD_UpperLimit = (float)COD_800_UPPER;
 		BOD_UpperLimit = COD_UpperLimit / 2.0f;
 		TSS_UpperLimit = (float)TSS_750_UPPER;
 		break;
+	case MODEL_3011_3012:
+		/*Load the default calibration and device configurations*/
+		CalibrationDefaultValue(MODEL_3011_3012);
+		/*Set the parameter display limit.*/
+		COD_UpperLimit = (float)COD_300_UPPER;
+		BOD_UpperLimit = COD_UpperLimit / 2.0f;
+		TSS_UpperLimit = (float)TSS_450_UPPER;
+		break;
 	}
+
+	AWADataStoreState.analyzerRangeSelect = SET;
 }
 
 void FlowSensorReadStatus(void)
