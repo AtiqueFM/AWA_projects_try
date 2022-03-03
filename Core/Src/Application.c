@@ -16,6 +16,7 @@
 #include <string.h>
 #include "FM24CL64B.h"
 #include <stdio.h>
+#include "Initialization.h"
 
 uint16_t CurrentTestValues_mA[5] = {4,8,12,16,20};
 
@@ -72,7 +73,7 @@ void ProcessModesCommands(void)
 				AWAOperationStatus_t.CalibrationMode = 0;
 				AWAOperationStatus_t.FactoryMode = 0;
 				//Auto measurement, background process
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == AUTO_COD_MEASURE)
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == AUTO_COD_MEASURE  && AWAOperationStatus_t.MILSwitchState == SET)
 				{
 					//First operate the sample pump
 					PumpOperation(0x02);
@@ -80,11 +81,18 @@ void ProcessModesCommands(void)
 					//perform the ADC measurement action when the pump action is completed
 					if(!PUMPControlHandle_t.u8Flag_measurement)
 						HoldingRegister_t.ModeCommand_t.CommonCommand = COD_Measure;
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == AUTO_COD_MEASURE && AWAOperationStatus_t.MILSwitchState == RESET)
+				{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+					pumpOperationStop();
 				}
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
 				{
 					CODADCCapture(COD_Measure);
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && PUMPControlHandle_t.u8Flag_measurement)
+				{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
 				//Perform the Auto Zero process
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == AUTO_COD_ZERO)
@@ -259,6 +267,16 @@ void ProcessModesCommands(void)
 				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt3)
 					COD_SensorCalib_ypoint(3);
 
+				/*Stop sampling pump, if MIL state is RESET*/
+				if((HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt1
+					|| HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt2
+					|| HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt3)
+					&& AWAOperationStatus_t.MILSwitchState == RESET)
+				{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+					pumpOperationStop();
+				}
+
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
 				{
@@ -298,6 +316,16 @@ void ProcessModesCommands(void)
 				//Measure sample 2
 				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt3)
 					COD_SensorCalib_ypoint(3);
+
+				/*Stop sampling pump, if MIL state is RESET*/
+				if((HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt1
+					|| HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt2
+					|| HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt3)
+					&& AWAOperationStatus_t.MILSwitchState == RESET)
+				{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+					pumpOperationStop();
+				}
 
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
@@ -648,16 +676,50 @@ void ProcessModesCommands(void)
 #else
 					CODADCCapture(COD_Measure);
 #endif
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && PUMPControlHandle_t.u8Flag_measurement)
+				{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION)
 				{
 					//operate the cleaning pump
 					PumpOperation(0x01);
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION)
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == SET)
 				{
 					//operate the sample pump
 					PumpOperation(0x02);
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == RESET)
+				{
+					pumpOperationStop();
+#if 0
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+					//Turn of the pump 2
+					PUMP2_OFF();
+					//PUMPControlHandle_t.u8PUMP_action = 0x02;//move to the pump delay time
+					//Reset the HMI inter-locking Flag
+					HMIInterlockingFlag(HMI_INTERLOCK_SAMPLE_PUMP,RESET);
+					//Disable interrupt
+//					htim6.Instance->DIER &= ~TIM_IT_UPDATE; // disable timer interrupt flag
+					//htim6.Instance->CR1 &= ~TIM_CR1_CEN; // disable timer
+					//htim6.Instance->SR = 0;
+					if(PUMPControlHandle_t.u8Flag_measurement == SET)
+					{
+						HAL_TIM_Base_Stop_IT(&htim6);
+						HAL_TIM_Base_DeInit(&htim6);
+
+						PUMPControlHandle_t.u8Flag_measurement = RESET;
+					}
+					//reset all the action
+					PUMPControlHandle_t.u16TIM6_count = 0;
+					PUMPControlHandle_t.u16TIM6_limit = 0;
+					PUMPControlHandle_t.u8PUMP_action = 1;
+					PUMPControlHandle_t.u8PUMP_delayaction = 0;
+					PUMPControlHandle_t.u8PUMP_no = 0;
+					//un-block the ADC measurement
+					PUMPControlHandle_t.u8Flag_measurement = 0x00;
+#endif
+
 				}
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO
 						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
@@ -677,7 +739,14 @@ void ProcessModesCommands(void)
 					AWADataStoreState.factoryCOD_setzero = SET;
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO
+						&& AWAOperationStatus_t.CleaningTankEmpty == SET)
+				{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
+				/*Emergency Pump Stop*/
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
+					pumpOperationStop();
 				break;
 			}
 			case TSSCoeffs:
@@ -719,21 +788,23 @@ void ProcessModesCommands(void)
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_Measure && !PUMPControlHandle_t.u8Flag_measurement)
 				{
-#ifdef HMI_TEST
-					CODADCCapture(AUTO_COD_ZERO);
-#else
 					CODADCCapture(TSS_Measure);
-#endif
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_Measure && PUMPControlHandle_t.u8Flag_measurement)
+				{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION)
 				{
 					//operate the cleaning pump
 					PumpOperation(0x01);
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION)
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == SET)
 				{
 					//operate the sample pump
 					PumpOperation(0x02);
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == RESET)
+				{
+					pumpOperationStop();
 				}
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_FACTORY_SETASZERO
 						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
@@ -753,6 +824,9 @@ void ProcessModesCommands(void)
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 				}
+				/*Emergency Pump Stop*/
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
+					pumpOperationStop();
 				break;
 			}
 			case Relay_test:
@@ -1044,13 +1118,14 @@ void CardAction(uint8_t CardID)
 
 	case MI420:
 		AdCounts_pH = 0;
+#if 0
 		//Software PT100 select SEL1 pin HIGH
 		if(HoldingRegister_t.IOUTCalibandTest_t.CalibrationType == TEMP_TYPE_PT100)//PT100
 			SEL1_PT100();
 		//Software PT1000 select SEL1 pin LOW
 		else
 			SEL1_PT1000();
-
+#endif
 		//Initialize the ADC for temperature configuration
 		ADS1115_OperationInit_Temperature();
 
@@ -2008,7 +2083,7 @@ void PumpOperation(uint8_t PumpNo)
 			PUMPControlHandle_t.u8Flag_measurement = 0x01;
 			VALVE_ON();//will change according to the valve operation
 			//Delay for 5 sec
-			HAL_Delay(1000);
+			HAL_Delay(500);
 			//turn on pump 1
 			PUMP1_ON();
 			//Set the HMI inter-locking flag for sample pump
@@ -2029,6 +2104,10 @@ void PumpOperation(uint8_t PumpNo)
 			HMIInterlockingFlag(HMI_INTERLOCK_SAMPLE_PUMP, SET);
 		}
 		//Enable Interrupt
+//		htim6.Instance->DIER |= TIM_IT_UPDATE; // enable timer interrupt flag
+//		htim6.Instance->CR1 |= TIM_CR1_CEN; // enable timer
+//		HAL_TIM_Base_Start_IT(&htim6);
+		HAL_TIM_Base_Init(&htim6);
 		htim6.Instance->DIER |= TIM_IT_UPDATE; // enable timer interrupt flag
 		htim6.Instance->CR1 |= TIM_CR1_CEN; // enable timer
 	}
@@ -2479,14 +2558,15 @@ void ParameterIOutProcess(void)
 
 void ParameterRelayAlarmProcess(void)
 {
-	for(int relay = 0;relay <7; relay++)
+	for(int relay = 0;relay <8; relay++)
 	{
 		float threshold = HoldingRegister_t.RelayOUTConfig_t[relay].Relay_OP_Threshold;
 		uint16_t parameterIndex = HoldingRegister_t.RelayOUTConfig_t[relay].Relay_OP_Parameter - 1;
 //		if(parameterIndex >	5)
 //			return 0;
-		float hysterisis =  HoldingRegister_t.RelayOUTConfig_t[relay].Relay_OP_Hysterisis;
+		float hysterisis =  HoldingRegister_t.RelayOUTConfig_t[relay].Relay_OP_Hysterisis; /*<Percentage*/
 		float parameterValue = ParameterValues_t.value[parameterIndex];
+		hysterisis = threshold * hysterisis / 100.0f; /*<Value of hysteresis from percentage*/
 		if(HoldingRegister_t.RelayOUTConfig_t[relay].Relay_OP_HIGHLOW == 0x01)//high
 		{
 			if(parameterValue >= threshold)
@@ -2981,6 +3061,7 @@ void TSScalculateValue(void)
 
 }
 
+
 void AWA_RangeSelect(void)
 {
 	uint8_t AnalyzerRange = HoldingRegister_t.ModeCommand_t.RANGESELECT;
@@ -2995,5 +3076,125 @@ void AWA_RangeSelect(void)
 		BOD_UpperLimit = COD_UpperLimit / 2.0f;
 		TSS_UpperLimit = (float)TSS_750_UPPER;
 		break;
+	}
+}
+
+void FlowSensorReadStatus(void)
+{
+
+	  float arrayADC [1000];
+	  uint16_t samples = 100;
+	  float avgs = (float)samples;
+
+	  /*
+	   * 500 samples - 1.7 ms
+	   * with averaging - 2.7 ms
+	   * for averaging - 1 ms
+	   */
+	  //GPIOB->ODR |= (1<<4);
+	  for(int i = 0;i<samples;i++)
+	  {
+		  //Set the data on the TOC HMI screen
+		   arrayADC[i] = InternalADCRead() * (3.3f/4096.0f);
+	  }
+	  //GPIOB->ODR &= ~(1<<4);
+	  float avgADC = 0;
+	  for(int i = 0;i<samples;i++)
+		  avgADC += arrayADC[i] / avgs;
+
+	  //For reference
+//	  InputRegister_t.PV_info.TOC = avgADC;
+	  InputRegister_t.SlotParameter.FlowSensorVolatge = avgADC;
+	  /*Cleaning tank is not empty*/
+	  if(avgADC <= HoldingRegister_t.ModeCommand_t.FlowSensorCutoff) //Limit can by set from HMI.
+	  {
+		  AWAOperationStatus_t.CleaningTankEmpty = RESET;
+		  CoilStatusRegister_t.CoilStatus_t.CleaningTankEmpty = RESET;
+	  }
+	  /* Cleaning tank is empty*/
+	  else
+	  {
+		  AWAOperationStatus_t.CleaningTankEmpty = SET;
+		  CoilStatusRegister_t.CoilStatus_t.CleaningTankEmpty = SET;/*Will display warning in HMI*/
+	  }
+}
+void MILSwitchReadStatus(void)
+{
+	/*MIL switch*/
+	uint32_t MIL_switch_status = HAL_GPIO_ReadPin(MIL_SWITCH_GPIO_Port, MIL_SWITCH_Pin);
+	CoilStatusRegister_t.CoilStatus_t.MILSwitchState = MIL_switch_status;
+	AWAOperationStatus_t.MILSwitchState = MIL_switch_status;
+//	InputRegister_t.PV_info.TOC = MIL_switch_status;//Testing
+}
+
+void pumpOperationStop(void)
+{
+	/*TODO : Check which pump is in current operation*/
+	uint8_t pumpNo = 0;
+	uint8_t pumpAction = 0;
+
+	pumpNo = PUMPControlHandle_t.u8PUMP_no;
+	pumpAction = PUMPControlHandle_t.u8PUMP_action; // Running operation 3
+
+	if(pumpAction == 3)
+	{
+		if(pumpNo == 2) //Sampling pump
+		{
+			HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+			//Turn of the pump 2
+			PUMP2_OFF();
+			//PUMPControlHandle_t.u8PUMP_action = 0x02;//move to the pump delay time
+			//Reset the HMI inter-locking Flag
+			HMIInterlockingFlag(HMI_INTERLOCK_SAMPLE_PUMP,RESET);
+			//Disable interrupt
+//					htim6.Instance->DIER &= ~TIM_IT_UPDATE; // disable timer interrupt flag
+			//htim6.Instance->CR1 &= ~TIM_CR1_CEN; // disable timer
+			//htim6.Instance->SR = 0;
+			if(PUMPControlHandle_t.u8Flag_measurement == SET)
+			{
+				HAL_TIM_Base_Stop_IT(&htim6);
+				HAL_TIM_Base_DeInit(&htim6);
+
+				PUMPControlHandle_t.u8Flag_measurement = RESET;
+			}
+			//reset all the action
+			PUMPControlHandle_t.u16TIM6_count = 0;
+			PUMPControlHandle_t.u16TIM6_limit = 0;
+			PUMPControlHandle_t.u8PUMP_action = 1;
+			PUMPControlHandle_t.u8PUMP_delayaction = 0;
+			PUMPControlHandle_t.u8PUMP_no = 0;
+			//un-block the ADC measurement
+			PUMPControlHandle_t.u8Flag_measurement = 0x00;
+		}
+		if(pumpNo == 1)
+		{
+			HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+			//Valve off
+			VALVE_OFF();
+			//Turn of the pump 1
+			PUMP1_OFF();
+			//PUMPControlHandle_t.u8PUMP_action = 0x02;//move to the pump delay time
+			//Reset the HMI inter-locking Flag
+			HMIInterlockingFlag(HMI_INTERLOCK_SAMPLE_PUMP,RESET);
+			//Disable interrupt
+//					htim6.Instance->DIER &= ~TIM_IT_UPDATE; // disable timer interrupt flag
+			//htim6.Instance->CR1 &= ~TIM_CR1_CEN; // disable timer
+			//htim6.Instance->SR = 0;
+			if(PUMPControlHandle_t.u8Flag_measurement == SET)
+			{
+				HAL_TIM_Base_Stop_IT(&htim6);
+				HAL_TIM_Base_DeInit(&htim6);
+
+				PUMPControlHandle_t.u8Flag_measurement = RESET;
+			}
+			//reset all the action
+			PUMPControlHandle_t.u16TIM6_count = 0;
+			PUMPControlHandle_t.u16TIM6_limit = 0;
+			PUMPControlHandle_t.u8PUMP_action = 1;
+			PUMPControlHandle_t.u8PUMP_delayaction = 0;
+			PUMPControlHandle_t.u8PUMP_no = 0;
+			//un-block the ADC measurement
+			PUMPControlHandle_t.u8Flag_measurement = 0x00;
+		}
 	}
 }

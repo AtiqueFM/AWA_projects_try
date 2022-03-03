@@ -96,4 +96,19 @@ Updates				:-
 						2. Internal ADC for flow sensor and interlocking for SET AS ZERO.
 							if cleaning tank is empty then wont be able to set that PD values as zero.
 							(if the voltage values are below 2.3V then cleaning tank is not empty.)
-						3. pH display value limited b/w 0 to 14.				
+						3. pH display value limited b/w 0 to 14.	
+	
+Date				:- 24/02/2022					
+Updates				:-
+						1. MIL, Flow sensor and Stop button command for sampling and cleaning up added to COD 10 point calibration.	
+						2. Delay b/t value on and pump 1 on changed from 1000 to 500ms
+						3. Commented all the default calibration parameters.	
+						
+Date 				:- 28/02/2022
+Updates				:- 
+						1. Added interlocking of MIL state in Sensor calibration of COD and TSS.
+						2. Moved the DMA TC flag in main loop from ISR -> caused the delay in pH card ADC reading.	
+						
+Date				:- 2/2/2022
+Updates				:-
+						1. uncommented the Relay operations, and tested with masibus for pH parameter.

@@ -573,7 +573,7 @@ void DMA2_Stream6_IRQHandler(void)
 
 	/*Disable the DMA2 Stream 6*/
 	DMAPeripheralEnable(DMA2_Stream6,DISABLE);
-
+#if 0
 	/*Clear the UART6 Transfer complete flag*/
 	while(!(huart6.Instance->SR & USART_SR_TC));
 	huart6.Instance->SR &= !USART_SR_TC;
@@ -589,9 +589,9 @@ void DMA2_Stream6_IRQHandler(void)
 
 	/*Enable the Stream 2*/
 	DMAPeripheralEnable(DMA2_Stream2,ENABLE);
-
+#endif
 	/*Make the Direction GPIO pin LOW*/
-	dma_tx_flag_AT = 1;
+	DMA_TX_FLAG = 1;
 }
 
 /*UART 1 RX*/
@@ -719,6 +719,7 @@ void DMA2_Stream7_IRQHandler(void)
 	/*Disable the DMA2 Stream 7*/
 	DMAPeripheralEnable(DMA2_Stream7,DISABLE);
 
+#if 0
 	/*Clear the UART1 Transfer complete flag*/
 	while(!(huart1.Instance->SR & USART_SR_TC));
 	huart1.Instance->SR &= !USART_SR_TC;
@@ -737,9 +738,9 @@ void DMA2_Stream7_IRQHandler(void)
 
 	/*Enable the Stream 5*/
 	DMAPeripheralEnable(DMA2_Stream5,ENABLE);
-
+#endif
 	/*Make the Direction GPIO pin LOW*/
-	dma_tx_flag_uart1 = 1;
+	DMA_TX_FLAG_HMI = 1;
 }
 
 

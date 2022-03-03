@@ -37,8 +37,8 @@ extern "C" {
 #define MODBUS_1000_BYTES					1
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1500
 #define UART_6_RX_DESTINATION_ADDR			(uint32_t)0x20005000
-uint8_t dma_tx_flag_AT;
-uint8_t dma_tx_flag_uart1;
+uint8_t DMA_TX_FLAG;
+uint8_t DMA_TX_FLAG_HMI;
 //If you want to skip the auto zero process for the HMI testing
 //#define HMI_TEST
 // Card IDs
@@ -499,7 +499,7 @@ typedef struct{
 	uint8_t CleanReady;			/*<NA*/
 	uint8_t ADCReadStart;		/*<NA*/
 	uint8_t CleaningTankEmpty;	/*<Bit Set if Cleaning tank is empty*/
-	uint8_t sample_pump;		/*<NA*/
+	uint8_t MILSwitchState;		/*<State - Yet to be defined.*/
 	uint8_t measure;			/*<NA*/
 	uint8_t read_acid;			/*<NA*/
 	uint8_t read_sample;		/*<NA*/
@@ -538,6 +538,11 @@ typedef union{
 		float TOC_Value;
 		float pH_mV;
 		float Temperature;
+		float FlowSensorVoltage;
+		float FlowSensorStatus;
+		float MILSwitchStatus;
+		uint16_t main_cmd;
+		uint16_t common_cmd;
 		/*2-pt calibration*/
 		float COD_slope;
 		float COD_intercept;
@@ -696,6 +701,8 @@ void Error_Handler(void);
 #define RELAY_3_GPIO_Port GPIOC
 #define RELAY_4_Pin GPIO_PIN_3
 #define RELAY_4_GPIO_Port GPIOC
+#define MIL_SWITCH_Pin GPIO_PIN_0
+#define MIL_SWITCH_GPIO_Port GPIOA
 #define RELAY_5_Pin GPIO_PIN_4
 #define RELAY_5_GPIO_Port GPIOA
 #define CARD_5_ID1_Pin GPIO_PIN_5
@@ -881,6 +888,7 @@ void Error_Handler(void);
 #define COD_SENSOR_MEASURE_pt1			0x18
 #define COD_SENSOR_MEASURE_pt2			0x19
 #define COD_SENSOR_MEASURE_pt3			0x20
+#define STOP_RUNNING_PUMP				0x99
 
 #define SETTING_CONFIG_MODE				0x23
 #define Default							0x11
@@ -1344,6 +1352,7 @@ typedef union{
 		unsigned AWADataSave_Calibration	: 1;//if not saved '1', else '0'
 		unsigned CleaningTankEmpty			: 1;	/*<If SET then Set As Zero won't be accessible
 		 	 	 	 	 	 	 	 	 	 	 	 	 Warning on the HMI*/
+		unsigned MILSwitchState				: 1;
 	};
 }AWAOperationHandle_t;
 AWAOperationHandle_t AWAOperationStatus_t;

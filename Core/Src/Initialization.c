@@ -84,29 +84,37 @@ void HoldingRegisterdefaultData(void)
 	HoldingRegister_t.ModeCommand_t.ModeCommand_H = 0x22;
 	HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x01;
 
-	HoldingRegister_t.ModeCommand_t.PUMP1_ONTIME = 1;
+//	HoldingRegister_t.ModeCommand_t.PUMP1_ONTIME = 1;
 	//depricated code
 	g_u8PUMP_action = 0x01;//pump-on time
 	//default value for the pump action, this will start from the pump on and off then it will enter to the de-gas time (pump delay)
-	PUMPControlHandle_t.u8PUMP_action = 0x01;
-	HoldingRegister_t.ModeCommand_t.PUMP1_ONTIME = 10;
-	HoldingRegister_t.ModeCommand_t.PUMP1_DELAY = 1;
-	HoldingRegister_t.ModeCommand_t.PUMP2_ONTIME = 10;
-	HoldingRegister_t.ModeCommand_t.PUMP2_DELAY = 1;
+//	PUMPControlHandle_t.u8PUMP_action = 0x01;
+	SEL1_PT100();
 
+#if 0
+	HoldingRegister_t.ModeCommand_t.PUMP1_ONTIME = 20;
+	HoldingRegister_t.ModeCommand_t.PUMP1_DELAY = 1;
+	HoldingRegister_t.ModeCommand_t.PUMP2_ONTIME = 20;
+	HoldingRegister_t.ModeCommand_t.PUMP2_DELAY = 1;
+#endif
+
+#if 0
 	//Testing COD +ve values
 	HoldingRegister_t.ModeCommand_t.C[2] = 0.0002f;
 	HoldingRegister_t.ModeCommand_t.C[1] = 0.27108f;
 	HoldingRegister_t.ModeCommand_t.C[0] = 0.23031f;
-	HoldingRegister_t.SensorCalibration_t.COD_CF = 1.21f;
-	HoldingRegister_t.SensorCalibration_t.COD_Intercept = -3.69f;
+#endif
+#if 0
+	HoldingRegister_t.SensorCalibration_t.COD_CF = 1.0f;
+	HoldingRegister_t.SensorCalibration_t.COD_Intercept = 0.4f;
 
 	COD_SensorCalibration_t.slope = HoldingRegister_t.SensorCalibration_t.COD_CF;
 	COD_SensorCalibration_t.intercept = HoldingRegister_t.SensorCalibration_t.COD_Intercept;
+#endif
 	//COD Sensor calibration, should start with capturing x1 and y1
 	COD_SensorCalibration_t.point_flag = 0;
 
-	HoldingRegister_t.ModeCommand_t.BOD_CF = 0.2f;
+//	HoldingRegister_t.ModeCommand_t.BOD_CF = 0.5f;
 
 #if 0
 	double data[10] = {95,150,240,360,450,500,620,700,750,800};
@@ -120,19 +128,19 @@ void HoldingRegisterdefaultData(void)
 	}
 #endif
 	//PT100
-	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0X01;
+//	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0X01;
 //	HoldingRegister_t.ModeCommand_t.COD_Y[] = {95,150,240,360,450,500,620,700,750,800};
 
 	//When the system is rebooted or booted for the first time user is supposed to measure the PD1 and PD2 zero values
 	COD_MeasurementStatus.COD_ZERO = 0x00;
 
 	//COD SF default value
-	HoldingRegister_t.ModeCommand_t.COD_SF = 100.0f;
-	HoldingRegister_t.ModeCommand_t.TSS_SF = 500.0f;
+//	HoldingRegister_t.ModeCommand_t.COD_SF = 100.0f;
+//	HoldingRegister_t.ModeCommand_t.TSS_SF = 500.0f;
 	//Default PD1 and PD2 Zero
 	//COD_MeasurementValues_t.PD1_Zero = 30988;
 	//COD_MeasurementValues_t.PD2_Zero = 23617;
-#if 1
+#if 0
 	InputRegister_t.PV_info.PD1_0 = 23000;//30988;
 	InputRegister_t.PV_info.PD2_0 = 30000;//23617;
 #endif
@@ -210,10 +218,14 @@ void HoldingRegisterdefaultData(void)
 	HoldingRegister_t.RelayOUTConfig_t[7].Relay_OP_HIGHLOW = 2;//HIGH = 1; LOW = 2
 #endif
 
-	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0x03;//Manual temp input
-	HoldingRegister_t.ModeCommand_t.Temperature_setPoint = 25.0f;//Temperature set point
-	HoldingRegister_t.ModeCommand_t.FlowSensorCutoff = 2.3f;
+
+//	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0x03;//Manual temp input
+//	HoldingRegister_t.ModeCommand_t.Temperature_setPoint = 25.0f;//Temperature set point
+//	HoldingRegister_t.ModeCommand_t.FlowSensorCutoff = 2.3f;
 	HoldingRegister_t.ModeCommand_t.RANGESELECT = MODEL_3021_3022;/*<COD:800; TSS:750*/
+//	HoldingRegister_t.IOUTCalibandTest_t.CalibrationType = 0x03;//Manual temp input
+//	HoldingRegister_t.ModeCommand_t.Temperature_setPoint = 25.0f;//Temperature set point
+//	HoldingRegister_t.ModeCommand_t.FlowSensorCutoff = 2.3f
 
 	/*<Last Calibration Data*/
 //	InputRegister_t.COD_lastCalibration[0].C[0] = 10.2f;

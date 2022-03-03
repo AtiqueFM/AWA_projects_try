@@ -7,6 +7,7 @@
 #include "stm32f4xx_hal.h"
 #include "main.h"
 #include "stm32f4xx_dma.h"
+#include "Initialization.h"
 
 
 #define CRC_POLY_16         0xA001
@@ -44,7 +45,7 @@ void ProcessMOD2_ModbusQuery_DMA(void);
 /*External function from Initialization*/
 extern void DMA_UART6_RX_Init(void);
 extern void DMA_UART6_TX_Init(void);
-extern void DMA_UART1_RX_Init(void);
+extern void DMA_UART1_RX_Init(uint32_t *pDestinationBuff, uint16_t noTrasaction);
 extern void DMA_UART1_TX_Init(void);
 //void MX_USART3_UART_Init(void);
 
@@ -818,40 +819,26 @@ void ProcessModbusQuery(void)
 		}
 		else
 		{
-//			huart3.Instance->CR1 |= UART_MODE_RX; // Rx enable
-//			huart3.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
 
-			//huart1.Instance->CR1 |= UART_MODE_RX; // Rx enable
-			//huart1.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
+			DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),DMA_FIRST_TRANSACTION_NO); /*< Initialize the DMA2 Stream 5 with DMA_FIRST_TRANSACTION_NO*/
+
+			/*Enable the DMAR*/
 			huart1.Instance->CR3 |= USART_CR3_DMAR;
-			huart1.Instance->CR3 &= !USART_CR3_DMAT;
-			//Enable the interrupt for UART TX
-			DMA_IRQITConfig(IRQ_NO_DMA2_Stream7,DISABLE);
-			//Disable the interrupt for UART RX
-			DMA_IRQITConfig(IRQ_NO_DMA2_Stream5,ENABLE);
+			//TODO: Increment the MODBUS_DMA_querry_count to 1.
+			DMAPeripheralEnable(DMA2_Stream5,ENABLE);
 
-			//Enable the DMA 2 Stream for UART 6 RX
-			DMAPeripheralEnable(DMA2_Stream5, ENABLE);
-			ADM_CLTR_LOW();
 		}
 	}
 	else // invalid slave ID
 	{
-//		huart3.Instance->CR1 |= UART_MODE_RX; // Rx enable
-//		huart3.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
 
-		//huart1.Instance->CR1 |= UART_MODE_RX; // Rx enable
-		//huart1.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
+		DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),DMA_FIRST_TRANSACTION_NO); /*< Initialize the DMA2 Stream 5 with DMA_FIRST_TRANSACTION_NO*/
+
+		/*Enable the DMAR*/
 		huart1.Instance->CR3 |= USART_CR3_DMAR;
-		huart1.Instance->CR3 &= !USART_CR3_DMAT;
-		//Enable the interrupt for UART TX
-		DMA_IRQITConfig(IRQ_NO_DMA2_Stream7,DISABLE);
-		//Disable the interrupt for UART RX
-		DMA_IRQITConfig(IRQ_NO_DMA2_Stream5,ENABLE);
+		//TODO: Increment the MODBUS_DMA_querry_count to 1.
+		DMAPeripheralEnable(DMA2_Stream5,ENABLE);
 
-		//Enable the DMA 2 Stream for UART 6 RX
-		DMAPeripheralEnable(DMA2_Stream5, ENABLE);
-		ADM_CLTR_LOW();
 	}
 
 
@@ -1303,32 +1290,47 @@ void ProcessMOD2_ModbusQuery_DMA(void)
 		}
 		else
 		{
+
+			//Configure DMA for UART 6 RX
+			DMA_UART6_RX_Init();
 			//huart6.Instance->CR1 |= UART_MODE_RX; // Rx enable
 			//huart6.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
 			huart6.Instance->CR3 |= USART_CR3_DMAR;
-			huart6.Instance->CR3 &= !USART_CR3_DMAT;
+//			huart6.Instance->CR3 &= !USART_CR3_DMAT;
 			//Enable the interrupt for UART TX
-			DMA_IRQITConfig(IRQ_NO_DMA2_Stream6,DISABLE);
+//			DMA_IRQITConfig(IRQ_NO_DMA2_Stream6,DISABLE);
 			//Disable the interrupt for UART RX
-			DMA_IRQITConfig(IRQ_NO_DMA2_Stream2,ENABLE);
+//			DMA_IRQITConfig(IRQ_NO_DMA2_Stream2,ENABLE);
 
 			//Enable the DMA 2 Stream for UART 6 RX
 			DMAPeripheralEnable(DMA2_Stream2, ENABLE);
-			ADM_2_CLTR_LOW();
+//			ADM_2_CLTR_LOW();
 		}
 	}
 	else // invalid slave ID
 	{
+
+		//Configure DMA for UART 6 RX
+		DMA_UART6_RX_Init();
+
 		//huart1.Instance->CR1 |= UART_MODE_RX; // Rx enable
 		//huart6.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
 		huart6.Instance->CR3 |= USART_CR3_DMAR;
-		huart6.Instance->CR3 &= !USART_CR3_DMAT;
+//		huart6.Instance->CR3 &= !USART_CR3_DMAT;
 		//Enable the interrupt for UART TX
-		DMA_IRQITConfig(IRQ_NO_DMA2_Stream6,DISABLE);
+//		DMA_IRQITConfig(IRQ_NO_DMA2_Stream6,DISABLE);
 		//Disable the interrupt for UART RX
-		DMA_IRQITConfig(IRQ_NO_DMA2_Stream2,ENABLE);
+//		DMA_IRQITConfig(IRQ_NO_DMA2_Stream2,ENABLE);
 		//Enable the DMA 2 Stream for UART 6 RX
 		DMAPeripheralEnable(DMA2_Stream2, ENABLE);
-		ADM_2_CLTR_LOW();
+//		ADM_2_CLTR_LOW();
+
+
+//		DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),DMA_FIRST_TRANSACTION_NO); /*< Initialize the DMA2 Stream 5 with DMA_FIRST_TRANSACTION_NO*/
+//
+//		/*Enable the DMAR*/
+//		huart1.Instance->CR3 |= USART_CR3_DMAR;
+//		//TODO: Increment the MODBUS_DMA_querry_count to 1.
+//		DMAPeripheralEnable(DMA2_Stream5,ENABLE);
 	}
 }
