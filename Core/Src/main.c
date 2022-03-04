@@ -276,6 +276,46 @@ int main(void)
 		  RxFlag = 0;
 		  ProcessModbusQuery();
 	  }
+
+	  /*Compare the command from HMI with the already executing command*/
+	  if(HoldingRegister_t.ModeCommand_t.CommonCommand == RESET
+			  && CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG == SET)
+	  {
+		  /*
+		   * If the the already executing command has expired.
+		   * Then, push the command from HMI into the state machine command variable.
+		   */
+
+		  //Reset the new command flag
+		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
+
+		  //Main command
+		  HoldingRegister_t.ModeCommand_t.ModeCommand_H = HoldingRegister_t.ModeCommand_t.ModeCommandHMI_H;
+		  HoldingRegister_t.ModeCommand_t.ModeCommand_L = HoldingRegister_t.ModeCommand_t.ModeCommandHMI_L;
+
+		  //Common command
+		  HoldingRegister_t.ModeCommand_t.CommonCommand = HoldingRegister_t.ModeCommand_t.CommonCommandHMI;
+
+	  }
+	  /*Check if the command from HMI is similar to that of the already executing/executed command*/
+	  else if(HoldingRegister_t.ModeCommand_t.CommonCommand != RESET
+			  && CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG == SET)
+	  {
+		  /*
+		   * If there is a new command from the HMI while the old common command is still in use,
+		   * then the common command from the HMI should be forced RESET, but the main command (Page ID)
+		   * should be retained.
+		   */
+
+		  //Reset the new command flag
+		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
+
+		  //Reset the Command from HMI
+		  //HoldingRegister_t.ModeCommand_t.ModeCommandHMI_H = HoldingRegister_t.ModeCommand_t.ModeCommand_H; //Set the current main command to the HMI command
+		  //HoldingRegister_t.ModeCommand_t.ModeCommandHMI_L = HoldingRegister_t.ModeCommand_t.ModeCommand_L;	//Set the current main command to the HMI command
+		  HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+	  }
+
 	  if(MOD2_RxFlag == 0x01)
 	  {
 		  UHolding_Modbus_2.BOD_Value = InputRegister_t.PV_info.BODValue;

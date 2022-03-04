@@ -369,6 +369,9 @@ typedef struct{
 	//uint16_t PWM3_offset;
 	//uint16_t PWM4_offset;
 	//uint16_t relay[8];//address : 187
+	uint8_t ModeCommandHMI_L;		/*<Request command from HMI*/
+	uint8_t ModeCommandHMI_H;		/*<Request command from HMI*/
+	uint16_t CommonCommandHMI;		/*<Request command from HMI*/
 }ModeCommandHandle_t;
 
 typedef struct{
@@ -466,7 +469,7 @@ typedef union{
 	struct{
 		//40000
 		ModeCommandHandle_t ModeCommand_t;
-		uint8_t RES_1[100];						/*<Reserve for additional MODBUS register*/
+		uint8_t RES_1[100 - 4];					/*<Reserve for additional MODBUS register*/
 		//41000
 		IOUTConfigHanldle_t IOUTConfig_t[8];
 		uint8_t RES_2[100];						/*<Reserve for additional MODBUS register*/
@@ -489,7 +492,7 @@ typedef struct{
 	uint8_t p[8]; //p5-p12
 	uint8_t relay[8];//relay 1 - relay 8
 	uint8_t spare[2];
-	uint8_t COD_USECOEFF;		/*<NA*/
+	uint8_t NEW_COMMAND_FLAG;	/*<Set by HMI is there is new command, Reset by uC after receiving the command.*/
 	uint8_t TSS_USECOEFF;		/*<NA*/
 	uint8_t pH_USECOEFF;		/*<NA*/
 	uint8_t OIW_USECOEFF;		/*<NA*/
