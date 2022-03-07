@@ -369,6 +369,12 @@ typedef struct{
 	//uint16_t PWM3_offset;
 	//uint16_t PWM4_offset;
 	//uint16_t relay[8];//address : 187
+	uint32_t RES[10];				/*<Reserve memory 40 bytes*/
+	uint16_t CS_PUMP1_ONTIME;		/*<Cleaning pump on time for Check screen*/
+	uint16_t CS_PUMP1_DELAY;		/*<Cleaning pump de-gas time for check screen*/
+	uint16_t CS_PUMP2_ONTIME;		/*<Sample pump on time for check screen*/
+	uint16_t CS_PUMP2_DELAY;		/*<Cleaning pump de-gas time for check screen*/
+	uint16_t CS_FLASH;				/*<IF 1 : 100 FLASHES; IF 2 : 500 flashes*/
 }ModeCommandHandle_t;
 
 typedef struct{
@@ -469,7 +475,7 @@ typedef union{
 	struct{
 		//40000
 		ModeCommandHandle_t ModeCommand_t;
-		uint8_t RES_1[100];						/*<Reserve for additional MODBUS register*/
+		uint8_t RES_1[100 - 40 - 10];						/*<Reserve for additional MODBUS register*/
 		//41000
 		IOUTConfigHanldle_t IOUTConfig_t[8];
 		uint8_t RES_2[100];						/*<Reserve for additional MODBUS register*/
@@ -590,19 +596,19 @@ uint16_t TempDetSignal;
 uint16_t TempADCounts[10];
 //uint16_t TempDet1Signal_Ch1[100];
 
-uint16_t TempDet1Noise_Ch1[100];
-uint16_t TempDet1Signal_Ch1[100];
-uint16_t TempDet2Noise_Ch2[100];
-uint16_t TempDet2Signal_Ch2[100];
+uint16_t TempDet1Noise_Ch1[500];
+uint16_t TempDet1Signal_Ch1[500];
+uint16_t TempDet2Noise_Ch2[500];
+uint16_t TempDet2Signal_Ch2[500];
 
 //buffers required for the the averaging of PD1 and PD2 noise and signal
-uint16_t SignalNoiseDiff_Ch1[100];//19/10/2021
-uint16_t SignalNoiseDiff_Ch2[100];//19/10/2021
+uint16_t SignalNoiseDiff_Ch1[500];//19/10/2021
+uint16_t SignalNoiseDiff_Ch2[500];//19/10/2021
 uint64_t TempMeanPd1,TempMeanPd2;//19/10/2021
 uint16_t PD1_new, PD2_new;
 uint16_t PD1_Zero, PD2_Zero;
-double sd[100];
-double sd2[100];
+double sd[500];
+double sd2[500];
 
 //LPF Array
 //uint16_t Y_filter_new;
@@ -611,8 +617,8 @@ double sd2[100];
 ////float sampling_time_noise = 0.059;
 ////float sampling_time_noise = 0.051;
 //uint16_t averaging_time = 1;
-uint16_t filter_data_PD1[100];
-uint16_t filter_data_PD2[100];
+uint16_t filter_data_PD1[500];
+uint16_t filter_data_PD2[500];
 uint64_t filter_data_PD1_mean;
 uint64_t filter_data_PD2_mean;
 

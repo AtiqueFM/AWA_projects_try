@@ -855,25 +855,70 @@ void ProcessModesCommands(void)
 		{
 			case COD_Check:
 			{
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Read_acid)
-				{
-					Application_ReadAcid();
-				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Read_sample)
-				{
-					Application_ReadSample();
-				}
+//				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Read_acid)
+//				{
+//					Application_ReadAcid();
+//				}
+//				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Read_sample)
+//				{
+//					Application_ReadSample();
+//				}
+//				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
+//				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
+//				{
+//					CODADCCapture(COD_Measure);
+//				}
+				//Set as zero
+//				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO
+//						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
+//				{
+//					Application_SetAsZero(1);
+//				}
+
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
 				{
 					CODADCCapture(COD_Measure);
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && PUMPControlHandle_t.u8Flag_measurement)
+				{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
-				//Set as zero
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION)
+				{
+					//operate the cleaning pump
+					CheckScreen_PumpOperation(0x01);
+				}
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == SET)
+				{
+					//operate the sample pump
+					CheckScreen_PumpOperation(0x02);
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == RESET)
+				{
+					pumpOperationStop();
+				}
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO
 						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
 				{
-					Application_SetAsZero(1);
+					//set the current PD1 and PD2 mean values to the PD1(0) and PD2(0)
+					COD_MeasurementValues_t.PD1_Zero = COD_MeasurementValues_t.PD1_New;
+					COD_MeasurementValues_t.PD2_Zero = COD_MeasurementValues_t.PD2_New;
+
+					//Calculate the COD RAW
+					float COD_RAW = HoldingRegister_t.ModeCommand_t.COD_SF *(log(COD_MeasurementValues_t.PD1_Zero/COD_MeasurementValues_t.PD1_New) - log(COD_MeasurementValues_t.PD2_Zero/COD_MeasurementValues_t.PD2_New));
+					//Publish the values to the MODBUS
+					InputRegister_t.PV_info.COD_RAW = COD_RAW;
+					InputRegister_t.PV_info.PD1_0 = COD_MeasurementValues_t.PD1_Zero;
+					InputRegister_t.PV_info.PD2_0 = COD_MeasurementValues_t.PD2_Zero;
+					//Reset the command
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+					AWADataStoreState.factoryCOD_setzero = SET;
+					//Flag set as data not saved in the FRAM
+					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 				}
+				/*Emergency Pump Stop*/
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
+					pumpOperationStop();
+
 				break;
 			}
 			case TSS_Check:
@@ -1204,6 +1249,467 @@ void CardAction(uint8_t CardID)
 	}
 }
 
+void filtering(uint8_t no_of_flashes)
+{
+	uint16_t flash_limit = 0;
+	if(no_of_flashes == 1)
+		flash_limit = 100;
+	else if(no_of_flashes == 2)
+		flash_limit = 500;
+
+	for(int t=0; t<flash_limit; t++)//limit of this for loop will change according to the number of flashes selected
+	{
+		if(TempDet1Signal_Ch1[t] >= TempDet1Noise_Ch1[t])
+			SignalNoiseDiff_Ch1[t] = TempDet1Signal_Ch1[t] - TempDet1Noise_Ch1[t];
+		else
+			SignalNoiseDiff_Ch1[t] = - TempDet1Signal_Ch1[t] + TempDet1Noise_Ch1[t];
+		if(TempDet2Signal_Ch2[t] >= TempDet2Noise_Ch2[t])
+			SignalNoiseDiff_Ch2[t] = TempDet2Signal_Ch2[t] - TempDet2Noise_Ch2[t];
+		else
+			SignalNoiseDiff_Ch2[t] =  - TempDet2Signal_Ch2[t] + TempDet2Noise_Ch2[t];
+	}
+
+	for(int t=0; t<flash_limit; t++)//limit of this for loop will change according to the number of flashes selected
+	{
+		TempMeanPd1 = TempMeanPd1 + SignalNoiseDiff_Ch1[t];
+		TempMeanPd2 = TempMeanPd2 + SignalNoiseDiff_Ch2[t];
+	}
+	TempMeanPd1 = TempMeanPd1/flash_limit;
+	TempMeanPd2 = TempMeanPd2/flash_limit;
+
+	//Ascending order for PD1 and PD2
+	CheckScreen_bubble_sort(flash_limit);
+
+}
+
+void CheckScreen_bubble_sort(uint16_t filterLimit)
+{
+	uint16_t temp = 0;
+
+	for(int i = 0;i<filterLimit;i++)
+	{
+		filter_data_PD1[i] = SignalNoiseDiff_Ch1[i];
+		filter_data_PD2[i] = SignalNoiseDiff_Ch2[i];
+	}
+
+	//filtering of PD1
+	for(int i = 0; i< filterLimit - 1 ; i++)
+	{
+		for(int j = i+1 ; j<filterLimit; j++)
+		{
+			if(filter_data_PD1[i] >= filter_data_PD1[j])
+			{
+				temp = filter_data_PD1[i];
+				filter_data_PD1[i] = filter_data_PD1[j];
+				filter_data_PD1[j] = temp;
+			}
+		}
+	}
+
+	//filtering of PD2
+	for(int i = 0; i< filterLimit - 1 ; i++)
+	{
+		for(int j = i+1 ; j<filterLimit; j++)
+		{
+			if(filter_data_PD2[i] >= filter_data_PD2[j])
+			{
+				temp = filter_data_PD2[i];
+				filter_data_PD2[i] = filter_data_PD2[j];
+				filter_data_PD2[j] = temp;
+			}
+		}
+	}
+	int count = 0;
+
+	//Limits for filtering
+	uint16_t limit_min = filterLimit * 0.2f; 		/*20%  of the total limit*/
+	uint16_t limit_max = filterLimit - limit_min;
+	uint16_t data_range = limit_max - limit_min;
+
+	//removed first 10 and last 10 data
+	for(int i=limit_min;i<limit_max;i++)
+	{
+		filter_data_PD1_mean += filter_data_PD1[i];
+		filter_data_PD2_mean += filter_data_PD2[i];
+		count += 1;
+	}
+
+	//Averaged 80 points data
+	filter_data_PD1_mean /= data_range;
+	filter_data_PD2_mean /= data_range;
+
+
+}
+uint8_t CheckScreen_CODADCCapture(uint8_t command)
+{
+	//variables for calculation
+	float COD_RAW = 0;
+	float TSS_RAW = 0;
+
+	//this flag will be set when the PD1 and PD2 zero values have been measured and stored
+	uint8_t flash = 0;
+
+	static uint16_t no_of_flashes = 0;
+
+	//if the command is for cod measurernt and zeroing of the PD1 and PD2 is done will only then it will measure and perform flashing
+	if((command == COD_Measure || command == AUTO_COD_MEASURE) && COD_MeasurementStatus.COD_ZERO == 0x01)
+	{
+		//set the flag to 1 as auto zeroing is done
+		flash = 1;
+	}else if(command == AUTO_COD_ZERO){
+		//Enter the Flashing operation to perform the Auto Zeroing
+		flash = 1;
+	}else{
+		//reset the common command flag as Auto Zeroing is not yet done
+		HoldingRegister_t.ModeCommand_t.CommonCommand = 0x00;
+		return 0;
+	}
+	if(flash)
+	{
+		//Set the COD flashing operation to prevent the program to enter into other card action
+		AWAOperationStatus_t.CODFlashOperation = 0x01;
+		if(TimerStart == 0x02)
+		{
+			TimerStart = 0x00;
+			CycleStart = 1;
+
+			htim2.Instance->DIER |= TIM_IT_UPDATE;
+			htim2.Instance->CR1 |= TIM_CR1_CEN;
+#if 0 //if 0, it will accept the MODBUS query even during the COD measurement process
+			RxFlag = 0x00;
+			//turn of the MODBUS receive query
+			huart3.Instance->CR1 &= ~UART_MODE_RX;// Rx disable
+			huart3.Instance->CR1 &= ~UART_IT_RXNE; // UART RX not empty interrupt disable
+#endif
+			dataptr1 = 0; //SSG
+			dataptr = 0;
+
+			ArrayPtr = 0;
+			/*TDOD: Check for the number of flashes to be performed*/
+			no_of_flashes = HoldingRegister_t.ModeCommand_t.CS_FLASH;
+			if(no_of_flashes == 1)
+				no_of_flashes = 100;
+			else if(no_of_flashes == 2)
+				no_of_flashes = 500;
+
+			//	ADCInit();
+			//Set the COD measure flag to "1", tp indicate the start of flashing sequence
+			cod_flash_operation = 1;
+			//Set HMI inter-locking flag
+			HMIInterlockingFlag(HMI_INTERLOCK_MEASURE,SET);
+
+		  }
+
+		if(TIM2State == TIME_6MS && ReadADCFlag == 1)
+		{
+			//HAL_Delay(1);
+
+			TempDetNoise = 0;
+			AD7682Init(PD1_CHANNEL);
+			//dummy read
+			//TempDetNoise = SPI_ReadData();//ReadADC(CH0);
+			//actual ADC data
+			TempDetNoise = SPI_ReadData();
+
+			TempDet1Noise_Ch1[ArrayPtr] = TempDetNoise;
+			//UInputReg.SInputReg.SADCReg[ArrayPtr].Det1Noise_Ch1 = TempDetNoise;//no need to send this on modbus
+
+		  	TempDetNoise = 0;
+		  	AD7682Init(PD2_CHANNEL);
+		  	//dummy read
+			//TempDetNoise = SPI_ReadData();//ReadADC(CH1);
+			//actual ADC Data
+			TempDetNoise = SPI_ReadData();
+
+			TempDet2Noise_Ch2[ArrayPtr] = TempDetNoise;
+			//UInputReg.SInputReg.SADCReg[ArrayPtr].Det2Noise_Ch2 = TempDetNoise;//no need to send this on modbus
+
+			(dataptr1 < 99)?(dataptr1++):(dataptr1 = 500);
+			ReadADCFlag = 0x00;
+		}
+		if(TIM2State == TIME_8MS && ReadADCFlag == 1)
+		{
+			TempDetSignal = 0;
+			//configure the ADC for PD1 ADC channel
+			AD7682Init(PD1_CHANNEL);
+			//dummy read
+			//TempDetSignal = SPI_ReadData();//ReadADC(CH0);
+			//Actual ADC data
+			TempDetSignal = SPI_ReadData();
+
+			//store the Signal ADC reading into the array
+			TempDet1Signal_Ch1[ArrayPtr] = TempDetSignal;
+			//reset the buffer
+			TempDetSignal = 0;
+			//configure the ADC for PD2 ADC channel
+			AD7682Init(PD2_CHANNEL);
+			//Dummy read
+			//TempDetSignal = SPI_ReadData();//ReadADC(CH1);
+			//Actual ADC data
+			TempDetSignal = SPI_ReadData();
+
+			//store the Signal ADC reading into the array
+			TempDet2Signal_Ch2[ArrayPtr] = TempDetSignal;
+
+			huart3.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
+
+			ArrayPtr++;
+
+			(dataptr < 99)?(dataptr++):(dataptr = 500);
+			ReadADCFlag = 0x00;
+		}
+
+		if(ArrayPtr >= no_of_flashes) //if((dataptr1 == 500) && (dataptr == 500))
+		{
+			ArrayPtr = 0;
+
+			CycleStart = 0;
+
+#if 0
+			//19/10/2021
+			//averaging the PD1 and PD2 noise and signal data
+			for(int t=0; t<100; t++)//limit of this for loop will change according to the number of flashes selected
+			{
+				if(TempDet1Signal_Ch1[t] >= TempDet1Noise_Ch1[t])
+					SignalNoiseDiff_Ch1[t] = TempDet1Signal_Ch1[t] - TempDet1Noise_Ch1[t];
+				else
+					SignalNoiseDiff_Ch1[t] = - TempDet1Signal_Ch1[t] + TempDet1Noise_Ch1[t];
+				if(TempDet2Signal_Ch2[t] >= TempDet2Noise_Ch2[t])
+					SignalNoiseDiff_Ch2[t] = TempDet2Signal_Ch2[t] - TempDet2Noise_Ch2[t];
+				else
+					SignalNoiseDiff_Ch2[t] =  - TempDet2Signal_Ch2[t] + TempDet2Noise_Ch2[t];
+			}
+
+			for(int t=0; t<100; t++)//limit of this for loop will change according to the number of flashes selected
+			{
+				TempMeanPd1 = TempMeanPd1 + SignalNoiseDiff_Ch1[t];
+				TempMeanPd2 = TempMeanPd2 + SignalNoiseDiff_Ch2[t];
+			}
+			TempMeanPd1 = TempMeanPd1/100;
+			TempMeanPd2 = TempMeanPd2/100;
+
+			//Ascending order for PD1 and PD2
+			bubble_sort();
+#endif
+
+			filtering(no_of_flashes);
+
+			//new mean
+			TempMeanPd1 = filter_data_PD1_mean;
+			TempMeanPd2 = filter_data_PD2_mean;
+
+			filter_data_PD1_mean = 0;
+			filter_data_PD2_mean = 0;
+			//Perform this condition dusring Auto zero
+			if(command == AUTO_COD_ZERO)
+			{
+				//store the pD1 and PD2 mean vales to the global PD1 zero and PD2 zero
+				PD1_Zero = TempMeanPd1;
+				PD2_Zero = TempMeanPd2;
+
+				//publish the PD1 and PD2 zero values to the modbus
+				InputRegister_t.PV_info.PD1_0 = PD1_Zero;
+				InputRegister_t.PV_info.PD2_0 = PD2_Zero;
+				InputRegister_t.PV_info.TSS_PD2_0 = PD2_Zero;
+
+				COD_MeasurementValues_t.PD1_Zero = PD1_Zero;
+				COD_MeasurementValues_t.PD2_Zero = PD2_Zero;
+
+				//TSS PD2_0 value
+				TSS_MeasurementValues_t.PD2_Zero = PD2_Zero;
+
+				//Flag set when the PD1 and PD2 zero values are measured and stored
+				COD_MeasurementStatus.COD_ZERO = 0x01;
+			}
+			//Perform this condition during the measure or auto measure command
+			else if(command == AUTO_COD_MEASURE || command == COD_Measure)
+			{
+				//store the pD1 and PD2 mean vales to the global PD1 zero and PD2 new
+				PD1_new = TempMeanPd1;
+				PD2_new = TempMeanPd2;
+
+				COD_MeasurementValues_t.PD1_New = PD1_new;
+				COD_MeasurementValues_t.PD2_New = PD2_new;
+
+				//TSS
+				TSS_MeasurementValues_t.PD2_New = PD2_new;
+
+				//publish the PD1 and PD2 new values to the modbus
+				InputRegister_t.PV_info.PD1_MEAN = PD1_new;
+				InputRegister_t.PV_info.PD2_MEAN = PD2_new;
+
+				//Get the PD1(0) and PD2(0) from the modbus map to the local variable
+				COD_MeasurementValues_t.PD1_Zero = InputRegister_t.PV_info.PD1_0;
+				COD_MeasurementValues_t.PD2_Zero = InputRegister_t.PV_info.PD2_0;
+
+				//Get the PD2(0) from the modbus map to the local variable / this value can be changed in factory 10 pt cal
+				TSS_MeasurementValues_t.PD2_Zero = InputRegister_t.PV_info.TSS_PD2_0;//Make a default value in the main
+
+				//Calculations for COD raw
+				COD_RAW = HoldingRegister_t.ModeCommand_t.COD_SF *(log(COD_MeasurementValues_t.PD1_Zero/PD1_new) - log(COD_MeasurementValues_t.PD2_Zero/PD2_new));
+
+				//Calculation of TSS raw
+				TSS_RAW = HoldingRegister_t.ModeCommand_t.TSS_SF *(log(TSS_MeasurementValues_t.PD2_Zero/PD2_new));
+
+				//Quadratic equation - compensation (Factory Calibration)
+				float c[4];//BOD
+				float k[3];//TSS
+
+				//COD coefficient
+				for(int i = 0;i<4;i++)
+					c[i] = HoldingRegister_t.ModeCommand_t.C[i];
+
+				//TSS coefficient
+				for(int i = 0;i<3;i++)
+					k[i] = HoldingRegister_t.ModeCommand_t.TSS_K[i];
+
+				//COD_RAW = pow(COD_RAW,3) *c[3] + pow(COD_RAW,2) *c[2] + pow(COD_RAW,1) *c[1] + c[0];
+				float factory_cod_value = pow(COD_RAW,3) *c[3] + pow(COD_RAW,2) *c[2] + pow(COD_RAW,1) *c[1] + c[0];
+
+				//TSS factory equation
+				float factory_tss_value = pow(TSS_RAW,2) *k[2] + pow(TSS_RAW,1) *k[1] + k[0];
+
+				//COD actual value
+				COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope + COD_SensorCalibration_t.intercept;
+
+				//COD value with Factory Calibration not sensor
+				//COD_MeasurementValues_t.Cal_Value = factory_cod_value;
+
+				/*<DEPRICATED CODE*/
+				//TSS value
+				//TSS_MeasurementValues_t.Cal_Value = factory_tss_value;
+
+				//TSS value
+				TSS_MeasurementValues_t.Cal_Value = factory_tss_value * TSS_SensorCalibration_t.slope + TSS_SensorCalibration_t.intercept;
+
+				//BOD value
+				InputRegister_t.PV_info.BODValue = 0.5f * COD_MeasurementValues_t.Cal_Value;//factory_cod_value;
+
+				//TOC Value
+				InputRegister_t.PV_info.TOC = 0.3f * COD_MeasurementValues_t.Cal_Value;//factory_cod_value;
+
+				//Publish the COD_RAW on modbus
+				//InputRegister_t.PV_info.COD_RAW = COD_MeasurementValues_t.RAW_Value;
+				InputRegister_t.PV_info.COD_RAW = COD_RAW;
+				if(COD_MeasurementValues_t.Cal_Value < 0)
+				{
+					InputRegister_t.PV_info.CODValue = 0.0f;	/*<Display to the Customer,only positive value*/
+					//BOD value
+					InputRegister_t.PV_info.BODValue = 0;		/*<Display to the Customer,only positive value*/
+				}
+				else if(COD_MeasurementValues_t.Cal_Value > COD_UpperLimit)
+				{
+					InputRegister_t.PV_info.CODValue = COD_UpperLimit;
+					InputRegister_t.PV_info.BODValue = HoldingRegister_t.ModeCommand_t.BOD_CF * BOD_UpperLimit;
+				}
+				else
+				{
+					InputRegister_t.PV_info.CODValue = COD_MeasurementValues_t.Cal_Value;
+					//BOD value
+					InputRegister_t.PV_info.BODValue = HoldingRegister_t.ModeCommand_t.BOD_CF * COD_MeasurementValues_t.Cal_Value;//factory_cod_value;
+				}
+				InputRegister_t.PV_info.CODValueUser = COD_MeasurementValues_t.Cal_Value; 	/*<Reference for the Developer, can be negative value*/
+				InputRegister_t.PV_info.BODValueUser = HoldingRegister_t.ModeCommand_t.BOD_CF * COD_MeasurementValues_t.Cal_Value;
+
+				//Publish the TSS value to the modbus
+				InputRegister_t.PV_info.TSS_RAW = TSS_RAW;
+				if(TSS_MeasurementValues_t.Cal_Value < 0)
+					InputRegister_t.PV_info.TSSValue = 0.0f;	/*<Display to the Customer,only positive value*/
+				else if(TSS_MeasurementValues_t.Cal_Value > TSS_UpperLimit)
+				{
+					InputRegister_t.PV_info.TSSValue = TSS_UpperLimit;
+				}
+				else
+					InputRegister_t.PV_info.TSSValue = TSS_MeasurementValues_t.Cal_Value;
+				InputRegister_t.PV_info.TSSValueUser = TSS_MeasurementValues_t.Cal_Value; 	/*<Reference for the Developer, can be negative value*/
+
+				//Set the FRAM data storage flag
+				AWAOperationStatus_t.AWADataSave_ProcessValues = SET;
+
+				AWADataStoreState.analyzerPocessvalue = SET;
+
+			}
+
+			//RSD
+			double sum = 0;
+			double sum2 = 0;
+			double var = 0;
+			double rsd = 0;
+			double rsd2 = 0;
+
+			PD1_new = TempMeanPd1;
+			PD2_new = TempMeanPd2;
+
+			//(new_value - mean)^2
+			int b = 0;
+			//for(int i=  0;i<100;i++)
+			//for(int i = 20,b = 0;i<80;i++,b++)
+			for(int i = COD_OUT_FILTER_MIN,b = 0;i<COD_OUT_FILTER_MAX;i++,b++)
+			{
+				//sd[i] = pow((SignalNoiseDiff_Ch1[i] - PD1_new),2)/100;
+				//sd2[i] = pow((SignalNoiseDiff_Ch2[i] - PD2_new),2)/100;
+
+				sd[b] = pow((filter_data_PD1[i] - PD1_new),2)/COD_OUT_FILTER_RANGE;
+				sd2[b] = pow((filter_data_PD2[i] - PD2_new),2)/COD_OUT_FILTER_RANGE;
+			}
+
+			//for(int i = 0;i<100;i++)
+			//for(int i = 0;i<60;i++)
+			for(int i = 0;i<COD_OUT_FILTER_RANGE;i++)
+			{
+				sum += sd[i];
+				sum2 += sd2[i];
+			}
+			//SD
+			sum = sqrt(sum);
+			sum2 = sqrt(sum2);
+
+			//variance
+			var = pow(sum,2);
+
+			//RSD
+			rsd = (sum/PD1_new) * 100.0f;
+			rsd2 = (sum2/PD2_new) * 100.0f;
+
+
+			COD_MeasurementValues_t.RSD1 = rsd;
+			COD_MeasurementValues_t.RSD2 = rsd2;
+
+			InputRegister_t.PV_info.RSD1 = rsd;
+			InputRegister_t.PV_info.RSD2 = rsd2;
+			//printf("RSD 1: %f, RSD 2: %f",rsd,rsd2);
+			//rest the PD1 and PD2 mean buffers
+			TempMeanPd1 = 0;
+			TempMeanPd2 = 0;
+
+			//Turn off the timer 2
+			htim2.Instance->DIER &= ~TIM_IT_UPDATE;
+			htim2.Instance->CR1 &= ~TIM_CR1_CEN;
+
+			UHoldReg.SHoldReg.ADCReadStart = 0x00;//change the command register
+			TimerStart = 0x02;
+			dataptr1 = 0;
+			dataptr = 0;
+
+			//Turn of the modbus receive query
+			huart3.Instance->CR1 |= UART_MODE_RX; // Rx enable
+			huart3.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
+
+			//reset the common command flag
+			HoldingRegister_t.ModeCommand_t.CommonCommand = 0x00;
+
+			//set the flashing operation flag to 2 as flashing operation is completed successfully
+			cod_flash_operation = 2;
+
+			//Reset the COD flashing operation to perform other card action
+			AWAOperationStatus_t.CODFlashOperation = 0x00;
+
+			//Reset the HMI inter-locking flag
+			HMIInterlockingFlag(HMI_INTERLOCK_MEASURE,RESET);
+		}
+
+	  }
+}
 uint8_t CODADCCapture(uint8_t command)
 {
 	//variables for calculation
@@ -2185,6 +2691,101 @@ void PumpOperation(uint8_t PumpNo)
 	}
 }
 
+//Check screen
+void CheckScreen_PumpOperation(uint8_t PumpNo)
+{
+	if(PUMPControlHandle_t.u8PUMP_action == OPERATION_PUMP_ON)//0x01)//pump on time
+	{
+		PUMPControlHandle_t.u16TIM6_count = 0;//reset
+		if(PumpNo == PUMP1)//0x01)//pump1
+		{
+			PUMPControlHandle_t.u16TIM6_limit = HoldingRegister_t.ModeCommand_t.CS_PUMP1_ONTIME;
+			PUMPControlHandle_t.u8PUMP_no = 0x01;
+			//block the ADC measurement
+			PUMPControlHandle_t.u8Flag_measurement = 0x01;
+			VALVE_ON();//will change according to the valve operation
+			//Delay for 5 sec
+			HAL_Delay(500);
+			//turn on pump 1
+			PUMP1_ON();
+			//Set the HMI inter-locking flag for sample pump
+			HMIInterlockingFlag(HMI_INTERLOCK_ACID_PUMP, SET);
+		}
+		else if (PumpNo == PUMP2)//0x02)//pump2
+		{
+			PUMPControlHandle_t.u16TIM6_limit = HoldingRegister_t.ModeCommand_t.CS_PUMP2_ONTIME;
+			PUMPControlHandle_t.u8PUMP_no = 0x02;
+			//block the ADC measurement
+			PUMPControlHandle_t.u8Flag_measurement = 0x01;
+			VALVE_OFF();//will change according to the valve operation
+			//turn off pump 2
+			PUMP2_ON();
+			//turn on the pump 2
+			HAL_GPIO_WritePin(SYS_LED_STATUS_GPIO_Port, SYS_LED_STATUS_Pin, GPIO_PIN_RESET);
+			//Set the HMI inter-locking flag for sample pump
+			HMIInterlockingFlag(HMI_INTERLOCK_SAMPLE_PUMP, SET);
+		}
+		//Enable Interrupt
+//		htim6.Instance->DIER |= TIM_IT_UPDATE; // enable timer interrupt flag
+//		htim6.Instance->CR1 |= TIM_CR1_CEN; // enable timer
+//		HAL_TIM_Base_Start_IT(&htim6);
+		HAL_TIM_Base_Init(&htim6);
+		htim6.Instance->DIER |= TIM_IT_UPDATE; // enable timer interrupt flag
+		htim6.Instance->CR1 |= TIM_CR1_CEN; // enable timer
+	}
+	if(PUMPControlHandle_t.u8PUMP_action == OPERATION_PUMP_OFF)//0x02)//switch from the pump on/off to de-gas time (pump delay time)
+	{
+		PUMPControlHandle_t.u16TIM6_count = 0;//reset
+		if(PumpNo == 0x01)//pump1
+			PUMPControlHandle_t.u16TIM6_limit = HoldingRegister_t.ModeCommand_t.CS_PUMP1_DELAY;
+		else if (PumpNo == 0x02)//pump2
+			PUMPControlHandle_t.u16TIM6_limit = HoldingRegister_t.ModeCommand_t.CS_PUMP2_DELAY;
+		HAL_GPIO_WritePin(SYS_LED_ERROR_GPIO_Port, SYS_LED_ERROR_Pin, GPIO_PIN_RESET);
+		PUMPControlHandle_t.u8PUMP_delayaction = 0x01;
+	}
+	if(PUMPControlHandle_t.u8PUMP_action == 0x03);//pump in progress
+	if(PUMPControlHandle_t.u8PUMP_action == 0x04)//operation complete (not required)
+	{
+		HoldingRegister_t.ModeCommand_t.CommonCommand = 0x0;
+	}
+	/*Modular for Emergency stop action*/
+	if(PUMPControlHandle_t.u8PUMP_action == PUMP1_TURN_OFF)//0x05)//turn off the PUMP1
+	{
+		//Turn off the pump 1
+		PUMP1_OFF();
+		//Turn off the Valve
+		VALVE_OFF();
+		PUMPControlHandle_t.u8PUMP_action = 0x02;//move to the pump delay time
+		//Set the HMI inter-locking flag for sample pump
+		HMIInterlockingFlag(HMI_INTERLOCK_ACID_PUMP, RESET);
+	}
+	if(PUMPControlHandle_t.u8PUMP_action == PUMP2_TURN_OFF)//0x06)//turn off the PUMP2
+	{
+		//Turn of the pump 2
+		PUMP2_OFF();
+		PUMPControlHandle_t.u8PUMP_action = 0x02;//move to the pump delay time
+		//Reset the HMI inter-locking Flag
+		HMIInterlockingFlag(HMI_INTERLOCK_SAMPLE_PUMP,RESET);
+	}
+	if(PUMPControlHandle_t.u8PUMP_action == 0x07)
+	{
+		//reset all the action
+		PUMPControlHandle_t.u16TIM6_count = 0;
+		PUMPControlHandle_t.u16TIM6_limit = 0;
+		PUMPControlHandle_t.u8PUMP_action = 1;
+		PUMPControlHandle_t.u8PUMP_delayaction = 0;
+		PUMPControlHandle_t.u8PUMP_no = 0;
+		//un-block the ADC measurement
+		PUMPControlHandle_t.u8Flag_measurement = 0x00;
+		//TEST
+		HAL_GPIO_WritePin(SYS_LED_ERROR_GPIO_Port, SYS_LED_ERROR_Pin, GPIO_PIN_SET);
+		//Disable interrupt
+		htim6.Instance->DIER &= ~TIM_IT_UPDATE; // disable timer interrupt flag
+		htim6.Instance->CR1 &= ~TIM_CR1_CEN; // disable timer
+
+		HoldingRegister_t.ModeCommand_t.CommonCommand = 0x0;
+	}
+}
 void currentOutputTest(uint8_t CurrentChannel)
 {
 

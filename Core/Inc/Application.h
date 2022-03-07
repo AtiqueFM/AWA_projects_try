@@ -47,6 +47,13 @@ void RelayToggleCoilInputUpdate(void);
 
 void PumpOperation(uint8_t PumpNo);
 
+//Check screen
+void CheckScreen_PumpOperation(uint8_t PumpNo);
+
+uint8_t CheckScreen_CODADCCapture(uint8_t command);
+
+void CheckScreen_bubble_sort(uint16_t filterLimit);
+
 void currentOutputTest(uint8_t CurrentChannel);
 
 void ModbusSaveConfiguration(uint8_t data);
