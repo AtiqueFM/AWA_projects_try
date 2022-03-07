@@ -97,11 +97,6 @@ void HoldingRegisterdefaultData(void)
 	//Set the COD Auto Zero flag as we have default data
 	COD_MeasurementStatus.COD_ZERO = 0x01;
 
-	//testing purpose
-	InputRegister_t.PV_info.CODValue = 0;//12.99;
-	InputRegister_t.PV_info.BODValue = 0;//111.23;
-	InputRegister_t.PV_info.TSSValue = 0;//56.88;
-
 }
 
 void DMA_UART6_RX_Init(void)

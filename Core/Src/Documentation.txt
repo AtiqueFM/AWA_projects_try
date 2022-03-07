@@ -117,3 +117,10 @@ Date				:- 3/3/2022
 Updates				:-
 						1. Analyzer range selection added to the State machine, data will be stored in the FRAM.
 						2. On fist boot the default data will be loaded for the parameter COD : 300 mg/l.
+						
+Date				:- 7/3/2022
+Updates				:-
+						1. pH 1-point sensor calibration added in software and HMI and tested using HMI and MODBUS.
+						2. BUG fix :- COD and TSS upper limits were not saved in the FRAM, now saved and read at BOOT.
+						3. Storing the process parameters in FRAM.
+						4. Reading the pH sensor calibration from memory and storing on the MODBUS, which will be displayed on the HMI.

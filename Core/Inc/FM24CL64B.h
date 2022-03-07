@@ -51,7 +51,12 @@
 #define FRAM_ADDRESS_pHSENSLASTCALIB_HISTORY	FRAM_ADDRESS_TSSSENSLASTCALIB_HISTORY + 124 //take 124 bytes
 //Range select flag
 #define FRAM_ADDRESS_RANGESELECT_FLAG			FRAM_ADDRESS_pHSENSLASTCALIB_HISTORY + 124 //takes 1 byte
-
+//Upper ranges for COD and TSS
+#define FRAM_ADDRESS_COD_UPPERLIMIT				FRAM_ADDRESS_RANGESELECT_FLAG + 1 //takes 4 byte
+//Upper ranges for COD and TSS
+#define FRAM_ADDRESS_TSS_UPPERLIMIT				FRAM_ADDRESS_COD_UPPERLIMIT + 4 //takes 4 byte
+//Process Values
+#define FRAM_ADDRESS_PROCESSVALUE			FRAM_ADDRESS_TSS_UPPERLIMIT + 4 //takes 16 byte add buffer for 10 process parameters (40 bytes)
 
 
 void FRAM_OperationWrite(uint16_t u16_address,uint8_t *u8_pData,uint16_t u16_noByte);
