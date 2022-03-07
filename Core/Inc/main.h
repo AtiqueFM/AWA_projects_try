@@ -369,12 +369,12 @@ typedef struct{
 	//uint16_t PWM3_offset;
 	//uint16_t PWM4_offset;
 	//uint16_t relay[8];//address : 187
-	uint32_t RES[10];				/*<Reserve memory 40 bytes*/
-	uint16_t CS_PUMP1_ONTIME;		/*<Cleaning pump on time for Check screen*/
-	uint16_t CS_PUMP1_DELAY;		/*<Cleaning pump de-gas time for check screen*/
-	uint16_t CS_PUMP2_ONTIME;		/*<Sample pump on time for check screen*/
-	uint16_t CS_PUMP2_DELAY;		/*<Cleaning pump de-gas time for check screen*/
-	uint16_t CS_FLASH;				/*<IF 1 : 100 FLASHES; IF 2 : 500 flashes*/
+	//uint32_t RES[10];				/*<Reserve memory 40 bytes*/
+	float CS_PUMP1_ONTIME;		/*<Cleaning pump on time for Check screen*/
+	float CS_PUMP1_DELAY;		/*<Cleaning pump de-gas time for check screen*/
+	float CS_PUMP2_ONTIME;		/*<Sample pump on time for check screen*/
+	float CS_PUMP2_DELAY;		/*<Cleaning pump de-gas time for check screen*/
+	float CS_FLASH;				/*<IF 1 : 100 FLASHES; IF 2 : 500 flashes*/
 }ModeCommandHandle_t;
 
 typedef struct{
@@ -475,7 +475,7 @@ typedef union{
 	struct{
 		//40000
 		ModeCommandHandle_t ModeCommand_t;
-		uint8_t RES_1[100 - 40 - 10];						/*<Reserve for additional MODBUS register*/
+		uint8_t RES_1[100 - 20];						/*<Reserve for additional MODBUS register*/
 		//41000
 		IOUTConfigHanldle_t IOUTConfig_t[8];
 		uint8_t RES_2[100];						/*<Reserve for additional MODBUS register*/
