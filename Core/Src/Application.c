@@ -2198,6 +2198,8 @@ void analyzerRangeSelectFRAMSaveData(void)
 	  FRAM_OperationWrite(FRAM_ADDRESS_COD_SENS_CALIB,(uint8_t*)&COD_SensorCalibration_t.byte,8);
 	  //TSS Sensor calibration data store
 	  FRAM_OperationWrite(FRAM_ADDRESS_TSS_SENS_CALIB,(uint8_t*)&TSS_SensorCalibration_t.byte,8);
+	  //PH Sensor calibration store
+	  FRAM_OperationWrite(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,8);
 	  //COD Factory 10pt calibration data store
 	  FRAM_OperationWrite(FRAM_ADDRESS_COD_FACTORY_CALIB,(uint8_t*)&COD_10ptFactoryCalibrationHandle_t.bytes,96);
 	  //TSS Factory 10pt calibration data store

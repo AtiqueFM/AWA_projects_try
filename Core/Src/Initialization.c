@@ -489,6 +489,25 @@ void setAOCofigurationData(uint8_t model)
 		break;
 	}
 }
+void setpHSensorCalibrationData(void)
+{
+	//Calibration points
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_value = 4.13f;
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = 7.11f;
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_count = 56497;
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count= 64680;
+	HoldingRegister_t.SensorCalibration_t.pH_PT.Y1 = 4.01f;
+	HoldingRegister_t.SensorCalibration_t.pH_PT.Y2 = 7.0f;
+
+	//Calibration Values
+	HoldingRegister_t.SensorCalibration_t.pH_slope = -16.9408436f;
+	HoldingRegister_t.SensorCalibration_t.pH_intercept = 6.88764143f;
+
+	//load to the live buffer
+	pH_SensorCalibpoints_t.pH_Solpe = HoldingRegister_t.SensorCalibration_t.pH_slope;
+	pH_SensorCalibpoints_t.pH_Intercept = HoldingRegister_t.SensorCalibration_t.pH_intercept;
+
+}
 
 void CalibrationDefaultValue(uint8_t AnalyzerRange)
 {
@@ -597,6 +616,9 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 
 		/*AO configuration*/
 		setAOCofigurationData(MODEL_3021_3022);
+
+		//pH Calibration data
+		setpHSensorCalibrationData();
 		break;
 	/*
 	 * Range	:
@@ -699,6 +721,9 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 
 		/*AO configuration*/
 		setAOCofigurationData(MODEL_3011_3012);
+
+		//pH Calibration data
+		setpHSensorCalibrationData();
 		break;
 	}
 }

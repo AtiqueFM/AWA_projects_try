@@ -124,3 +124,7 @@ Updates				:-
 						2. BUG fix :- COD and TSS upper limits were not saved in the FRAM, now saved and read at BOOT.
 						3. Storing the process parameters in FRAM.
 						4. Reading the pH sensor calibration from memory and storing on the MODBUS, which will be displayed on the HMI.
+						
+Date				:- 8/3/2022
+Updates				:-
+						1. Added default pH sensor calibration for range select.
