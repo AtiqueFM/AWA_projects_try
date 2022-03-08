@@ -375,6 +375,10 @@ typedef struct{
 	float CS_PUMP2_ONTIME;		/*<Sample pump on time for check screen*/
 	float CS_PUMP2_DELAY;		/*<Cleaning pump de-gas time for check screen*/
 	float CS_FLASH;				/*<IF 1 : 100 FLASHES; IF 2 : 500 flashes*/
+	float CS_PD_1_MIN;			/*<Gives the minimum values from the array of flashes*/
+	float CS_PD_1_MAX;			/*<Gives the maximum values from the array of flashes*/
+	float CS_PD_2_MIN;			/*<Gives the minimum values from the array of flashes*/
+	float CS_PD_2_MAX;			/*<Gives the maximum values from the array of flashes*/
 }ModeCommandHandle_t;
 
 typedef struct{
@@ -475,7 +479,7 @@ typedef union{
 	struct{
 		//40000
 		ModeCommandHandle_t ModeCommand_t;
-		uint8_t RES_1[100 - 20];						/*<Reserve for additional MODBUS register*/
+		uint8_t RES_1[100 - 36];						/*<Reserve for additional MODBUS register*/
 		//41000
 		IOUTConfigHanldle_t IOUTConfig_t[8];
 		uint8_t RES_2[100];						/*<Reserve for additional MODBUS register*/
@@ -845,7 +849,7 @@ void Error_Handler(void);
 													+ (10 * sizeof(LastCalibrationAI1Hanlde_t))\
 													+ (10 * sizeof(LastCalibrationAI2Hanlde_t)))
 
-#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t) + 100)
+#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t) + 100 - 36)
 #define HOLDING_REGISTER_ADDRESS_42000	(uint16_t)(HOLDING_REGISTER_ADDRESS_41000\
 													+ (8*sizeof(IOUTConfigHanldle_t))\
 													+ 100)

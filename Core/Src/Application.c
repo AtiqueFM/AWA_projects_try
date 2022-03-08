@@ -47,6 +47,9 @@ uint8_t cod_flash_operation;
 uint16_t dataptr1;
 uint16_t dataptr;
 uint16_t ArrayPtr;
+uint16_t noOfFlashes;
+uint16_t flash_limit_max;
+uint16_t flash_limit_min;
 
 struct Sensornode *CODSensorhead = '\0'; 	/*<Head for COD Sensor Calibration*/
 struct Sensornode *TSSSensorhead = '\0'; 	/*<Head for COD Sensor Calibration*/
@@ -855,30 +858,10 @@ void ProcessModesCommands(void)
 		{
 			case COD_Check:
 			{
-//				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Read_acid)
-//				{
-//					Application_ReadAcid();
-//				}
-//				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Read_sample)
-//				{
-//					Application_ReadSample();
-//				}
-//				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
-//				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
-//				{
-//					CODADCCapture(COD_Measure);
-//				}
-				//Set as zero
-//				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO
-//						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
-//				{
-//					Application_SetAsZero(1);
-//				}
-
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
 				{
-					CODADCCapture(COD_Measure);
+					CheckScreen_CODADCCapture(COD_Measure);
 				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && PUMPControlHandle_t.u8Flag_measurement)
 				{
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
@@ -914,6 +897,10 @@ void ProcessModesCommands(void)
 					AWADataStoreState.factoryCOD_setzero = SET;
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO
+						&& AWAOperationStatus_t.CleaningTankEmpty != RESET)
+				{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				}
 				/*Emergency Pump Stop*/
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
@@ -923,25 +910,72 @@ void ProcessModesCommands(void)
 			}
 			case TSS_Check:
 			{
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Read_acid)
-				{
-					Application_ReadAcid();
-				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Read_sample)
-				{
-					Application_ReadSample();
-				}
+//				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Read_acid)
+//				{
+//					Application_ReadAcid();
+//				}
+//				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Read_sample)
+//				{
+//					Application_ReadSample();
+//				}
+//				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
+//				if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_Measure && !PUMPControlHandle_t.u8Flag_measurement)
+//				{
+//					CODADCCapture(TSS_Measure);
+//				}
+//				//Set as zero
+//				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO
+//						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
+//				{
+//					Application_SetAsZero(2);
+//				}
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_Measure && !PUMPControlHandle_t.u8Flag_measurement)
 				{
-					CODADCCapture(TSS_Measure);
+					CheckScreen_CODADCCapture(TSS_Measure);
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_Measure && PUMPControlHandle_t.u8Flag_measurement)
+				{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
-				//Set as zero
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION)
+				{
+					//operate the cleaning pump
+					CheckScreen_PumpOperation(0x01);
+				}
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == SET)
+				{
+					//operate the sample pump
+					CheckScreen_PumpOperation(0x02);
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == RESET)
+				{
+					pumpOperationStop();
+				}
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_FACTORY_SETASZERO
 						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
 				{
-					Application_SetAsZero(2);
+					//set the current PD1 and PD2 mean values to the PD1(0) and PD2(0)
+					//COD_MeasurementValues_t.PD1_Zero = COD_MeasurementValues_t.PD1_New;
+					TSS_MeasurementValues_t.PD2_Zero = TSS_MeasurementValues_t.PD2_New;
+
+					//Calculate the COD RAW
+					float TSS_RAW = HoldingRegister_t.ModeCommand_t.TSS_SF *(log(TSS_MeasurementValues_t.PD2_Zero/TSS_MeasurementValues_t.PD2_New));
+					//Publish the values to the MODBUS
+					InputRegister_t.PV_info.TSS_RAW = TSS_RAW;
+					InputRegister_t.PV_info.TSS_PD2_0 = TSS_MeasurementValues_t.PD2_Zero;
+					//Reset the command
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+					AWADataStoreState.factoryTSS_setzero = SET;
+					//Flag set as data not saved in the FRAM
+					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_FACTORY_SETASZERO
+						&& AWAOperationStatus_t.CleaningTankEmpty != RESET)
+				{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				}
+				/*Emergency Pump Stop*/
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
+					pumpOperationStop();
 				break;
 			}
 		}
@@ -1249,13 +1283,10 @@ void CardAction(uint8_t CardID)
 	}
 }
 
-void filtering(uint8_t no_of_flashes)
+void filtering(uint16_t no_of_flashes)
 {
-	uint16_t flash_limit = 0;
-	if(no_of_flashes == 1)
-		flash_limit = 100;
-	else if(no_of_flashes == 2)
-		flash_limit = 500;
+	uint16_t flash_limit = no_of_flashes;
+
 
 	for(int t=0; t<flash_limit; t++)//limit of this for loop will change according to the number of flashes selected
 	{
@@ -1326,6 +1357,10 @@ void CheckScreen_bubble_sort(uint16_t filterLimit)
 	uint16_t limit_max = filterLimit - limit_min;
 	uint16_t data_range = limit_max - limit_min;
 
+	flash_limit_min = limit_min;
+	flash_limit_max = limit_max;
+
+
 	//removed first 10 and last 10 data
 	for(int i=limit_min;i<limit_max;i++)
 	{
@@ -1338,6 +1373,11 @@ void CheckScreen_bubble_sort(uint16_t filterLimit)
 	filter_data_PD1_mean /= data_range;
 	filter_data_PD2_mean /= data_range;
 
+	//Get the minimum and maximum
+	HoldingRegister_t.ModeCommand_t.CS_PD_1_MIN = filter_data_PD1[limit_min];
+	HoldingRegister_t.ModeCommand_t.CS_PD_1_MAX = filter_data_PD1[limit_max - 1];
+	HoldingRegister_t.ModeCommand_t.CS_PD_2_MIN = filter_data_PD2[limit_min];
+	HoldingRegister_t.ModeCommand_t.CS_PD_2_MAX = filter_data_PD2[limit_max - 1];
 
 }
 uint8_t CheckScreen_CODADCCapture(uint8_t command)
@@ -1349,7 +1389,7 @@ uint8_t CheckScreen_CODADCCapture(uint8_t command)
 	//this flag will be set when the PD1 and PD2 zero values have been measured and stored
 	uint8_t flash = 0;
 
-	static uint16_t no_of_flashes = 0;
+	uint8_t no_of_flashes = 0;
 
 	//if the command is for cod measurernt and zeroing of the PD1 and PD2 is done will only then it will measure and perform flashing
 	if((command == COD_Measure || command == AUTO_COD_MEASURE) && COD_MeasurementStatus.COD_ZERO == 0x01)
@@ -1388,9 +1428,9 @@ uint8_t CheckScreen_CODADCCapture(uint8_t command)
 			/*TDOD: Check for the number of flashes to be performed*/
 			no_of_flashes = HoldingRegister_t.ModeCommand_t.CS_FLASH;
 			if(no_of_flashes == 1)
-				no_of_flashes = 100;
+				noOfFlashes = 100;
 			else if(no_of_flashes == 2)
-				no_of_flashes = 500;
+				noOfFlashes = 500;
 
 			//	ADCInit();
 			//Set the COD measure flag to "1", tp indicate the start of flashing sequence
@@ -1459,7 +1499,7 @@ uint8_t CheckScreen_CODADCCapture(uint8_t command)
 			ReadADCFlag = 0x00;
 		}
 
-		if(ArrayPtr >= no_of_flashes) //if((dataptr1 == 500) && (dataptr == 500))
+		if(ArrayPtr >= noOfFlashes) //if((dataptr1 == 500) && (dataptr == 500))
 		{
 			ArrayPtr = 0;
 
@@ -1492,7 +1532,7 @@ uint8_t CheckScreen_CODADCCapture(uint8_t command)
 			bubble_sort();
 #endif
 
-			filtering(no_of_flashes);
+			filtering(noOfFlashes);
 
 			//new mean
 			TempMeanPd1 = filter_data_PD1_mean;
@@ -1644,18 +1684,18 @@ uint8_t CheckScreen_CODADCCapture(uint8_t command)
 			int b = 0;
 			//for(int i=  0;i<100;i++)
 			//for(int i = 20,b = 0;i<80;i++,b++)
-			for(int i = COD_OUT_FILTER_MIN,b = 0;i<COD_OUT_FILTER_MAX;i++,b++)
+			for(int i = flash_limit_min,b = 0;i<flash_limit_max;i++,b++)
 			{
 				//sd[i] = pow((SignalNoiseDiff_Ch1[i] - PD1_new),2)/100;
 				//sd2[i] = pow((SignalNoiseDiff_Ch2[i] - PD2_new),2)/100;
 
-				sd[b] = pow((filter_data_PD1[i] - PD1_new),2)/COD_OUT_FILTER_RANGE;
-				sd2[b] = pow((filter_data_PD2[i] - PD2_new),2)/COD_OUT_FILTER_RANGE;
+				sd[b] = pow((filter_data_PD1[i] - PD1_new),2)/(flash_limit_max - flash_limit_min);
+				sd2[b] = pow((filter_data_PD2[i] - PD2_new),2)/(flash_limit_max - flash_limit_min);
 			}
 
 			//for(int i = 0;i<100;i++)
 			//for(int i = 0;i<60;i++)
-			for(int i = 0;i<COD_OUT_FILTER_RANGE;i++)
+			for(int i = 0;i<(flash_limit_max - flash_limit_min);i++)
 			{
 				sum += sd[i];
 				sum2 += sd2[i];
