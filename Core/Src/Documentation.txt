@@ -128,3 +128,4 @@ Updates				:-
 Date				:- 8/3/2022
 Updates				:-
 						1. Added default pH sensor calibration for range select.
+						2. Added the pH sensor calibration points and data to the FRAM.

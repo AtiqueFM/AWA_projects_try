@@ -1425,21 +1425,23 @@ typedef union{
 ElectronicCalibpHHandle_t pH_ElectronicCalibpoints_t;
 
 typedef union{
-	float byte[2];
+	uint8_t byte[32];
 	struct{
-		float pH_Solpe;
-		float pH_Intercept;
-		/*1-pt calib points*/
-		uint16_t pH_1ptCalib_sample;
-		uint16_t pH_1ptCalib_count;
-		/*2-pt calib points*/
-		float pH_Solution_1_y1;
-		float pH_Solution_2_y2;
-		signed int pH_counts_1_x1;
-		signed int pH_counts_2_x2;
-		uint16_t flag_sample_set;
-		uint16_t flag_ADC_count_set;
-		uint16_t flag_display_count;
+		//Stored in FRAM
+		float pH_Solpe;					/*<Slope*/
+		float pH_Intercept;				/*<Intercept*/
+		float pH_Solution_1_y1;			/*<Simulation solution*/
+		float pH_Solution_2_y2;			/*<Simulation solution*/
+		int pH_counts_1_x1;				/*<Corresponding ADC counts*/
+		int pH_counts_2_x2;				/*<Corresponding ADC counts*/
+		float pH_Calculated_1_x1;		/*<Calculated pH value,(Display only)*/
+		float pH_Calculated_2_x2;		/*<Calculated pH value,(Display only)*/
+		//Not stored in FRAM
+		uint16_t pH_1ptCalib_sample;	/*<NA*/
+		uint16_t pH_1ptCalib_count;		/*<NA*/
+		uint16_t flag_sample_set;		/*<From HMI, for storing the simulation pH solution value*/
+		uint16_t flag_ADC_count_set;	/*<From HMI, for storing the pH solution corresponding ADC counts*/
+		uint16_t flag_display_count;	/*<From HMI, for displaying the current raw value of the pH*/
 		/*ADC counts*/
 		uint16_t pH_ADCCounts;
 	};

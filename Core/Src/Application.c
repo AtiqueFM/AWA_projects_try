@@ -2282,7 +2282,7 @@ void ModbusSaveConfiguration(uint8_t data)
 		  if(AWADataStoreState.sensorpH)
 		  {
 			  //PH Sensor calibration store
-			  FRAM_OperationWrite(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,8);
+			  FRAM_OperationWrite(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,32);
 
 			  AWADataStoreState.sensorpH = RESET;
 		  }
@@ -2356,8 +2356,14 @@ void ModbusReadConfiguration(void)
 	FRAM_OperationRead(FRAM_ADDRESS_pH_ELEC_CALIB, (uint8_t*)&pH_ElectronicCalibpoints_t.bytes[8], 8);
 
 	//Read the pH sensor calibration data
-	FRAM_OperationRead(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,8);
+	FRAM_OperationRead(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,32);
 
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_value = pH_SensorCalibpoints_t.pH_Calculated_1_x1; //calculated pH values
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = pH_SensorCalibpoints_t.pH_Calculated_2_x2; //calculated pH values
+	HoldingRegister_t.SensorCalibration_t.pH_PT.Y1 = pH_SensorCalibpoints_t.pH_Solution_1_y1;				//Simulation solution
+	HoldingRegister_t.SensorCalibration_t.pH_PT.Y2 = pH_SensorCalibpoints_t.pH_Solution_2_y2;				//Simulation solution
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_count = pH_SensorCalibpoints_t.pH_counts_1_x1;		//ADC counts
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count = pH_SensorCalibpoints_t.pH_counts_2_x2;		//ADC counts
 	HoldingRegister_t.SensorCalibration_t.pH_slope = pH_SensorCalibpoints_t.pH_Solpe;
 	HoldingRegister_t.SensorCalibration_t.pH_intercept = pH_SensorCalibpoints_t.pH_Intercept;
 

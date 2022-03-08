@@ -19,8 +19,8 @@
 //AO 1 - AO 8
 #define FRAM_ADDRESS_pH_ELEC_CALIB			FRAM_ADDRESS_AO_ELEC_CALIB + (sizeof(CurrentOutputCalibration_t)*8) //uses 8 bytes slope and intercept
 //1-pt calibration or 2-pt calibration
-#define FRAM_ADDRESS_pH_SENS_CALIB			FRAM_ADDRESS_pH_ELEC_CALIB + 8 //uses 8 bytes
-#define	FRAM_ADDRESS_PT_ELEC_CALIB  		FRAM_ADDRESS_pH_SENS_CALIB + 8 //uses 16 bytes PT-100 slope and intercept, PT-1000 slope and intercept
+#define FRAM_ADDRESS_pH_SENS_CALIB			FRAM_ADDRESS_pH_ELEC_CALIB + 8 //used 32 bytes //uses 8 bytes
+#define	FRAM_ADDRESS_PT_ELEC_CALIB  		FRAM_ADDRESS_pH_SENS_CALIB + 32 //uses 16 bytes PT-100 slope and intercept, PT-1000 slope and intercept
 #define FRAM_ADDRESS_COD_SENS_CALIB			FRAM_ADDRESS_PT_ELEC_CALIB + 16//uses 8 bytes stores slope and intercept
 #define FRAM_ADDRESS_COD_FACTORY_CALIB 		FRAM_ADDRESS_COD_SENS_CALIB + 8 // takes up 100 bytes
 //PD1(0) and PD2(0)
