@@ -1475,6 +1475,11 @@ uint8_t CODADCCapture(uint8_t command)
 					InputRegister_t.PV_info.TSSValue = TSS_MeasurementValues_t.Cal_Value;
 				InputRegister_t.PV_info.TSSValueUser = TSS_MeasurementValues_t.Cal_Value; 	/*<Reference for the Developer, can be negative value*/
 
+				//Set the FRAM data storage flag
+				AWAOperationStatus_t.AWADataSave_ProcessValues = SET;
+
+				AWADataStoreState.analyzerPocessvalue = SET;
+
 			}
 
 			//RSD
@@ -2193,12 +2198,29 @@ void analyzerRangeSelectFRAMSaveData(void)
 	  FRAM_OperationWrite(FRAM_ADDRESS_COD_SENS_CALIB,(uint8_t*)&COD_SensorCalibration_t.byte,8);
 	  //TSS Sensor calibration data store
 	  FRAM_OperationWrite(FRAM_ADDRESS_TSS_SENS_CALIB,(uint8_t*)&TSS_SensorCalibration_t.byte,8);
+	  //PH Sensor calibration store
+	  FRAM_OperationWrite(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,8);
 	  //COD Factory 10pt calibration data store
 	  FRAM_OperationWrite(FRAM_ADDRESS_COD_FACTORY_CALIB,(uint8_t*)&COD_10ptFactoryCalibrationHandle_t.bytes,96);
 	  //TSS Factory 10pt calibration data store
 	  FRAM_OperationWrite(FRAM_ADDRESS_TSS_FACTORY_CALIB,(uint8_t*)&TSS_10ptFactoryCalibrationHandle_t.bytes,96);
 	  //Complete MODBUS data storage
 	  FRAM_OperationWrite(FRAM_ADDRESS_MIN, (uint8_t*)&HoldingRegister_t.bytes, sizeof(HoldingRegister_t.bytes));
+	  /*TODO:Also store the process parameter upper limits*/
+	  FRAM_OperationWrite(FRAM_ADDRESS_COD_UPPERLIMIT, (uint8_t*)&COD_UpperLimit, sizeof(COD_UpperLimit));
+	  //Store TSS upper limit
+	  FRAM_OperationWrite(FRAM_ADDRESS_TSS_UPPERLIMIT, (uint8_t*)&TSS_UpperLimit, sizeof(TSS_UpperLimit));
+	  memset(&framdata,'\0',sizeof(framdata));
+	  //Store COD PD1 and PD2 zero
+	  framdata.fData[0] = InputRegister_t.PV_info.PD1_0;
+	  framdata.fData[1] = InputRegister_t.PV_info.PD2_0;
+	  //COD PD1(0) and PD2(0)
+	  FRAM_OperationWrite(FRAM_ADDRESS_COD_PD_ZERO,(uint8_t*)&framdata.bytes,8);
+	  //Store TSS PD2 zero
+	  memset(&framdata,'\0',sizeof(framdata));
+	  framdata.fData[0] = InputRegister_t.PV_info.TSS_PD2_0;
+	  //TSS PD2(0)
+	  FRAM_OperationWrite(FRAM_ADDRESS_TSS_PD_ZERO,(uint8_t*)&framdata.bytes,4);
 }
 void ModbusSaveConfiguration(uint8_t data)
 {
@@ -2208,6 +2230,18 @@ void ModbusSaveConfiguration(uint8_t data)
 	  {
 		  //Complete MODBUS data storage
 		  FRAM_OperationWrite(FRAM_ADDRESS_MIN, (uint8_t*)&HoldingRegister_t.bytes, sizeof(HoldingRegister_t.bytes));
+	  }
+	  else if(data == SAVE_PROCESSPARAMETER_DATA)
+	  {
+		  //Reset the FRAM save Calibration flag
+		  AWAOperationStatus_t.AWADataSave_ProcessValues = RESET;
+		  if(AWADataStoreState.analyzerPocessvalue)
+		  {
+			  //Store COD,BOD,TSS and TOC values into FRAM
+			  FRAM_OperationWrite(FRAM_ADDRESS_PROCESSVALUE,(uint8_t*)&InputRegister_t.bytes[0],16);
+
+			  AWADataStoreState.analyzerPocessvalue = RESET;
+		  }
 	  }
 	  else if(data == SAVE_CALIBRATION_DATA)//Calibration data storage
 	  {
@@ -2259,7 +2293,7 @@ void ModbusSaveConfiguration(uint8_t data)
 		  if(AWADataStoreState.sensorpH)
 		  {
 			  //PH Sensor calibration store
-			  FRAM_OperationWrite(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,8);
+			  FRAM_OperationWrite(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,32);
 
 			  AWADataStoreState.sensorpH = RESET;
 		  }
@@ -2313,6 +2347,7 @@ void ModbusSaveConfiguration(uint8_t data)
 			  /*Save the new configuration data into FRAM*/
 			  analyzerRangeSelectFRAMSaveData();
 		  }
+
 	  }
 
 
@@ -2332,7 +2367,18 @@ void ModbusReadConfiguration(void)
 	FRAM_OperationRead(FRAM_ADDRESS_pH_ELEC_CALIB, (uint8_t*)&pH_ElectronicCalibpoints_t.bytes[8], 8);
 
 	//Read the pH sensor calibration data
-	FRAM_OperationRead(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,8);
+	FRAM_OperationRead(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,32);
+
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_value = pH_SensorCalibpoints_t.pH_Calculated_1_x1; //calculated pH values
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = pH_SensorCalibpoints_t.pH_Calculated_2_x2; //calculated pH values
+	HoldingRegister_t.SensorCalibration_t.pH_PT.Y1 = pH_SensorCalibpoints_t.pH_Solution_1_y1;				//Simulation solution
+	HoldingRegister_t.SensorCalibration_t.pH_PT.Y2 = pH_SensorCalibpoints_t.pH_Solution_2_y2;				//Simulation solution
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_count = pH_SensorCalibpoints_t.pH_counts_1_x1;		//ADC counts
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count = pH_SensorCalibpoints_t.pH_counts_2_x2;		//ADC counts
+	HoldingRegister_t.SensorCalibration_t.pH_slope = pH_SensorCalibpoints_t.pH_Solpe;
+	HoldingRegister_t.SensorCalibration_t.pH_intercept = pH_SensorCalibpoints_t.pH_Intercept;
+	//HoldingRegister_t.SensorCalibration_t.pH_1pt_calib_point1 = pH_SensorCalibpoints_t.pH_Solution_1_y1;	//Simulation solution 1
+	//HoldingRegister_t.SensorCalibration_t.pH_1pt_Cal_point_1_value = pH_SensorCalibpoints_t.
 
 	//Read the PT-100 and PT-1000 Electronic calibration data
 	FRAM_OperationRead(FRAM_ADDRESS_PT_ELEC_CALIB,(uint8_t*)&PT_ElectronicCalibration_t.bytes,16);
@@ -2563,6 +2609,14 @@ void ModbusReadConfiguration(void)
 		HoldingRegister_t.ModeCommand_t.RANGESELECT = MODEL_3011_3012;
 	  AWA_RangeSelect();
 	}
+
+	/*Get the upper limits for COD and TSS*/
+	FRAM_OperationRead(FRAM_ADDRESS_COD_UPPERLIMIT,(uint8_t*)&COD_UpperLimit,sizeof(COD_UpperLimit));
+	BOD_UpperLimit = COD_UpperLimit / 2.0f;
+	FRAM_OperationRead(FRAM_ADDRESS_TSS_UPPERLIMIT,(uint8_t*)&TSS_UpperLimit,sizeof(TSS_UpperLimit));
+
+	/*Read the process parameters*/
+	FRAM_OperationRead(FRAM_ADDRESS_PROCESSVALUE,(uint8_t*)&InputRegister_t.bytes[0],16);
 }
 
 

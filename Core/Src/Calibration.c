@@ -75,6 +75,10 @@ void pHSensorCalibrationmV(void)
 		pH_SensorCalibpoints_t.pH_Intercept = y1 - pH_SensorCalibpoints_t.pH_Solpe * x1;
 	}
 
+	//Push to MODBUS
+	HoldingRegister_t.SensorCalibration_t.pH_slope = pH_SensorCalibpoints_t.pH_Solpe;
+	HoldingRegister_t.SensorCalibration_t.pH_intercept = pH_SensorCalibpoints_t.pH_Intercept;
+
 }
 
 
@@ -168,7 +172,13 @@ void pH_SensorCalibrationGetValues(void)
 		/*For HMI display*/
 		if(pH_SensorCalibpoints_t.flag_display_count == 0x01)
 		{
-			//Read by HMI
+			//convert the mV to Calculated pH
+			float pH_calculated = (-16.908f * InputRegister_t.SlotParameter.pH_Live_Volatge) + 7.0f; /*<To be sent to the HMI, (414,14) and (-414,0) line equation*/
+
+			//Read by HMI (Display only)
+			HoldingRegister_t.SensorCalibration_t.pH_1pt_Cal_point_1_value = pH_calculated;
+
+			//For slope and intercept calculation.
 			HoldingRegister_t.SensorCalibration_t.pH_1pt_Cal_point_1_count = pH_SensorCalibpoints_t.pH_ADCCounts;
 
 		}
@@ -215,6 +225,9 @@ void pH_SensorCalibrationGetValues(void)
 			//convert the mV to Calculated pH
 			float pH_calculated = (-16.908f * InputRegister_t.SlotParameter.pH_Live_Volatge) + 7.0f; /*<To be sent to the HMI, (414,14) and (-414,0) line equation*/
 
+
+			//Store in the live buffer
+			pH_SensorCalibpoints_t.pH_Calculated_1_x1 = pH_calculated;
 			//Read by HMI
 			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_value = pH_calculated;
 			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = 0;
@@ -226,7 +239,8 @@ void pH_SensorCalibrationGetValues(void)
 			//convert the mV to Calculated pH
 			float pH_calculated = (-16.908f * InputRegister_t.SlotParameter.pH_Live_Volatge) + 7.0f; /*<To be sent to the HMI, (414,14) and (-414,0) line equation*/
 
-
+			//Store in the live buffer
+			pH_SensorCalibpoints_t.pH_Calculated_2_x2 = pH_calculated;
 			//Read by HMI
 			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = pH_calculated;
 			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count = pH_SensorCalibpoints_t.pH_ADCCounts;

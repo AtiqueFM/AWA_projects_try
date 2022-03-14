@@ -101,11 +101,6 @@ void HoldingRegisterdefaultData(void)
 	//Set the COD Auto Zero flag as we have default data
 	COD_MeasurementStatus.COD_ZERO = 0x01;
 
-	//testing purpose
-	InputRegister_t.PV_info.CODValue = 0;//12.99;
-	InputRegister_t.PV_info.BODValue = 0;//111.23;
-	InputRegister_t.PV_info.TSSValue = 0;//56.88;
-
 }
 
 void DMA_UART6_RX_Init(void)
@@ -498,7 +493,33 @@ void setAOCofigurationData(uint8_t model)
 		break;
 	}
 }
+void setpHSensorCalibrationData(void)
+{
+	//Calibration points
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_value = 4.13f;
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = 7.11f;
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_count = 56497;
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count= 64680;
+	HoldingRegister_t.SensorCalibration_t.pH_PT.Y1 = 4.01f;
+	HoldingRegister_t.SensorCalibration_t.pH_PT.Y2 = 7.0f;
 
+	//Calibration Values
+	HoldingRegister_t.SensorCalibration_t.pH_slope = -16.9408436f;
+	HoldingRegister_t.SensorCalibration_t.pH_intercept = 6.88764143f;
+
+	//load to the live buffer
+	pH_SensorCalibpoints_t.pH_Solpe = HoldingRegister_t.SensorCalibration_t.pH_slope;
+	pH_SensorCalibpoints_t.pH_Intercept = HoldingRegister_t.SensorCalibration_t.pH_intercept;
+
+}
+
+void setPDZeroDefaults(void)
+{
+	COD_MeasurementValues_t.PD1_Zero = InputRegister_t.PV_info.PD1_0;
+	COD_MeasurementValues_t.PD2_Zero = InputRegister_t.PV_info.PD2_0;
+
+	TSS_MeasurementValues_t.PD2_Zero = InputRegister_t.PV_info.TSS_PD2_0;
+}
 void CalibrationDefaultValue(uint8_t AnalyzerRange)
 {
 
@@ -606,6 +627,19 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 
 		/*AO configuration*/
 		setAOCofigurationData(MODEL_3021_3022);
+
+		//pH Calibration data
+		setpHSensorCalibrationData();
+
+		//PD1(0) and PD2(0) for COD
+		InputRegister_t.PV_info.PD1_0 = 27000;
+		InputRegister_t.PV_info.PD2_0 = 22000;
+
+		//PD2(0) for TSS
+		InputRegister_t.PV_info.TSS_PD2_0 = 22000;
+
+		//Load into live buffers
+		setPDZeroDefaults();
 		break;
 	/*
 	 * Range	:
@@ -708,6 +742,19 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 
 		/*AO configuration*/
 		setAOCofigurationData(MODEL_3011_3012);
+
+		//pH Calibration data
+		setpHSensorCalibrationData();
+
+		//PD1(0) and PD2(0) for COD
+		InputRegister_t.PV_info.PD1_0 = 24000;
+		InputRegister_t.PV_info.PD2_0 = 21000;
+
+		//PD2(0) for TSS
+		InputRegister_t.PV_info.TSS_PD2_0 = 21000;
+
+		//Load into live buffers
+		setPDZeroDefaults();
 		break;
 	}
 }

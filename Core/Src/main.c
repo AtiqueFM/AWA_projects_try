@@ -370,6 +370,12 @@ int main(void)
 		  ModbusSaveConfiguration(SAVE_CALIBRATION_DATA);
 	  }
 
+	  //Check for the save process parameter data flag, if the flag is set then save the calibration data into FRAM
+	  if(AWAOperationStatus_t.AWADataSave_ProcessValues)
+	  {
+		  ModbusSaveConfiguration(SAVE_PROCESSPARAMETER_DATA);
+	  }
+
 	  //RTU
 	  if(DMA_TX_FLAG == 1)
 	  {

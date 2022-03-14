@@ -453,7 +453,10 @@ typedef struct{
 	float pH_Cal_Point_1_value; 			/*<Caluclated pH value*/
 	float pH_Cal_Point_2_value; 			/*<Caluclated pH value*/
 	float pH_1pt_Cal_point_1_value; 		/*<Caluclated pH value*/
-	Two_pt_Cal AI2_PT;
+	float pH_slope;					/*<For HMI display*/
+	float pH_intercept;				/*<For HMI display*/
+//	float pH_1_pt_slope;					/*<For HMI display*/
+//	float pH_1_pt_intercept;				/*<For HMI display*/
 }SensoralibrationHandle_t;
 
 typedef union{
@@ -1289,6 +1292,7 @@ void Error_Handler(void);
 
 #define SAVE_CONFIGURATION_DATA			0x01
 #define SAVE_CALIBRATION_DATA			0x02
+#define SAVE_PROCESSPARAMETER_DATA		0x03
 
 //HMI inter-locking
 #define HMI_INTERLOCK_SAMPLE_PUMP				1
@@ -1360,6 +1364,7 @@ typedef union{
 		unsigned CalibrationMode			: 1;/*2/9/2021*/
 		unsigned CODFlashOperation			: 1;
 		unsigned AWADataSave_Calibration	: 1;//if not saved '1', else '0'
+		unsigned AWADataSave_ProcessValues	: 1;
 		unsigned CleaningTankEmpty			: 1;	/*<If SET then Set As Zero won't be accessible
 		 	 	 	 	 	 	 	 	 	 	 	 	 Warning on the HMI*/
 		unsigned MILSwitchState				: 1;
@@ -1380,6 +1385,7 @@ typedef struct{
 	unsigned factoryCOD_setzero	: 1;	/*<SET after setting zero and RESET after storing in FRAM*/
 	unsigned factoryTSS_setzero	: 1;	/*<SET after setting zero and RESET after storing in FRAM*/
 	unsigned analyzerRangeSelect: 1;	/*<SEt after selecting the analyzer range from the factory menu, will be reset for the first time.*/
+	unsigned analyzerPocessvalue: 1;	/*<Set after calculating new process values ; COD,BOD,TSS,TOC*/
 }AWADataStoreState_t;
 AWADataStoreState_t	AWADataStoreState;
 
@@ -1422,21 +1428,23 @@ typedef union{
 ElectronicCalibpHHandle_t pH_ElectronicCalibpoints_t;
 
 typedef union{
-	float byte[2];
+	uint8_t byte[32];
 	struct{
-		float pH_Solpe;
-		float pH_Intercept;
-		/*1-pt calib points*/
-		uint16_t pH_1ptCalib_sample;
-		uint16_t pH_1ptCalib_count;
-		/*2-pt calib points*/
-		float pH_Solution_1_y1;
-		float pH_Solution_2_y2;
-		signed int pH_counts_1_x1;
-		signed int pH_counts_2_x2;
-		uint16_t flag_sample_set;
-		uint16_t flag_ADC_count_set;
-		uint16_t flag_display_count;
+		//Stored in FRAM
+		float pH_Solpe;					/*<Slope*/
+		float pH_Intercept;				/*<Intercept*/
+		float pH_Solution_1_y1;			/*<Simulation solution*/
+		float pH_Solution_2_y2;			/*<Simulation solution*/
+		int pH_counts_1_x1;				/*<Corresponding ADC counts*/
+		int pH_counts_2_x2;				/*<Corresponding ADC counts*/
+		float pH_Calculated_1_x1;		/*<Calculated pH value,(Display only)*/
+		float pH_Calculated_2_x2;		/*<Calculated pH value,(Display only)*/
+		//Not stored in FRAM
+		uint16_t pH_1ptCalib_sample;	/*<NA*/
+		uint16_t pH_1ptCalib_count;		/*<NA*/
+		uint16_t flag_sample_set;		/*<From HMI, for storing the simulation pH solution value*/
+		uint16_t flag_ADC_count_set;	/*<From HMI, for storing the pH solution corresponding ADC counts*/
+		uint16_t flag_display_count;	/*<From HMI, for displaying the current raw value of the pH*/
 		/*ADC counts*/
 		uint16_t pH_ADCCounts;
 	};
