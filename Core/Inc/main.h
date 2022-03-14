@@ -372,6 +372,16 @@ typedef struct{
 	uint8_t ModeCommandHMI_L;		/*<Request command from HMI*/
 	uint8_t ModeCommandHMI_H;		/*<Request command from HMI*/
 	uint16_t CommonCommandHMI;		/*<Request command from HMI*/
+	//uint32_t RES[10];				/*<Reserve memory 40 bytes*/
+	float CS_PUMP1_ONTIME;		/*<Cleaning pump on time for Check screen*/
+	float CS_PUMP1_DELAY;		/*<Cleaning pump de-gas time for check screen*/
+	float CS_PUMP2_ONTIME;		/*<Sample pump on time for check screen*/
+	float CS_PUMP2_DELAY;		/*<Cleaning pump de-gas time for check screen*/
+	float CS_FLASH;				/*<IF 1 : 100 FLASHES; IF 2 : 500 flashes*/
+	float CS_PD_1_MIN;			/*<Gives the minimum values from the array of flashes*/
+	float CS_PD_1_MAX;			/*<Gives the maximum values from the array of flashes*/
+	float CS_PD_2_MIN;			/*<Gives the minimum values from the array of flashes*/
+	float CS_PD_2_MAX;			/*<Gives the maximum values from the array of flashes*/
 }ModeCommandHandle_t;
 
 typedef struct{
@@ -472,7 +482,8 @@ typedef union{
 	struct{
 		//40000
 		ModeCommandHandle_t ModeCommand_t;
-		uint8_t RES_1[100 - 4];					/*<Reserve for additional MODBUS register*/
+		//uint8_t RES_1[100 - 4];					/*<Reserve for additional MODBUS register*/
+		uint8_t RES_1[100 - 36 - 4];						/*<Reserve for additional MODBUS register*/
 		//41000
 		IOUTConfigHanldle_t IOUTConfig_t[8];
 		uint8_t RES_2[100];						/*<Reserve for additional MODBUS register*/
@@ -593,19 +604,19 @@ uint16_t TempDetSignal;
 uint16_t TempADCounts[10];
 //uint16_t TempDet1Signal_Ch1[100];
 
-uint16_t TempDet1Noise_Ch1[100];
-uint16_t TempDet1Signal_Ch1[100];
-uint16_t TempDet2Noise_Ch2[100];
-uint16_t TempDet2Signal_Ch2[100];
+uint16_t TempDet1Noise_Ch1[500];
+uint16_t TempDet1Signal_Ch1[500];
+uint16_t TempDet2Noise_Ch2[500];
+uint16_t TempDet2Signal_Ch2[500];
 
 //buffers required for the the averaging of PD1 and PD2 noise and signal
-uint16_t SignalNoiseDiff_Ch1[100];//19/10/2021
-uint16_t SignalNoiseDiff_Ch2[100];//19/10/2021
+uint16_t SignalNoiseDiff_Ch1[500];//19/10/2021
+uint16_t SignalNoiseDiff_Ch2[500];//19/10/2021
 uint64_t TempMeanPd1,TempMeanPd2;//19/10/2021
 uint16_t PD1_new, PD2_new;
 uint16_t PD1_Zero, PD2_Zero;
-double sd[100];
-double sd2[100];
+double sd[500];
+double sd2[500];
 
 //LPF Array
 //uint16_t Y_filter_new;
@@ -614,8 +625,8 @@ double sd2[100];
 ////float sampling_time_noise = 0.059;
 ////float sampling_time_noise = 0.051;
 //uint16_t averaging_time = 1;
-uint16_t filter_data_PD1[100];
-uint16_t filter_data_PD2[100];
+uint16_t filter_data_PD1[500];
+uint16_t filter_data_PD2[500];
 uint64_t filter_data_PD1_mean;
 uint64_t filter_data_PD2_mean;
 
@@ -842,7 +853,9 @@ void Error_Handler(void);
 													+ (10 * sizeof(LastCalibrationAI1Hanlde_t))\
 													+ (10 * sizeof(LastCalibrationAI2Hanlde_t)))
 
-#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t) + 100 - 4)
+
+//#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t) + 100 - 4)
+#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t) + 100 - 36 - 4)
 #define HOLDING_REGISTER_ADDRESS_42000	(uint16_t)(HOLDING_REGISTER_ADDRESS_41000\
 													+ (8*sizeof(IOUTConfigHanldle_t))\
 													+ 100)
