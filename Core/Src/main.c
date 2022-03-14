@@ -297,6 +297,20 @@ int main(void)
 		  HoldingRegister_t.ModeCommand_t.CommonCommand = HoldingRegister_t.ModeCommand_t.CommonCommandHMI;
 
 	  }
+	  /*For STOP pump action*/
+	  else if(HoldingRegister_t.ModeCommand_t.CommonCommandHMI == STOP_RUNNING_PUMP
+			  && CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG == SET)
+	  {
+		  //Reset the new command flag
+		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
+
+		  //Main command
+		  HoldingRegister_t.ModeCommand_t.ModeCommand_H = HoldingRegister_t.ModeCommand_t.ModeCommandHMI_H;
+		  HoldingRegister_t.ModeCommand_t.ModeCommand_L = HoldingRegister_t.ModeCommand_t.ModeCommandHMI_L;
+
+		  //Common command
+		  HoldingRegister_t.ModeCommand_t.CommonCommand = HoldingRegister_t.ModeCommand_t.CommonCommandHMI;
+	  }
 	  /*Check if the command from HMI is similar to that of the already executing/executed command*/
 	  else if(HoldingRegister_t.ModeCommand_t.CommonCommand != RESET
 			  && CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG == SET)
