@@ -509,6 +509,13 @@ void setpHSensorCalibrationData(void)
 
 }
 
+void setPDZeroDefaults(void)
+{
+	COD_MeasurementValues_t.PD1_Zero = InputRegister_t.PV_info.PD1_0;
+	COD_MeasurementValues_t.PD2_Zero = InputRegister_t.PV_info.PD2_0;
+
+	TSS_MeasurementValues_t.PD2_Zero = InputRegister_t.PV_info.TSS_PD2_0;
+}
 void CalibrationDefaultValue(uint8_t AnalyzerRange)
 {
 
@@ -619,6 +626,16 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 
 		//pH Calibration data
 		setpHSensorCalibrationData();
+
+		//PD1(0) and PD2(0) for COD
+		InputRegister_t.PV_info.PD1_0 = 27000;
+		InputRegister_t.PV_info.PD2_0 = 22000;
+
+		//PD2(0) for TSS
+		InputRegister_t.PV_info.TSS_PD2_0 = 22000;
+
+		//Load into live buffers
+		setPDZeroDefaults();
 		break;
 	/*
 	 * Range	:
@@ -724,6 +741,16 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 
 		//pH Calibration data
 		setpHSensorCalibrationData();
+
+		//PD1(0) and PD2(0) for COD
+		InputRegister_t.PV_info.PD1_0 = 24000;
+		InputRegister_t.PV_info.PD2_0 = 21000;
+
+		//PD2(0) for TSS
+		InputRegister_t.PV_info.TSS_PD2_0 = 21000;
+
+		//Load into live buffers
+		setPDZeroDefaults();
 		break;
 	}
 }
