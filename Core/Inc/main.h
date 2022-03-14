@@ -839,7 +839,7 @@ void Error_Handler(void);
 													+ (10 * sizeof(LastCalibrationAI1Hanlde_t))\
 													+ (10 * sizeof(LastCalibrationAI2Hanlde_t)))
 
-#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t) + 100)
+#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t) + 100 - 4)
 #define HOLDING_REGISTER_ADDRESS_42000	(uint16_t)(HOLDING_REGISTER_ADDRESS_41000\
 													+ (8*sizeof(IOUTConfigHanldle_t))\
 													+ 100)

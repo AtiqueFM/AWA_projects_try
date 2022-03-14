@@ -84,6 +84,10 @@ void HoldingRegisterdefaultData(void)
 	//Device will start from RUN->Batch mode
 	HoldingRegister_t.ModeCommand_t.ModeCommand_H = 0x22;
 	HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x01;
+	HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
+	HoldingRegister_t.ModeCommand_t.ModeCommandHMI_H = 0x22;
+	HoldingRegister_t.ModeCommand_t.ModeCommandHMI_L = 0x01;
+	HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 //	HoldingRegister_t.ModeCommand_t.PUMP1_ONTIME = 1;
 	//depricated code
 	g_u8PUMP_action = 0x01;//pump-on time

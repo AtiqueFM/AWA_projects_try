@@ -287,7 +287,7 @@ int main(void)
 		   */
 
 		  //Reset the new command flag
-		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
+		  //CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
 
 		  //Main command
 		  HoldingRegister_t.ModeCommand_t.ModeCommand_H = HoldingRegister_t.ModeCommand_t.ModeCommandHMI_H;
@@ -295,14 +295,17 @@ int main(void)
 
 		  //Common command
 		  HoldingRegister_t.ModeCommand_t.CommonCommand = HoldingRegister_t.ModeCommand_t.CommonCommandHMI;
+		  //HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 
+		  //Reset the new command flag
+		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
 	  }
 	  /*For STOP pump action*/
 	  else if(HoldingRegister_t.ModeCommand_t.CommonCommandHMI == STOP_RUNNING_PUMP
 			  && CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG == SET)
 	  {
 		  //Reset the new command flag
-		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
+		  //CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
 
 		  //Main command
 		  HoldingRegister_t.ModeCommand_t.ModeCommand_H = HoldingRegister_t.ModeCommand_t.ModeCommandHMI_H;
@@ -310,6 +313,9 @@ int main(void)
 
 		  //Common command
 		  HoldingRegister_t.ModeCommand_t.CommonCommand = HoldingRegister_t.ModeCommand_t.CommonCommandHMI;
+
+		  //Reset the new command flag
+		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
 	  }
 	  /*Check if the command from HMI is similar to that of the already executing/executed command*/
 	  else if(HoldingRegister_t.ModeCommand_t.CommonCommand != RESET
@@ -322,12 +328,15 @@ int main(void)
 		   */
 
 		  //Reset the new command flag
-		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
+		  //CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
 
 		  //Reset the Command from HMI
 		  //HoldingRegister_t.ModeCommand_t.ModeCommandHMI_H = HoldingRegister_t.ModeCommand_t.ModeCommand_H; //Set the current main command to the HMI command
 		  //HoldingRegister_t.ModeCommand_t.ModeCommandHMI_L = HoldingRegister_t.ModeCommand_t.ModeCommand_L;	//Set the current main command to the HMI command
 		  HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+
+		  //Reset the new command flag
+		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
 	  }
 
 	  if(MOD2_RxFlag == 0x01)
