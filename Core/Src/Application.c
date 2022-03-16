@@ -90,7 +90,7 @@ void ProcessModesCommands(void)
 					pumpOperationStop();
 				}
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
 				{
 					CODADCCapture(COD_Measure);
 				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && PUMPControlHandle_t.u8Flag_measurement)
@@ -98,7 +98,7 @@ void ProcessModesCommands(void)
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
 				//Perform the Auto Zero process
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == AUTO_COD_ZERO)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == AUTO_COD_ZERO)
 				{
 					//First operate the sample pump
 					PumpOperation(0x01);
@@ -107,9 +107,12 @@ void ProcessModesCommands(void)
 					if(!PUMPControlHandle_t.u8Flag_measurement)
 						HoldingRegister_t.ModeCommand_t.CommonCommand = COD_ZERO_MEAS;
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_ZERO_MEAS && !PUMPControlHandle_t.u8Flag_measurement)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_ZERO_MEAS && !PUMPControlHandle_t.u8Flag_measurement)
 				{
 					CODADCCapture(AUTO_COD_ZERO);
+				}
+				else{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				}
 				break;
 			}
@@ -255,6 +258,8 @@ void ProcessModesCommands(void)
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 
 					HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x50;
+				}else{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				}
 				break;
 			}
@@ -271,7 +276,7 @@ void ProcessModesCommands(void)
 					COD_SensorCalib_ypoint(3);
 
 				/*Stop sampling pump, if MIL state is RESET*/
-				if((HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt1
+				else if((HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt1
 					|| HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt2
 					|| HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt3)
 					&& AWAOperationStatus_t.MILSwitchState == RESET)
@@ -281,7 +286,7 @@ void ProcessModesCommands(void)
 				}
 
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
 				{
 #ifdef HMI_TEST
 					CODADCCapture(AUTO_COD_ZERO);
@@ -291,7 +296,7 @@ void ProcessModesCommands(void)
 #endif
 				}
 				//For Two point calibration operation
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Sensor_Calibrate_COD)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == Sensor_Calibrate_COD)
 				{
 					COD_SensorCalibration();
 					/*Re-calculate the values of COD from the new 2-pt calibration*/
@@ -305,6 +310,8 @@ void ProcessModesCommands(void)
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 
+				}else{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				}
 				break;
 			}
@@ -321,7 +328,7 @@ void ProcessModesCommands(void)
 					COD_SensorCalib_ypoint(3);
 
 				/*Stop sampling pump, if MIL state is RESET*/
-				if((HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt1
+				else if((HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt1
 					|| HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt2
 					|| HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt3)
 					&& AWAOperationStatus_t.MILSwitchState == RESET)
@@ -331,7 +338,7 @@ void ProcessModesCommands(void)
 				}
 
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
 				{
 #ifdef HMI_TEST
 					CODADCCapture(AUTO_COD_ZERO);
@@ -341,7 +348,7 @@ void ProcessModesCommands(void)
 #endif
 				}
 				//For Two point calibration operation
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Sensor_Calibrate_TSS)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == Sensor_Calibrate_TSS)
 				{
 					TSS_SensorCalibration();
 					/*Calculate the new TSS value from the new 2-pt calibration*/
@@ -356,6 +363,8 @@ void ProcessModesCommands(void)
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 
+				}else{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				}
 				break;
 			}
@@ -502,6 +511,8 @@ void ProcessModesCommands(void)
 					HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x50;
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0x0;
 					break;
+				}else{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				}
 				break;
 			}
@@ -637,6 +648,8 @@ void ProcessModesCommands(void)
 					AWADataStoreState.electronicPT = SET;/*<TODO: to RESET after storing the data in FRAM*/
 					HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x50;
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0x0;
+				}else{
+					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				}
 				break;
 			}
@@ -672,7 +685,7 @@ void ProcessModesCommands(void)
 				}
 
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
 				{
 #ifdef HMI_TEST
 					CODADCCapture(AUTO_COD_ZERO);
@@ -683,12 +696,12 @@ void ProcessModesCommands(void)
 				{
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION)
 				{
 					//operate the cleaning pump
 					PumpOperation(0x01);
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == SET)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == SET)
 				{
 					//operate the sample pump
 					PumpOperation(0x02);
@@ -724,7 +737,7 @@ void ProcessModesCommands(void)
 #endif
 
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO
 						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
 				{
 					//set the current PD1 and PD2 mean values to the PD1(0) and PD2(0)
@@ -748,8 +761,10 @@ void ProcessModesCommands(void)
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
 				/*Emergency Pump Stop*/
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
 					pumpOperationStop();
+				else
+					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				break;
 			}
 			case TSSCoeffs:
@@ -796,12 +811,12 @@ void ProcessModesCommands(void)
 				{
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION)
 				{
 					//operate the cleaning pump
 					PumpOperation(0x01);
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == SET)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == SET)
 				{
 					//operate the sample pump
 					PumpOperation(0x02);
@@ -809,7 +824,7 @@ void ProcessModesCommands(void)
 				{
 					pumpOperationStop();
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_FACTORY_SETASZERO
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_FACTORY_SETASZERO
 						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
 				{
 					//set the current PD1 and PD2 mean values to the PD1(0) and PD2(0)
@@ -828,8 +843,10 @@ void ProcessModesCommands(void)
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 				}
 				/*Emergency Pump Stop*/
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
 					pumpOperationStop();
+				else
+					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				break;
 			}
 			case Relay_test:
@@ -847,7 +864,8 @@ void ProcessModesCommands(void)
 					AWADataStoreState.analyzerRangeSelect = SET;
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
-				}
+				}else
+					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 
 			break;
 		}
@@ -866,12 +884,12 @@ void ProcessModesCommands(void)
 				{
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION)
 				{
 					//operate the cleaning pump
 					CheckScreen_PumpOperation(0x01);
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == SET)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == SET)
 				{
 					//operate the sample pump
 					CheckScreen_PumpOperation(0x02);
@@ -879,7 +897,7 @@ void ProcessModesCommands(void)
 				{
 					pumpOperationStop();
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_FACTORY_SETASZERO
 						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
 				{
 					//set the current PD1 and PD2 mean values to the PD1(0) and PD2(0)
@@ -903,9 +921,10 @@ void ProcessModesCommands(void)
 					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				}
 				/*Emergency Pump Stop*/
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
 					pumpOperationStop();
-
+				else
+					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				break;
 			}
 			case TSS_Check:
@@ -937,12 +956,12 @@ void ProcessModesCommands(void)
 				{
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION)
 				{
 					//operate the cleaning pump
 					CheckScreen_PumpOperation(0x01);
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == SET)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == SET)
 				{
 					//operate the sample pump
 					CheckScreen_PumpOperation(0x02);
@@ -950,7 +969,7 @@ void ProcessModesCommands(void)
 				{
 					pumpOperationStop();
 				}
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_FACTORY_SETASZERO
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_FACTORY_SETASZERO
 						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
 				{
 					//set the current PD1 and PD2 mean values to the PD1(0) and PD2(0)
@@ -963,10 +982,10 @@ void ProcessModesCommands(void)
 					InputRegister_t.PV_info.TSS_RAW = TSS_RAW;
 					InputRegister_t.PV_info.TSS_PD2_0 = TSS_MeasurementValues_t.PD2_Zero;
 					//Reset the command
-					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 					AWADataStoreState.factoryTSS_setzero = SET;
 					//Flag set as data not saved in the FRAM
-					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+					AWAOperationStatus_t.AWADataSave_Calibration = SET;
 
 				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_FACTORY_SETASZERO
 						&& AWAOperationStatus_t.CleaningTankEmpty != RESET)
@@ -974,8 +993,10 @@ void ProcessModesCommands(void)
 					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				}
 				/*Emergency Pump Stop*/
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
 					pumpOperationStop();
+				else
+					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				break;
 			}
 		}
@@ -1415,12 +1436,7 @@ uint8_t CheckScreen_CODADCCapture(uint8_t command)
 
 			htim2.Instance->DIER |= TIM_IT_UPDATE;
 			htim2.Instance->CR1 |= TIM_CR1_CEN;
-#if 0 //if 0, it will accept the MODBUS query even during the COD measurement process
-			RxFlag = 0x00;
-			//turn of the MODBUS receive query
-			huart3.Instance->CR1 &= ~UART_MODE_RX;// Rx disable
-			huart3.Instance->CR1 &= ~UART_IT_RXNE; // UART RX not empty interrupt disable
-#endif
+
 			dataptr1 = 0; //SSG
 			dataptr = 0;
 
@@ -1505,33 +1521,6 @@ uint8_t CheckScreen_CODADCCapture(uint8_t command)
 
 			CycleStart = 0;
 
-#if 0
-			//19/10/2021
-			//averaging the PD1 and PD2 noise and signal data
-			for(int t=0; t<100; t++)//limit of this for loop will change according to the number of flashes selected
-			{
-				if(TempDet1Signal_Ch1[t] >= TempDet1Noise_Ch1[t])
-					SignalNoiseDiff_Ch1[t] = TempDet1Signal_Ch1[t] - TempDet1Noise_Ch1[t];
-				else
-					SignalNoiseDiff_Ch1[t] = - TempDet1Signal_Ch1[t] + TempDet1Noise_Ch1[t];
-				if(TempDet2Signal_Ch2[t] >= TempDet2Noise_Ch2[t])
-					SignalNoiseDiff_Ch2[t] = TempDet2Signal_Ch2[t] - TempDet2Noise_Ch2[t];
-				else
-					SignalNoiseDiff_Ch2[t] =  - TempDet2Signal_Ch2[t] + TempDet2Noise_Ch2[t];
-			}
-
-			for(int t=0; t<100; t++)//limit of this for loop will change according to the number of flashes selected
-			{
-				TempMeanPd1 = TempMeanPd1 + SignalNoiseDiff_Ch1[t];
-				TempMeanPd2 = TempMeanPd2 + SignalNoiseDiff_Ch2[t];
-			}
-			TempMeanPd1 = TempMeanPd1/100;
-			TempMeanPd2 = TempMeanPd2/100;
-
-			//Ascending order for PD1 and PD2
-			bubble_sort();
-#endif
-
 			filtering(noOfFlashes);
 
 			//new mean
@@ -1612,13 +1601,6 @@ uint8_t CheckScreen_CODADCCapture(uint8_t command)
 				//COD actual value
 				COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope + COD_SensorCalibration_t.intercept;
 
-				//COD value with Factory Calibration not sensor
-				//COD_MeasurementValues_t.Cal_Value = factory_cod_value;
-
-				/*<DEPRICATED CODE*/
-				//TSS value
-				//TSS_MeasurementValues_t.Cal_Value = factory_tss_value;
-
 				//TSS value
 				TSS_MeasurementValues_t.Cal_Value = factory_tss_value * TSS_SensorCalibration_t.slope + TSS_SensorCalibration_t.intercept;
 
@@ -1682,19 +1664,13 @@ uint8_t CheckScreen_CODADCCapture(uint8_t command)
 
 			//(new_value - mean)^2
 			int b = 0;
-			//for(int i=  0;i<100;i++)
-			//for(int i = 20,b = 0;i<80;i++,b++)
+
 			for(int i = flash_limit_min,b = 0;i<flash_limit_max;i++,b++)
 			{
-				//sd[i] = pow((SignalNoiseDiff_Ch1[i] - PD1_new),2)/100;
-				//sd2[i] = pow((SignalNoiseDiff_Ch2[i] - PD2_new),2)/100;
-
 				sd[b] = pow((filter_data_PD1[i] - PD1_new),2)/(flash_limit_max - flash_limit_min);
 				sd2[b] = pow((filter_data_PD2[i] - PD2_new),2)/(flash_limit_max - flash_limit_min);
 			}
 
-			//for(int i = 0;i<100;i++)
-			//for(int i = 0;i<60;i++)
 			for(int i = 0;i<(flash_limit_max - flash_limit_min);i++)
 			{
 				sum += sd[i];
@@ -3953,5 +3929,8 @@ void pumpOperationStop(void)
 			//un-block the ADC measurement
 			PUMPControlHandle_t.u8Flag_measurement = 0x00;
 		}
+	}else
+	{
+		HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 	}
 }

@@ -563,13 +563,13 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 
 		/*COD 2 point calibration*/
 		HoldingRegister_t.SensorCalibration_t.COD_X1 = 0.0f;
-		HoldingRegister_t.SensorCalibration_t.COD_X2 = 200.0f;
-		HoldingRegister_t.SensorCalibration_t.COD_Y1 = -0.4f;
-		HoldingRegister_t.SensorCalibration_t.COD_Y2 = 199.153f;
+		HoldingRegister_t.SensorCalibration_t.COD_X2 = 400.0f;
+		HoldingRegister_t.SensorCalibration_t.COD_Y1 = -0.53f;
+		HoldingRegister_t.SensorCalibration_t.COD_Y2 = 398.15f;
 
 		/*COD 2 point calibration data*/
 		HoldingRegister_t.SensorCalibration_t.COD_CF = 1.0f;
-		HoldingRegister_t.SensorCalibration_t.COD_Intercept = 0.4f;
+		HoldingRegister_t.SensorCalibration_t.COD_Intercept = 0.53f;
 
 		/*COD Scaling factors*/
 		HoldingRegister_t.ModeCommand_t.COD_SF = 100.0f;
@@ -579,42 +579,42 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 
 
 		/*TSS factory 10 point calibration*/
-		HoldingRegister_t.ModeCommand_t.TSS_F[0] =	0.31f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[1] =	32.64f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[2] =	52.43f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[3] =	86.95f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[4] =	103.55f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[5] =	132.74f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[6] =	149.44f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[7] =	178.79f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[8] =	191.17f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[9] =	212.95f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[0] =	0.45f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[1] =	33.21f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[2] =	46.05f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[3] =	62.54f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[4] =	85.83f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[5] =	119.32f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[6] =	157.63f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[7] =	217.40f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[8] =	255.91f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[9] =	377.87f;
 
 		HoldingRegister_t.ModeCommand_t.TSS_G[0] =	0.0f;
 		HoldingRegister_t.ModeCommand_t.TSS_G[1] =	50.0f;
-		HoldingRegister_t.ModeCommand_t.TSS_G[2] =	100.0f;
-		HoldingRegister_t.ModeCommand_t.TSS_G[3] =	150.0f;
-		HoldingRegister_t.ModeCommand_t.TSS_G[4] =	200.0f;
-		HoldingRegister_t.ModeCommand_t.TSS_G[5] =	250.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_G[2] =	75.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_G[3] =	100.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_G[4] =	150.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_G[5] =	200.0f;
 		HoldingRegister_t.ModeCommand_t.TSS_G[6] =	300.0f;
-		HoldingRegister_t.ModeCommand_t.TSS_G[7] =	350.0f;
-		HoldingRegister_t.ModeCommand_t.TSS_G[8] =	400.0f;
-		HoldingRegister_t.ModeCommand_t.TSS_G[9] =	450.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_G[7] =	400.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_G[8] =	600.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_G[9] =	750.0f;
 
 		/*TSS coefficients*/
-		HoldingRegister_t.ModeCommand_t.TSS_K[0] =	-0.36972f;
-		HoldingRegister_t.ModeCommand_t.TSS_K[1] =	1.62619f;
-		HoldingRegister_t.ModeCommand_t.TSS_K[2] =	0.00226f;
+		HoldingRegister_t.ModeCommand_t.TSS_K[0] =	-21.96761f;
+		HoldingRegister_t.ModeCommand_t.TSS_K[1] =	2.0888f;
+		HoldingRegister_t.ModeCommand_t.TSS_K[2] =	0.00004f;
 
 		/*TSS 2 point calibration*/
 		HoldingRegister_t.SensorCalibration_t.TSS_X1 = 0.0f;
-		HoldingRegister_t.SensorCalibration_t.TSS_X2 = 200.0f;
-		HoldingRegister_t.SensorCalibration_t.TSS_Y1 = 1.163f;
-		HoldingRegister_t.SensorCalibration_t.TSS_Y2 = 203.622f;
+		HoldingRegister_t.SensorCalibration_t.TSS_X2 = 50.0f;
+		HoldingRegister_t.SensorCalibration_t.TSS_Y1 = -9.914f;
+		HoldingRegister_t.SensorCalibration_t.TSS_Y2 = 49.907f;
 
 		/*COD 2 point calibration data*/
-		HoldingRegister_t.SensorCalibration_t.TSS_CF = -1.15f;
-		HoldingRegister_t.SensorCalibration_t.TSS_Intercept = 0.94f;
+		HoldingRegister_t.SensorCalibration_t.TSS_CF = 0.84f;
+		HoldingRegister_t.SensorCalibration_t.TSS_Intercept = 8.29f;
 
 		/*COD Scaling factors*/
 		HoldingRegister_t.ModeCommand_t.TSS_SF = 100.0f;
@@ -681,7 +681,7 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 		HoldingRegister_t.SensorCalibration_t.COD_X1 = 0.0f;
 		HoldingRegister_t.SensorCalibration_t.COD_X2 = 200.0f;
 		HoldingRegister_t.SensorCalibration_t.COD_Y1 = -0.4f;
-		HoldingRegister_t.SensorCalibration_t.COD_Y2 = 199.153f;
+		HoldingRegister_t.SensorCalibration_t.COD_Y2 = 199.183f;
 
 		/*COD 2 point calibration data*/
 		HoldingRegister_t.SensorCalibration_t.COD_CF = 1.0f;
@@ -728,8 +728,8 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 		HoldingRegister_t.SensorCalibration_t.TSS_Y2 = 203.622f;
 
 		/*TSS 2 point calibration data*/
-		HoldingRegister_t.SensorCalibration_t.TSS_CF = -1.15f;
-		HoldingRegister_t.SensorCalibration_t.TSS_Intercept = 0.94f;
+		HoldingRegister_t.SensorCalibration_t.TSS_Intercept = -1.15f;
+		HoldingRegister_t.SensorCalibration_t.TSS_CF = 0.99f;
 
 		/*TSS Scaling factors*/
 		HoldingRegister_t.ModeCommand_t.TSS_SF = 100.0f;
