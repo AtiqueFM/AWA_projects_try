@@ -101,6 +101,14 @@ void HoldingRegisterdefaultData(void)
 	//Set the COD Auto Zero flag as we have default data
 	COD_MeasurementStatus.COD_ZERO = 0x01;
 
+	/*HMI and Firmware version number*/
+	HoldingRegister_t.ModeCommand_t.HMI_Ver_Major = HMI_VER_MAJOR;
+	HoldingRegister_t.ModeCommand_t.HMI_Ver_Minor = HMI_VER_MINOR;
+	HoldingRegister_t.ModeCommand_t.HMI_Ver_BugFix = HMI_VER_BUGFIX;
+
+	HoldingRegister_t.ModeCommand_t.FW_Ver_Major = FW_VER_MAJOR;
+	HoldingRegister_t.ModeCommand_t.FW_Ver_Minor = FW_VER_MINOR;
+	HoldingRegister_t.ModeCommand_t.FW_Ver_BugFix = FW_VER_BUGFIX;
 }
 
 void DMA_UART6_RX_Init(void)
@@ -572,7 +580,7 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 		HoldingRegister_t.SensorCalibration_t.COD_Intercept = 0.53f;
 
 		/*COD Scaling factors*/
-		HoldingRegister_t.ModeCommand_t.COD_SF = 100.0f;
+		HoldingRegister_t.ModeCommand_t.COD_SF = 200.0f;
 
 		/*Transfer the data from MODBUS to live buffer*/
 		transfer_CODdatatoLiveBuffer();
@@ -617,7 +625,7 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 		HoldingRegister_t.SensorCalibration_t.TSS_Intercept = 8.29f;
 
 		/*COD Scaling factors*/
-		HoldingRegister_t.ModeCommand_t.TSS_SF = 100.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_SF = 200.0f;
 
 		/*Load the data into TSS factory calibration live buffer*/
 		transfer_TSSdatatoLiveBuffer();

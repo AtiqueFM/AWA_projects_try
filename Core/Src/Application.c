@@ -253,6 +253,7 @@ void ProcessModesCommands(void)
 					/*----------------------------------------------------------------------*/
 
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+					HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 					AWAOperationStatus_t.CalibrationMode = 0x0;
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
@@ -853,6 +854,7 @@ void ProcessModesCommands(void)
 			{
 				RelayToggle();
 				//RelayToggleCoilInputUpdate();
+				break;
 			}
 			case Select_Range:
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == 0x98)
@@ -1714,6 +1716,8 @@ uint8_t CheckScreen_CODADCCapture(uint8_t command)
 			//reset the common command flag
 			HoldingRegister_t.ModeCommand_t.CommonCommand = 0x00;
 
+			HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+
 			//set the flashing operation flag to 2 as flashing operation is completed successfully
 			cod_flash_operation = 2;
 
@@ -2072,6 +2076,8 @@ uint8_t CODADCCapture(uint8_t command)
 			//reset the common command flag
 			HoldingRegister_t.ModeCommand_t.CommonCommand = 0x00;
 
+			HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+
 			//set the flashing operation flag to 2 as flashing operation is completed successfully
 			cod_flash_operation = 2;
 
@@ -2400,7 +2406,9 @@ uint8_t CODADCCapture_Sensor(uint8_t command,uint8_t sens_calib_point)
 			huart3.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
 
 			//reset the common command flag
-			HoldingRegister_t.ModeCommand_t.CommonCommand = 0x00;
+			HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
+
+			HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 
 			//set the flashing operation flag to 2 as flashing operation is completed successfully
 			cod_flash_operation = 2;
@@ -2704,6 +2712,8 @@ void PumpOperation(uint8_t PumpNo)
 		htim6.Instance->CR1 &= ~TIM_CR1_CEN; // disable timer
 
 		HoldingRegister_t.ModeCommand_t.CommonCommand = 0x0;
+
+		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 	}
 }
 
@@ -2800,6 +2810,8 @@ void CheckScreen_PumpOperation(uint8_t PumpNo)
 		htim6.Instance->CR1 &= ~TIM_CR1_CEN; // disable timer
 
 		HoldingRegister_t.ModeCommand_t.CommonCommand = 0x0;
+
+		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 	}
 }
 void currentOutputTest(uint8_t CurrentChannel)
@@ -2963,6 +2975,8 @@ void ModbusSaveConfiguration(uint8_t data)
 			  AWADataStoreState.analyzerRangeSelect = RESET;
 			  /*Save the new configuration data into FRAM*/
 			  analyzerRangeSelectFRAMSaveData();
+
+			  HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 		  }
 
 	  }
@@ -3898,6 +3912,8 @@ void pumpOperationStop(void)
 			PUMPControlHandle_t.u8PUMP_no = 0;
 			//un-block the ADC measurement
 			PUMPControlHandle_t.u8Flag_measurement = 0x00;
+
+			HoldingRegister_t.ModeCommand_t.CommonCommandHMI = 0x0;
 		}
 		if(pumpNo == 1)
 		{
@@ -3928,9 +3944,12 @@ void pumpOperationStop(void)
 			PUMPControlHandle_t.u8PUMP_no = 0;
 			//un-block the ADC measurement
 			PUMPControlHandle_t.u8Flag_measurement = 0x00;
+
+			HoldingRegister_t.ModeCommand_t.CommonCommandHMI = 0x0;
 		}
 	}else
 	{
 		HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = 0x0;
 	}
 }

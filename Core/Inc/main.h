@@ -32,7 +32,13 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+/*SOftware Version for HMI and Firmware*/
+#define HMI_VER_MAJOR		1
+#define HMI_VER_MINOR		0
+#define HMI_VER_BUGFIX		0
+#define FW_VER_MAJOR		1
+#define FW_VER_MINOR		0
+#define FW_VER_BUGFIX		0
 
 #define MODBUS_1000_BYTES					1
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1500
@@ -269,6 +275,8 @@ typedef struct{
 	uint16_t PD1_mean;
 	//test
 	uint16_t PD2_mean;
+	uint16_t PD1_Zero;
+	uint16_t PD2_Zero;
 	uint16_t PD1_SIGNAL_MIN;
 	uint16_t PD1_SIGNAL_MAX;
 	uint16_t PD2_SIGNAL_MIN;
@@ -382,6 +390,13 @@ typedef struct{
 	float CS_PD_1_MAX;			/*<Gives the maximum values from the array of flashes*/
 	float CS_PD_2_MIN;			/*<Gives the minimum values from the array of flashes*/
 	float CS_PD_2_MAX;			/*<Gives the maximum values from the array of flashes*/
+	float Reserve;
+	float HMI_Ver_Major;
+	float HMI_Ver_Minor;
+	float HMI_Ver_BugFix;
+	float FW_Ver_Major;
+	float FW_Ver_Minor;
+	float FW_Ver_BugFix;
 }ModeCommandHandle_t;
 
 typedef struct{
@@ -483,7 +498,7 @@ typedef union{
 		//40000
 		ModeCommandHandle_t ModeCommand_t;
 		//uint8_t RES_1[100 - 4];					/*<Reserve for additional MODBUS register*/
-		uint8_t RES_1[100 - 36 - 4];						/*<Reserve for additional MODBUS register*/
+		uint8_t RES_1[100 - 36 - 4 - 28];						/*<Reserve for additional MODBUS register*/
 		//41000
 		IOUTConfigHanldle_t IOUTConfig_t[8];
 		uint8_t RES_2[100];						/*<Reserve for additional MODBUS register*/
@@ -855,7 +870,7 @@ void Error_Handler(void);
 
 
 //#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t) + 100 - 4)
-#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t) + 100 - 36 - 4)
+#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t) + 100 - 36 - 4 - 28)
 #define HOLDING_REGISTER_ADDRESS_42000	(uint16_t)(HOLDING_REGISTER_ADDRESS_41000\
 													+ (8*sizeof(IOUTConfigHanldle_t))\
 													+ 100)

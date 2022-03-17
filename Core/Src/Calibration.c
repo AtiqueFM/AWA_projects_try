@@ -327,6 +327,7 @@ void COD_SensorCalibration(void)
 		HoldingRegister_t.SensorCalibration_t.COD_Intercept = intercept;
 		//Reset the Common command Flag
 		HoldingRegister_t.ModeCommand_t.CommonCommand = 0x00;
+		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 	}
 	//3-point calibration
 	else if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == 0x04)
@@ -357,6 +358,7 @@ void TSS_SensorCalibration(void)
 		HoldingRegister_t.SensorCalibration_t.TSS_Intercept = intercept;
 		//Reset the Common command Flag
 		HoldingRegister_t.ModeCommand_t.CommonCommand = 0x00;
+		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 	}
 	//3-point calibration
 	else if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == 0x04)
