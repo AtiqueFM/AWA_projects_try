@@ -61,4 +61,7 @@ void InternalADCStartConversion(void);
 
 /*Default calibration values*/
 void CalibrationDefaultValue(uint8_t AnalyzerRange);
+
+/*RTU Data*/
+void setRTUData(void);
 #endif /* INC_INITIALIZATION_H_ */

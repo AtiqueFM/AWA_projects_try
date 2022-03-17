@@ -141,3 +141,6 @@ Updates				:-
 Data				:- 17/3/2022
 Updates				:-
 						1. Resetting on HMI command on action completion.
+						2. pH Sensor calibration history added to the MODBUS.
+						3. while loop clean-up.
+						4. Auto Zero condition to be executed if occured while Continuous mode is in action.

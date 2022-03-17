@@ -42,7 +42,10 @@ float adc;
 /*External variables*/
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim6;
+extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart3;
+extern UART_HandleTypeDef huart6;
+extern uint8_t performAUTOZERO;
 uint8_t cod_flash_operation;
 uint16_t dataptr1;
 uint16_t dataptr;
@@ -52,9 +55,10 @@ uint16_t flash_limit_max;
 uint16_t flash_limit_min;
 
 struct Sensornode *CODSensorhead = '\0'; 	/*<Head for COD Sensor Calibration*/
-struct Sensornode *TSSSensorhead = '\0'; 	/*<Head for COD Sensor Calibration*/
-struct Factorynode *CODFactoryhead = '\0'; 	/*<Head for COD Sensor Calibration*/
-struct Factorynode *TSSFactoryhead = '\0'; 	/*<Head for COD Sensor Calibration*/
+struct Sensornode *TSSSensorhead = '\0'; 	/*<Head for TSS Sensor Calibration*/
+struct Sensornode *pHSensorhead = '\0'; 	/*<Head for pH Sensor Calibration*/
+struct Factorynode *CODFactoryhead = '\0'; 	/*<Head for COD Factory Calibration*/
+struct Factorynode *TSSFactoryhead = '\0'; 	/*<Head for TSS Factory Calibration*/
 
 /*
  * Analyzer range:- Parameter limit select
@@ -2924,6 +2928,9 @@ void ModbusSaveConfiguration(uint8_t data)
 			  //PH Sensor calibration store
 			  FRAM_OperationWrite(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,32);
 
+			  //Storing in Last calibration Space
+			  FRAM_OperationWrite(FRAM_ADDRESS_pHSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 576],124); //Storing COD factory calibration with overflow flag
+
 			  AWADataStoreState.sensorpH = RESET;
 		  }
 		  if(AWADataStoreState.factoryCOD)
@@ -3225,6 +3232,51 @@ void ModbusReadConfiguration(void)
 	/*Read the overflow flag*/
 	AWALastCalibrationCount.sensorTSS_overflowflag = InputRegister_t.TSS_lastSensorCalibration.overflowFlag;
 
+
+	/*
+	 * Read the pH Sensor calibration last data
+	 */
+
+	/*Reset the local variable*/
+	index_count = 0;
+
+	//Storing in Last calibration Space
+	FRAM_OperationRead(FRAM_ADDRESS_pHSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 576],124); //Storing only COD factory calibration with overflow flag
+
+	/*<TODO: Store the data from Input registers to Linked List*/
+	/*If the overflow flag is not set*/
+	if(InputRegister_t.pH_lastSensorCalibration.overflowFlag != SET)
+	{
+		/*
+		 * Last calibration data is within 10
+		 */
+		for(int i = 0;i<10;i++)
+		{
+			if(InputRegister_t.pH_lastSensorCalibration.epochtimestamp[i] != 0)
+			{
+				index_count += 1;
+			}
+		}
+
+		/*Store the index count in the index*/
+		AWALastCalibrationCount.sensorpH_count = index_count;
+	}
+	/*If the overflow flag is SET*/
+	else
+	{
+		index_count = 10;
+	}
+	for(int i = (index_count - 1);(InputRegister_t.pH_lastSensorCalibration.epochtimestamp[i] != 0) & (i >=0 );i--)
+	{
+		/*Create new node and insert at the end*/
+		sensor_insertNode(&pHSensorhead,
+							InputRegister_t.pH_lastSensorCalibration.intercept[i],
+							InputRegister_t.pH_lastSensorCalibration.slope[i],
+							InputRegister_t.pH_lastSensorCalibration.epochtimestamp[i]);
+	}
+	/*Read the overflow flag*/
+	AWALastCalibrationCount.sensorpH_overflowflag = InputRegister_t.pH_lastSensorCalibration.overflowFlag;
+/**************************/
 
 	/*Reading the default range select option*/
 	uint8_t flag = 0;
@@ -3597,12 +3649,13 @@ void Application_LastCaldataToModbus(void)
 {
 	uint8_t index = 0;
 	uint32_t timestamp = HoldingRegister_t.ModeCommand_t.Epoch_Timestamp;
+	HAL_Delay(20);
 	if(AWADataStoreState.electronicpH)
 	{
 		index = AWALastCalibrationCount.electronicpH_count += 1;
 		/*<TODO: Store intercept and slope in the Input register*/
-		InputRegister_t.PH_lastCalibration[index].PHCalibIntercept = pH_ElectronicCalibpoints_t.pH_Intercept;
-		InputRegister_t.PH_lastCalibration[index].PHCalibSlope = pH_ElectronicCalibpoints_t.pH_Slope;
+		//InputRegister_t.PH_lastCalibration[index].PHCalibIntercept = pH_ElectronicCalibpoints_t.pH_Intercept;
+		//InputRegister_t.PH_lastCalibration[index].PHCalibSlope = pH_ElectronicCalibpoints_t.pH_Slope;
 	}
 	if(AWADataStoreState.factoryCOD)
 	{
@@ -3734,6 +3787,38 @@ void Application_LastCaldataToModbus(void)
 		/*Store the overflow flag*/
 		InputRegister_t.TSS_lastSensorCalibration.overflowFlag = AWALastCalibrationCount.sensorTSS_overflowflag;
 	}
+	if(AWADataStoreState.sensorpH)
+	{
+		AWALastCalibrationCount.sensorpH_count += 1;
+		index = AWALastCalibrationCount.sensorpH_count;
+		/*If calibration data exceeds 10 pairs, set the overflow flag and reset the index count*/
+		if(index >10)
+		{
+			AWALastCalibrationCount.sensorpH_overflowflag = SET;/*Set the overflow flag*/
+			AWALastCalibrationCount.sensorpH_count = 0;/*Reset the count to 0*/
+		}
+
+		/*Create new node and insert at the end*/
+		sensor_insertNode(&pHSensorhead,
+							pH_SensorCalibpoints_t.pH_Intercept,
+							pH_SensorCalibpoints_t.pH_Solpe,
+							timestamp);
+
+		/*If the overflow flag is set then delete the first node from the liked list.*/
+		if(AWALastCalibrationCount.sensorpH_overflowflag)
+		{
+			sensor_deleteNode(&pHSensorhead);
+		}
+
+		/*Write the into MODBUS*/
+		sensor_dataTransfer(&pHSensorhead,
+							&InputRegister_t.pH_lastSensorCalibration,
+							AWALastCalibrationCount.sensorpH_overflowflag,
+							AWALastCalibrationCount.sensorpH_count);
+
+		/*Store the overflow flag*/
+		InputRegister_t.pH_lastSensorCalibration.overflowFlag = AWALastCalibrationCount.sensorpH_overflowflag;
+	}
 }
 
 
@@ -3838,19 +3923,15 @@ void FlowSensorReadStatus(void)
 	   * with averaging - 2.7 ms
 	   * for averaging - 1 ms
 	   */
-	  //GPIOB->ODR |= (1<<4);
 	  for(int i = 0;i<samples;i++)
 	  {
 		  //Set the data on the TOC HMI screen
 		   arrayADC[i] = InternalADCRead() * (3.3f/4096.0f);
 	  }
-	  //GPIOB->ODR &= ~(1<<4);
 	  float avgADC = 0;
 	  for(int i = 0;i<samples;i++)
 		  avgADC += arrayADC[i] / avgs;
 
-	  //For reference
-//	  InputRegister_t.PV_info.TOC = avgADC;
 	  InputRegister_t.SlotParameter.FlowSensorVolatge = avgADC;
 	  /*Cleaning tank is not empty*/
 	  if(avgADC <= HoldingRegister_t.ModeCommand_t.FlowSensorCutoff) //Limit can by set from HMI.
@@ -3952,4 +4033,199 @@ void pumpOperationStop(void)
 		HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = 0x0;
 	}
+}
+
+void Application_commandCheckandProcess(void)
+{
+	  /*Compare the command from HMI with the already executing command*/
+	  if(HoldingRegister_t.ModeCommand_t.CommonCommand == RESET
+			  && CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG == SET)
+	  {
+		  /*
+		   * If the the already executing command has expired.
+		   * Then, push the command from HMI into the state machine command variable.
+		   */
+
+		  //Main command
+		  HoldingRegister_t.ModeCommand_t.ModeCommand_H = HoldingRegister_t.ModeCommand_t.ModeCommandHMI_H;
+		  HoldingRegister_t.ModeCommand_t.ModeCommand_L = HoldingRegister_t.ModeCommand_t.ModeCommandHMI_L;
+
+		  //Common command
+		  HoldingRegister_t.ModeCommand_t.CommonCommand = HoldingRegister_t.ModeCommand_t.CommonCommandHMI;
+		  //HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+
+		  //Reset the new command flag
+		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
+	  }
+	  /*For cleaning cycle*/
+	  else if(HoldingRegister_t.ModeCommand_t.CommonCommandHMI == AUTO_COD_ZERO
+	  			  && CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG == SET)
+	  {
+		  /*Perform Auto Zero after the current action is over*/
+		  performAUTOZERO = SET;	//Action will be performed in main loop
+
+		  HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+
+		  //Reset the new command flag
+		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
+	  }
+	  /*For STOP pump action*/
+	  else if(HoldingRegister_t.ModeCommand_t.CommonCommandHMI == STOP_RUNNING_PUMP
+			  && CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG == SET)
+	  {
+		  //Reset the new command flag
+		  //CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
+
+		  //Main command
+		  HoldingRegister_t.ModeCommand_t.ModeCommand_H = HoldingRegister_t.ModeCommand_t.ModeCommandHMI_H;
+		  HoldingRegister_t.ModeCommand_t.ModeCommand_L = HoldingRegister_t.ModeCommand_t.ModeCommandHMI_L;
+
+		  //Common command
+		  HoldingRegister_t.ModeCommand_t.CommonCommand = HoldingRegister_t.ModeCommand_t.CommonCommandHMI;
+
+		  //Reset the new command flag
+		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
+	  }
+	  /*Check if the command from HMI is similar to that of the already executing/executed command*/
+	  else if(HoldingRegister_t.ModeCommand_t.CommonCommand != RESET
+			  && CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG == SET)
+	  {
+		  /*
+		   * If there is a new command from the HMI while the old common command is still in use,
+		   * then the common command from the HMI should be forced RESET, but the main command (Page ID)
+		   * should be retained.
+		   */
+
+		  //Reset the common command from HMI
+		  HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+
+		  //Reset the new command flag
+		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
+	  }
+
+	  if(performAUTOZERO && HoldingRegister_t.ModeCommand_t.CommonCommand == RESET)
+	  {
+		  //Set the main page command
+		  HoldingRegister_t.ModeCommand_t.ModeCommand_H = 0x22;
+		  HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x01;
+
+		  //Set the common command for Auto Zeroing
+		  HoldingRegister_t.ModeCommand_t.CommonCommand = AUTO_COD_ZERO;
+
+		  //Reset the Auto Zero command flag.
+		  performAUTOZERO = RESET;
+
+	  }
+}
+
+
+void Application_AWAIOProcess(void)
+{
+	  if(AWAOperationStatus_t.FactoryMode != 1 && AWAOperationStatus_t.CalibrationMode != 1 && AWAOperationStatus_t.CODFlashOperation != 1)
+	  {
+		  CardAction(0x01);
+		  if(AWAOperationStatus_t.ElectronicCal_AO == 0)
+		  {
+			ParameterValues_t.pH_Value = InputRegister_t.PV_info.pH_value;
+			ParameterValues_t.COD_Value = InputRegister_t.PV_info.CODValue;
+			ParameterValues_t.BOD_Value = InputRegister_t.PV_info.BODValue;
+			ParameterValues_t.TSS_Value = InputRegister_t.PV_info.TSSValue;
+
+			//Analog Output
+			ParameterIOutProcess();
+
+			//Relay Output
+			ParameterRelayAlarmProcess();
+		  }
+
+	  }
+}
+
+
+void Application_MODBUSRXprocess(void)
+{
+	  //RTU
+	  if(DMA_TX_FLAG == 1)
+	  {
+		/*Clear the UART6 Transfer complete flag*/
+		while(!(huart6.Instance->SR & USART_SR_TC));
+		huart6.Instance->SR &= !USART_SR_TC;
+
+		/*Disable the UART DMA Tx*/
+		huart6.Instance->CR3 &= !USART_CR3_DMAT;
+
+		/*Enable the UART DMA Rx*/
+		huart6.Instance->CR3 |= USART_CR3_DMAR;
+
+		/*Enable the Stream 2 IRQ*/
+		HAL_NVIC_EnableIRQ(DMA2_Stream2_IRQn);
+
+		/*Enable the Stream 2*/
+		DMAPeripheralEnable(DMA2_Stream2,ENABLE);
+		ADM_2_CLTR_LOW();
+		DMA_TX_FLAG = 0;
+	  }
+	  //HMI
+	  if(DMA_TX_FLAG_HMI == 1)
+	  {
+		/*Clear the UART1 Transfer complete flag*/
+		while(!(huart1.Instance->SR & USART_SR_TC));
+		huart1.Instance->SR &= !USART_SR_TC;
+
+		/*Disable the UART DMA Tx*/
+		huart1.Instance->CR3 &= !USART_CR3_DMAT;
+
+		/*Enable the UART DMA Rx*/
+		huart1.Instance->CR3 |= USART_CR3_DMAR;
+
+		/*Configure the Stream 5 Rx with DMA_FIRST_TRANSACTION_NO*/
+		DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),DMA_FIRST_TRANSACTION_NO);
+
+		/*Enable the Stream 5 IRQ*/
+		//HAL_NVIC_EnableIRQ(DMA2_Stream5_IRQn);
+
+		/*Enable the Stream 5*/
+		DMAPeripheralEnable(DMA2_Stream5,ENABLE);
+
+		ADM_CLTR_LOW();
+		DMA_TX_FLAG_HMI = 0;
+	  }
+}
+
+
+void Application_StoreData(void)
+{
+	  //Check for the save calibration data flag, if the flag is set then save the calibration data into FRAM
+	  if(AWAOperationStatus_t.AWADataSave_Calibration)
+	  {
+		  ModbusSaveConfiguration(SAVE_CALIBRATION_DATA);
+	  }
+
+	  //Check for the save process parameter data flag, if the flag is set then save the calibration data into FRAM
+	  if(AWAOperationStatus_t.AWADataSave_ProcessValues)
+	  {
+		  ModbusSaveConfiguration(SAVE_PROCESSPARAMETER_DATA);
+	  }
+}
+
+void Application_MODBUSParseQuery(void)
+{
+	  if(RxFlag == 0x01)
+	  {
+		  RxFlag = 0;
+		  ProcessModbusQuery();
+	  }
+
+	  //Comparing current command and new command
+	  Application_commandCheckandProcess();
+
+	  if(MOD2_RxFlag == 0x01)
+	  {
+		  //Copy the data from Analyzer to RTU buffer
+		  setRTUData();
+
+		  MOD2_RxFlag = 0;
+		  //ProcessMOD2_ModbusQuery();
+		  ProcessMOD2_ModbusQuery_DMA();
+	  }
 }

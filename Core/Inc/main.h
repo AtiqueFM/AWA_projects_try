@@ -296,7 +296,7 @@ typedef union{
 				  + (sizeof(LastCalibrationFactoryHanlde_t))	/*<TSS Factory calibration*/
 				  + (sizeof(LastCalibrationSensorHandle_t))		/*<COD Sensor calibration*/
 				  + (sizeof(LastCalibrationSensorHandle_t))		/*<TSS Sensor calibration*/
-				  + (10 * sizeof(LastCalibrationPHHanlde_t))
+				  + (sizeof(LastCalibrationSensorHandle_t))		/*<pH Sensor calibration*/
 				  + (10 * sizeof(LastCalibrationAI1Hanlde_t))
 				  + (10 * sizeof(LastCalibrationAI2Hanlde_t))
 				  + sizeof(SlotParametersHandle_t)];
@@ -311,7 +311,7 @@ typedef union{
 		LastCalibrationFactoryHanlde_t TSS_lastCalibration;
 		LastCalibrationSensorHandle_t COD_lastSensorCalibration;
 		LastCalibrationSensorHandle_t TSS_lastSensorCalibration;
-		LastCalibrationPHHanlde_t PH_lastCalibration[10];
+		LastCalibrationSensorHandle_t pH_lastSensorCalibration;
 		LastCalibrationAI1Hanlde_t AI1_lastCalibration[10];
 		LastCalibrationAI2Hanlde_t AI2_lastCalibration[10];
 		//32000
@@ -585,6 +585,8 @@ typedef union{
 		float RES[50];
 		uint16_t main_cmd;
 		uint16_t common_cmd;
+		float RES_1[10];
+		LastCalibrationSensorHandle_t pH_lastSensorCalibration;
 	};
 }UHolding_Modbus_2_t;
 UHolding_Modbus_2_t UHolding_Modbus_2;
@@ -864,7 +866,7 @@ void Error_Handler(void);
 													+ (sizeof(LastCalibrationFactoryHanlde_t))\
 													+ (sizeof(LastCalibrationSensorHandle_t))\
 													+ (sizeof(LastCalibrationSensorHandle_t))\
-													+ (10 * sizeof(LastCalibrationPHHanlde_t))\
+													+ (sizeof(LastCalibrationSensorHandle_t))\
 													+ (10 * sizeof(LastCalibrationAI1Hanlde_t))\
 													+ (10 * sizeof(LastCalibrationAI2Hanlde_t)))
 
@@ -1430,6 +1432,7 @@ typedef struct{
 	unsigned factoryTSS_overflowflag;	/*<Flag will be set to 1 when count exceeds 10*/
 	unsigned sensorCOD_overflowflag;	/*<Flag will be set to 1 when count exceeds 10*/
 	unsigned sensorTSS_overflowflag;	/*<Flag will be set to 1 when count exceeds 10*/
+	unsigned sensorpH_overflowflag;		/*<Flag will be set to 1 when count exceeds 10*/
 	unsigned analyzerRangeSelectflag;	/*<SET when Range is selected from Factory menu, RESET when the analyzer is programmed for the first time*/
 }AWALastCalibrationCount_t;
 AWALastCalibrationCount_t AWALastCalibrationCount;

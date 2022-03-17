@@ -143,4 +143,14 @@ void FlowSensorReadStatus(void);
 void MILSwitchReadStatus(void);
 
 void pumpOperationStop(void);
+
+void Application_commandCheckandProcess(void);
+
+void Application_AWAIOProcess(void);	//relays and AO
+
+void Application_MODBUSRXprocess(void);
+
+void Application_StoreData(void);		//Stores the process variables and calibration data if the flag is raised
+
+void Application_MODBUSParseQuery(void);	//Will parse the modbus query from Master and also perform the action on the command received
 #endif /* INC_APPLICATION_H_ */

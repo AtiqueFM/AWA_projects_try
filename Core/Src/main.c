@@ -115,6 +115,8 @@ typedef union{
 }Data;
 Data data_;
 
+//AutoZero flag
+uint8_t performAUTOZERO;
 
 int _write(int file, char *ptr, int len)
 {
@@ -222,9 +224,9 @@ int main(void)
   //this is set to 0x01 when the start ADC command is received
   TimerStart = 0x02;
   //printf("Hello AWA!!!\n");
-  //memset(&InputRegister_t.bytes[sizeof(PVhandle_t) + 164 + 164],'\0',124);
+  //memset(&InputRegister_t.bytes[sizeof(PVhandle_t) + 576],'\0',124);
 //  int flag_= 0;
-//  FRAM_OperationWrite(FRAM_ADDRESS_RANGESELECT_FLAG,(uint8_t*)&flag_,1);
+  //FRAM_OperationWrite(FRAM_ADDRESS_pHSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 576],124);
   //int size = sizeof(PVhandle_t) + sizeof(InputRegister_t.COD_lastCalibration);
 
   float arrayADC [1000];
@@ -239,24 +241,8 @@ int main(void)
 	  //Process the commands from the HMI
 	  ProcessModesCommands();
 
-	  if(AWAOperationStatus_t.FactoryMode != 1 && AWAOperationStatus_t.CalibrationMode != 1 && AWAOperationStatus_t.CODFlashOperation != 1)
-	  {
-		  CardAction(0x01);
-		  if(AWAOperationStatus_t.ElectronicCal_AO == 0)
-		  {
-			ParameterValues_t.pH_Value = InputRegister_t.PV_info.pH_value;
-			ParameterValues_t.COD_Value = InputRegister_t.PV_info.CODValue;
-			ParameterValues_t.BOD_Value = InputRegister_t.PV_info.BODValue;
-			ParameterValues_t.TSS_Value = InputRegister_t.PV_info.TSSValue;
-
-			//Analog Output
-			ParameterIOutProcess();
-
-			//Relay Output
-			ParameterRelayAlarmProcess();
-		  }
-
-	  }
+	  //Relay outputs and analog outputs
+	  Application_AWAIOProcess();
 
 #if 0
 	  if(AWAOperationStatus_t.ElectronicCal_AO == 0 \
@@ -271,157 +257,15 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  if(RxFlag == 0x01)
-	  {
-		  RxFlag = 0;
-		  ProcessModbusQuery();
-	  }
 
-	  /*Compare the command from HMI with the already executing command*/
-	  if(HoldingRegister_t.ModeCommand_t.CommonCommand == RESET
-			  && CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG == SET)
-	  {
-		  /*
-		   * If the the already executing command has expired.
-		   * Then, push the command from HMI into the state machine command variable.
-		   */
+	  //Parses the data received from the MODBUS master and execute the command received
+	  Application_MODBUSParseQuery();
 
-		  //Reset the new command flag
-		  //CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
+	  //Stores the process variables and calibration data if the respective flag is raised
+	  Application_StoreData();
 
-		  //Main command
-		  HoldingRegister_t.ModeCommand_t.ModeCommand_H = HoldingRegister_t.ModeCommand_t.ModeCommandHMI_H;
-		  HoldingRegister_t.ModeCommand_t.ModeCommand_L = HoldingRegister_t.ModeCommand_t.ModeCommandHMI_L;
-
-		  //Common command
-		  HoldingRegister_t.ModeCommand_t.CommonCommand = HoldingRegister_t.ModeCommand_t.CommonCommandHMI;
-		  //HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
-
-		  //Reset the new command flag
-		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
-	  }
-	  /*For STOP pump action*/
-	  else if(HoldingRegister_t.ModeCommand_t.CommonCommandHMI == STOP_RUNNING_PUMP
-			  && CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG == SET)
-	  {
-		  //Reset the new command flag
-		  //CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
-
-		  //Main command
-		  HoldingRegister_t.ModeCommand_t.ModeCommand_H = HoldingRegister_t.ModeCommand_t.ModeCommandHMI_H;
-		  HoldingRegister_t.ModeCommand_t.ModeCommand_L = HoldingRegister_t.ModeCommand_t.ModeCommandHMI_L;
-
-		  //Common command
-		  HoldingRegister_t.ModeCommand_t.CommonCommand = HoldingRegister_t.ModeCommand_t.CommonCommandHMI;
-
-		  //Reset the new command flag
-		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
-	  }
-	  /*Check if the command from HMI is similar to that of the already executing/executed command*/
-	  else if(HoldingRegister_t.ModeCommand_t.CommonCommand != RESET
-			  && CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG == SET)
-	  {
-		  /*
-		   * If there is a new command from the HMI while the old common command is still in use,
-		   * then the common command from the HMI should be forced RESET, but the main command (Page ID)
-		   * should be retained.
-		   */
-
-		  //Reset the new command flag
-		  //CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
-
-		  //Reset the Command from HMI
-		  //HoldingRegister_t.ModeCommand_t.ModeCommandHMI_H = HoldingRegister_t.ModeCommand_t.ModeCommand_H; //Set the current main command to the HMI command
-		  //HoldingRegister_t.ModeCommand_t.ModeCommandHMI_L = HoldingRegister_t.ModeCommand_t.ModeCommand_L;	//Set the current main command to the HMI command
-		  HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
-
-		  //Reset the new command flag
-		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
-	  }
-
-	  if(MOD2_RxFlag == 0x01)
-	  {
-		  UHolding_Modbus_2.BOD_Value = InputRegister_t.PV_info.BODValue;
-		  UHolding_Modbus_2.COD_Value = InputRegister_t.PV_info.CODValue;
-		  UHolding_Modbus_2.TSS_Value = InputRegister_t.PV_info.TSSValue;
-		  UHolding_Modbus_2.TOC_Value = InputRegister_t.PV_info.TOC;
-		  UHolding_Modbus_2.pH_mV = InputRegister_t.PV_info.pH_value;
-		  UHolding_Modbus_2.Temperature = InputRegister_t.PV_info.temp_pH;
-		  UHolding_Modbus_2.COD_slope = COD_SensorCalibration_t.slope;
-		  UHolding_Modbus_2.COD_intercept = COD_SensorCalibration_t.intercept;
-		  UHolding_Modbus_2.TSS_slope = TSS_SensorCalibration_t.slope;
-		  UHolding_Modbus_2.TSS_intercept = TSS_SensorCalibration_t.intercept;
-		  UHolding_Modbus_2.pH_slope = pH_SensorCalibpoints_t.pH_Solpe;
-		  UHolding_Modbus_2.pH_intercept = pH_SensorCalibpoints_t.pH_Intercept;
-		  UHolding_Modbus_2.FlowSensorStatus = AWAOperationStatus_t.CleaningTankEmpty;
-		  UHolding_Modbus_2.FlowSensorVoltage = InputRegister_t.SlotParameter.FlowSensorVolatge;
-		  UHolding_Modbus_2.MILSwitchStatus = AWAOperationStatus_t.MILSwitchState;
-		  UHolding_Modbus_2.main_cmd = (HoldingRegister_t.ModeCommand_t.ModeCommand_H<<8) | (HoldingRegister_t.ModeCommand_t.ModeCommand_L);
-		  UHolding_Modbus_2.common_cmd = HoldingRegister_t.ModeCommand_t.CommonCommand;
-		  UHolding_Modbus_2.PD_1 = InputRegister_t.PV_info.PD1_MEAN;
-		  UHolding_Modbus_2.PD_2 = InputRegister_t.PV_info.PD2_MEAN;
-		  MOD2_RxFlag = 0;
-		  //ProcessMOD2_ModbusQuery();
-		  ProcessMOD2_ModbusQuery_DMA();
-	  }
-	  //Check for the save calibration data flag, if the flag is set then save the calibration data into FRAM
-	  if(AWAOperationStatus_t.AWADataSave_Calibration)
-	  {
-		  ModbusSaveConfiguration(SAVE_CALIBRATION_DATA);
-	  }
-
-	  //Check for the save process parameter data flag, if the flag is set then save the calibration data into FRAM
-	  if(AWAOperationStatus_t.AWADataSave_ProcessValues)
-	  {
-		  ModbusSaveConfiguration(SAVE_PROCESSPARAMETER_DATA);
-	  }
-
-	  //RTU
-	  if(DMA_TX_FLAG == 1)
-	  {
-		/*Clear the UART6 Transfer complete flag*/
-		while(!(huart6.Instance->SR & USART_SR_TC));
-		huart6.Instance->SR &= !USART_SR_TC;
-
-		/*Disable the UART DMA Tx*/
-		huart6.Instance->CR3 &= !USART_CR3_DMAT;
-
-		/*Enable the UART DMA Rx*/
-		huart6.Instance->CR3 |= USART_CR3_DMAR;
-
-		/*Enable the Stream 2 IRQ*/
-		HAL_NVIC_EnableIRQ(DMA2_Stream2_IRQn);
-
-		/*Enable the Stream 2*/
-		DMAPeripheralEnable(DMA2_Stream2,ENABLE);
-		ADM_2_CLTR_LOW();
-		DMA_TX_FLAG = 0;
-	  }
-	  //HMI
-	  if(DMA_TX_FLAG_HMI == 1)
-	  {
-		/*Clear the UART1 Transfer complete flag*/
-		while(!(huart1.Instance->SR & USART_SR_TC));
-		huart1.Instance->SR &= !USART_SR_TC;
-
-		/*Disable the UART DMA Tx*/
-		huart1.Instance->CR3 &= !USART_CR3_DMAT;
-
-		/*Enable the UART DMA Rx*/
-		huart1.Instance->CR3 |= USART_CR3_DMAR;
-
-		/*Configure the Stream 5 Rx with DMA_FIRST_TRANSACTION_NO*/
-		DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),DMA_FIRST_TRANSACTION_NO);
-
-		/*Enable the Stream 5 IRQ*/
-		//HAL_NVIC_EnableIRQ(DMA2_Stream5_IRQn);
-
-		/*Enable the Stream 5*/
-		DMAPeripheralEnable(DMA2_Stream5,ENABLE);
-
-		ADM_CLTR_LOW();
-		DMA_TX_FLAG_HMI = 0;
-	  }
+	  //Will if data is transmitted by the slave and is ready for new query
+	  Application_MODBUSRXprocess();
 
 	  /*COD process controls*/
 	  FlowSensorReadStatus();

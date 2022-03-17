@@ -766,3 +766,34 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 		break;
 	}
 }
+
+void setRTUData(void)
+{
+	  UHolding_Modbus_2.BOD_Value = InputRegister_t.PV_info.BODValue;
+	  UHolding_Modbus_2.COD_Value = InputRegister_t.PV_info.CODValue;
+	  UHolding_Modbus_2.TSS_Value = InputRegister_t.PV_info.TSSValue;
+	  UHolding_Modbus_2.TOC_Value = InputRegister_t.PV_info.TOC;
+	  UHolding_Modbus_2.pH_mV = InputRegister_t.PV_info.pH_value;
+	  UHolding_Modbus_2.Temperature = InputRegister_t.PV_info.temp_pH;
+	  UHolding_Modbus_2.COD_slope = COD_SensorCalibration_t.slope;
+	  UHolding_Modbus_2.COD_intercept = COD_SensorCalibration_t.intercept;
+	  UHolding_Modbus_2.TSS_slope = TSS_SensorCalibration_t.slope;
+	  UHolding_Modbus_2.TSS_intercept = TSS_SensorCalibration_t.intercept;
+	  UHolding_Modbus_2.pH_slope = pH_SensorCalibpoints_t.pH_Solpe;
+	  UHolding_Modbus_2.pH_intercept = pH_SensorCalibpoints_t.pH_Intercept;
+	  UHolding_Modbus_2.FlowSensorStatus = AWAOperationStatus_t.CleaningTankEmpty;
+	  UHolding_Modbus_2.FlowSensorVoltage = InputRegister_t.SlotParameter.FlowSensorVolatge;
+	  UHolding_Modbus_2.MILSwitchStatus = AWAOperationStatus_t.MILSwitchState;
+	  UHolding_Modbus_2.main_cmd = (HoldingRegister_t.ModeCommand_t.ModeCommand_H<<8) | (HoldingRegister_t.ModeCommand_t.ModeCommand_L);
+	  UHolding_Modbus_2.common_cmd = HoldingRegister_t.ModeCommand_t.CommonCommand;
+	  UHolding_Modbus_2.PD_1 = InputRegister_t.PV_info.PD1_MEAN;
+	  UHolding_Modbus_2.PD_2 = InputRegister_t.PV_info.PD2_MEAN;
+	  for(int i = 0;i<10;i++)
+	  {
+		  UHolding_Modbus_2.pH_lastSensorCalibration.intercept[i] = InputRegister_t.pH_lastSensorCalibration.intercept[i];
+		  UHolding_Modbus_2.pH_lastSensorCalibration.slope[i] = InputRegister_t.pH_lastSensorCalibration.slope[i];
+		  UHolding_Modbus_2.pH_lastSensorCalibration.epochtimestamp[i] = InputRegister_t.pH_lastSensorCalibration.epochtimestamp[i];
+	  }
+	  UHolding_Modbus_2.pH_lastSensorCalibration.overflowFlag = InputRegister_t.pH_lastSensorCalibration.overflowFlag;
+
+}
