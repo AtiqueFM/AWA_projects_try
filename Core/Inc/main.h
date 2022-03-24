@@ -568,7 +568,7 @@ typedef union{
 		float TSS_Value;
 		float BOD_Value;
 		float TOC_Value;
-		float pH_mV;
+		float pH;
 		float Temperature;
 		float FlowSensorVoltage;
 		float FlowSensorStatus;
@@ -582,6 +582,15 @@ typedef union{
 		float pH_intercept;
 		float PD_1;
 		float PD_2;
+		float PD_1_Zero;
+		float PD_2_Zero;
+		float PD_2_TSS_Zero;
+		float rsd_1;
+		float rsd_2;
+		float COD_raw;
+		float TSS_raw;
+		float pH_mV;
+		float temp_resistance;
 		float RES[50];
 		uint16_t main_cmd;
 		uint16_t common_cmd;

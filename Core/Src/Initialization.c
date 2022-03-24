@@ -587,42 +587,44 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 
 
 		/*TSS factory 10 point calibration*/
-		HoldingRegister_t.ModeCommand_t.TSS_F[0] =	0.45f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[1] =	33.21f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[2] =	46.05f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[3] =	62.54f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[4] =	85.83f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[5] =	119.32f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[6] =	157.63f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[7] =	217.40f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[8] =	255.91f;
-		HoldingRegister_t.ModeCommand_t.TSS_F[9] =	377.87f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[0] =	0.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[1] =	0.45f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[2] =	33.21f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[3] =	46.05f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[4] =	62.54f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[5] =	85.83f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[6] =	119.32f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[7] =	157.63f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[8] =	217.40f;
+		HoldingRegister_t.ModeCommand_t.TSS_F[9] =	255.91f;
+//		HoldingRegister_t.ModeCommand_t.TSS_F[9] =	377.87f;
 
 		HoldingRegister_t.ModeCommand_t.TSS_G[0] =	0.0f;
-		HoldingRegister_t.ModeCommand_t.TSS_G[1] =	50.0f;
-		HoldingRegister_t.ModeCommand_t.TSS_G[2] =	75.0f;
-		HoldingRegister_t.ModeCommand_t.TSS_G[3] =	100.0f;
-		HoldingRegister_t.ModeCommand_t.TSS_G[4] =	150.0f;
-		HoldingRegister_t.ModeCommand_t.TSS_G[5] =	200.0f;
-		HoldingRegister_t.ModeCommand_t.TSS_G[6] =	300.0f;
-		HoldingRegister_t.ModeCommand_t.TSS_G[7] =	400.0f;
-		HoldingRegister_t.ModeCommand_t.TSS_G[8] =	600.0f;
-		HoldingRegister_t.ModeCommand_t.TSS_G[9] =	750.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_G[1] =	0.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_G[2] =	50.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_G[3] =	75.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_G[4] =	100.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_G[5] =	150.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_G[6] =	200.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_G[7] =	300.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_G[8] =	400.0f;
+		HoldingRegister_t.ModeCommand_t.TSS_G[9] =	600.0f;
+//		HoldingRegister_t.ModeCommand_t.TSS_G[9] =	750.0f;
 
 		/*TSS coefficients*/
-		HoldingRegister_t.ModeCommand_t.TSS_K[0] =	-21.96761f;
-		HoldingRegister_t.ModeCommand_t.TSS_K[1] =	2.0888f;
-		HoldingRegister_t.ModeCommand_t.TSS_K[2] =	0.00004f;
+		HoldingRegister_t.ModeCommand_t.TSS_K[0] =	6.19997f;
+		HoldingRegister_t.ModeCommand_t.TSS_K[1] =	1.17092f;
+		HoldingRegister_t.ModeCommand_t.TSS_K[2] =	0.00401f;
 
 		/*TSS 2 point calibration*/
 		HoldingRegister_t.SensorCalibration_t.TSS_X1 = 0.0f;
-		HoldingRegister_t.SensorCalibration_t.TSS_X2 = 50.0f;
-		HoldingRegister_t.SensorCalibration_t.TSS_Y1 = -9.914f;
-		HoldingRegister_t.SensorCalibration_t.TSS_Y2 = 49.907f;
+		HoldingRegister_t.SensorCalibration_t.TSS_X2 = 300.0f;
+		HoldingRegister_t.SensorCalibration_t.TSS_Y1 = 2.936f;
+		HoldingRegister_t.SensorCalibration_t.TSS_Y2 = 282.197f;
 
 		/*COD 2 point calibration data*/
-		HoldingRegister_t.SensorCalibration_t.TSS_CF = 0.84f;
-		HoldingRegister_t.SensorCalibration_t.TSS_Intercept = 8.29f;
+		HoldingRegister_t.SensorCalibration_t.TSS_CF = 1.07f;
+		HoldingRegister_t.SensorCalibration_t.TSS_Intercept = -3.15f;
 
 		/*COD Scaling factors*/
 		HoldingRegister_t.ModeCommand_t.TSS_SF = 200.0f;
@@ -773,7 +775,7 @@ void setRTUData(void)
 	  UHolding_Modbus_2.COD_Value = InputRegister_t.PV_info.CODValue;
 	  UHolding_Modbus_2.TSS_Value = InputRegister_t.PV_info.TSSValue;
 	  UHolding_Modbus_2.TOC_Value = InputRegister_t.PV_info.TOC;
-	  UHolding_Modbus_2.pH_mV = InputRegister_t.PV_info.pH_value;
+	  UHolding_Modbus_2.pH = InputRegister_t.PV_info.pH_value;
 	  UHolding_Modbus_2.Temperature = InputRegister_t.PV_info.temp_pH;
 	  UHolding_Modbus_2.COD_slope = COD_SensorCalibration_t.slope;
 	  UHolding_Modbus_2.COD_intercept = COD_SensorCalibration_t.intercept;
@@ -788,6 +790,15 @@ void setRTUData(void)
 	  UHolding_Modbus_2.common_cmd = HoldingRegister_t.ModeCommand_t.CommonCommand;
 	  UHolding_Modbus_2.PD_1 = InputRegister_t.PV_info.PD1_MEAN;
 	  UHolding_Modbus_2.PD_2 = InputRegister_t.PV_info.PD2_MEAN;
+	  UHolding_Modbus_2.PD_1_Zero = InputRegister_t.PV_info.PD1_0;
+	  UHolding_Modbus_2.PD_2_Zero = InputRegister_t.PV_info.PD2_0;
+	  UHolding_Modbus_2.PD_2_TSS_Zero = InputRegister_t.PV_info.TSS_PD2_0;
+	  UHolding_Modbus_2.rsd_1 = InputRegister_t.PV_info.RSD1;
+	  UHolding_Modbus_2.rsd_2 = InputRegister_t.PV_info.RSD2;
+	  UHolding_Modbus_2.COD_raw = InputRegister_t.PV_info.COD_RAW;
+	  UHolding_Modbus_2.TSS_raw = InputRegister_t.PV_info.TSS_RAW;
+	  UHolding_Modbus_2.pH_mV = InputRegister_t.SlotParameter.pH_Live_Volatge;
+	  UHolding_Modbus_2.temp_resistance = InputRegister_t.SlotParameter.pH_Temperature_Live_Voltage;
 	  for(int i = 0;i<10;i++)
 	  {
 		  UHolding_Modbus_2.pH_lastSensorCalibration.intercept[i] = InputRegister_t.pH_lastSensorCalibration.intercept[i];

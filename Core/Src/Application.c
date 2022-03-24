@@ -117,6 +117,7 @@ void ProcessModesCommands(void)
 				}
 				else{
 					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
+					HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 				}
 				break;
 			}
@@ -140,6 +141,9 @@ void ProcessModesCommands(void)
 				ModbusSaveConfiguration(SAVE_CONFIGURATION_DATA);
 				HoldingRegister_t.ModeCommand_t.ModeCommand_H = 0x23;
 				HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x10;
+
+				HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
+				HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 				break;
 			}
 			case Calibrate_PH:/*31/8/2021*/
@@ -2871,7 +2875,13 @@ void ModbusSaveConfiguration(uint8_t data)
 		  if(AWADataStoreState.analyzerPocessvalue)
 		  {
 			  //Store COD,BOD,TSS and TOC values into FRAM
-			  FRAM_OperationWrite(FRAM_ADDRESS_PROCESSVALUE,(uint8_t*)&InputRegister_t.bytes[0],16);
+			  FRAM_OperationWrite(FRAM_ADDRESS_PROCESSVALUE,(uint8_t*)&InputRegister_t.bytes[0],28);
+
+			  /*Read the Check Screen parameters*/
+			  //FRAM_OperationWrite(FRAM_ADDRESS_CHECKSCREENVALUES,(uint8_t*)&HoldingRegister_t.ModeCommand_t.CS_PD_1_MIN,16);
+
+			  //Complete MODBUS data storage
+			  FRAM_OperationWrite(FRAM_ADDRESS_MIN, (uint8_t*)&HoldingRegister_t.bytes, sizeof(HoldingRegister_t.bytes));
 
 			  AWADataStoreState.analyzerPocessvalue = RESET;
 		  }
@@ -2942,6 +2952,8 @@ void ModbusSaveConfiguration(uint8_t data)
 			  FRAM_OperationWrite(FRAM_ADDRESS_LASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t)],164); //Storing COD factory calibration with overflow flag
 
 			  AWADataStoreState.factoryCOD = RESET;
+
+			  HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 		  }
 		  if(AWADataStoreState.factoryCOD_setzero)
 		  {
@@ -2953,6 +2965,8 @@ void ModbusSaveConfiguration(uint8_t data)
 			  FRAM_OperationWrite(FRAM_ADDRESS_COD_PD_ZERO,(uint8_t*)&framdata.bytes,8);
 
 			  AWADataStoreState.factoryCOD_setzero = RESET;
+
+			  HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 		  }
 		  if(AWADataStoreState.factoryTSS)
 		  {
@@ -2963,6 +2977,8 @@ void ModbusSaveConfiguration(uint8_t data)
 			  FRAM_OperationWrite(FRAM_ADDRESS_TSSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 164],164); //Storing COD factory calibration with overflow flag
 
 			  AWADataStoreState.factoryTSS = RESET;
+
+			  HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 		  }
 		  if(AWADataStoreState.factoryTSS_setzero)
 		  {
@@ -2973,6 +2989,8 @@ void ModbusSaveConfiguration(uint8_t data)
 			  FRAM_OperationWrite(FRAM_ADDRESS_TSS_PD_ZERO,(uint8_t*)&framdata.bytes,4);
 
 			  AWADataStoreState.factoryTSS_setzero = RESET;
+
+			  HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 		  }
 		  if(AWADataStoreState.analyzerRangeSelect)
 		  {
@@ -3290,7 +3308,12 @@ void ModbusReadConfiguration(void)
 	{
 	  /*Booting first time or analyzer range is not selected by the user, load with the default configuration COD = 300 mg/l*/
 		HoldingRegister_t.ModeCommand_t.RANGESELECT = MODEL_3011_3012;
-	  AWA_RangeSelect();
+		//Set the Default data to MODBUS and Live Data
+		AWA_RangeSelect();
+		//Store the data in FRAM
+		AWADataStoreState.analyzerRangeSelect = SET;
+		//Flag set as data not saved in the FRAM
+		AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 	}
 
 	/*Get the upper limits for COD and TSS*/
@@ -3299,7 +3322,10 @@ void ModbusReadConfiguration(void)
 	FRAM_OperationRead(FRAM_ADDRESS_TSS_UPPERLIMIT,(uint8_t*)&TSS_UpperLimit,sizeof(TSS_UpperLimit));
 
 	/*Read the process parameters*/
-	FRAM_OperationRead(FRAM_ADDRESS_PROCESSVALUE,(uint8_t*)&InputRegister_t.bytes[0],16);
+	FRAM_OperationRead(FRAM_ADDRESS_PROCESSVALUE,(uint8_t*)&InputRegister_t.bytes[0],28);
+
+	/*Read the Check Screen parameters*/
+	//FRAM_OperationRead(FRAM_ADDRESS_CHECKSCREENVALUES,(uint8_t*)&HoldingRegister_t.ModeCommand_t.CS_PD_1_MIN,16);
 }
 
 
@@ -4071,6 +4097,7 @@ void Application_commandCheckandProcess(void)
 	  }
 	  /*For STOP pump action*/
 	  else if(HoldingRegister_t.ModeCommand_t.CommonCommandHMI == STOP_RUNNING_PUMP
+			  && HoldingRegister_t.ModeCommand_t.CommonCommand != COD_Measure
 			  && CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG == SET)
 	  {
 		  //Reset the new command flag

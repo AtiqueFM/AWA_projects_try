@@ -56,7 +56,9 @@
 //Upper ranges for COD and TSS
 #define FRAM_ADDRESS_TSS_UPPERLIMIT				FRAM_ADDRESS_COD_UPPERLIMIT + 4 //takes 4 byte
 //Process Values
-#define FRAM_ADDRESS_PROCESSVALUE			FRAM_ADDRESS_TSS_UPPERLIMIT + 4 //takes 16 byte add buffer for 10 process parameters (40 bytes)
+#define FRAM_ADDRESS_PROCESSVALUE			FRAM_ADDRESS_TSS_UPPERLIMIT + 4 //takes 16 byte add buffer for 10 process parameters (28 bytes)
+//Check Screen Variables
+#define FRAM_ADDRESS_CHECKSCREENVALUES		FRAM_ADDRESS_PROCESSVALUE + 100
 
 
 void FRAM_OperationWrite(uint16_t u16_address,uint8_t *u8_pData,uint16_t u16_noByte);
