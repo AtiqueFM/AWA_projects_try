@@ -149,3 +149,9 @@ Date				:- 24/3/2022
 Updates				:- 
 						1. Saving of check screen parameters
 						2. TSS range select 10 pt and sensor calibration changed.
+						
+Date				:- 29/3/2022
+Updates				:-
+						1. Relay transfered from coil status to holding register.
+						2. Auto zero selction addedin sheduler.
+						3. Manual sensor calibration data manupulation will be seen in calibration history and will be taken in actual process value calculation.

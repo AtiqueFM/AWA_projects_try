@@ -115,6 +115,67 @@ void ProcessModesCommands(void)
 				{
 					CODADCCapture(AUTO_COD_ZERO);
 				}
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == 0x97)
+				{
+					//Store the manual COD calibration factor
+
+					//Get the sensor calibration factor from modus
+					COD_SensorCalibration_t.slope = HoldingRegister_t.SensorCalibration_t.COD_CF;
+					COD_SensorCalibration_t.intercept = HoldingRegister_t.SensorCalibration_t.COD_Intercept;
+
+
+					/*<TODO: Push the slope and intercept to Last Calibration Input register*/
+					//Set the state of which data to store
+					AWADataStoreState.sensorCOD = SET;/*<TODO: to RESET after storing the data in FRAM*/
+					Application_LastCaldataToModbus();
+					/*----------------------------------------------------------------------*/
+
+					//Flag set as data not saved in the FRAM
+					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+					HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+
+				}
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == 0x96)
+				{
+					//Store the manual TSS calibration factor
+					TSS_SensorCalibration_t.slope = HoldingRegister_t.SensorCalibration_t.TSS_CF;
+					TSS_SensorCalibration_t.intercept = HoldingRegister_t.SensorCalibration_t.TSS_Intercept;
+
+					/*<TODO: Push the slope and intercept to Last Calibration Input register*/
+					//Set the state of which data to store
+					AWADataStoreState.sensorTSS = SET;/*<TODO: to RESET after storing the data in FRAM*/
+					Application_LastCaldataToModbus();
+
+					/*----------------------------------------------------------------------*/
+
+					//Flag set as data not saved in the FRAM
+					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+					HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+
+				}
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == 0x95)
+				{
+					//Store the manual pH calibration factor
+					pH_SensorCalibpoints_t.pH_Solpe = HoldingRegister_t.SensorCalibration_t.pH_slope;
+					pH_SensorCalibpoints_t.pH_Intercept = HoldingRegister_t.SensorCalibration_t.pH_intercept;
+
+					/*<TODO: Push the slope and intercept to Last Calibration Input register*/
+					//Set the state of which data to store
+					AWADataStoreState.sensorpH = SET;/*<TODO: to RESET after storing the data in FRAM*/
+					Application_LastCaldataToModbus();
+					/*----------------------------------------------------------------------*/
+
+					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+					HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+					//AWAOperationStatus_t.CalibrationMode = 0x0;
+					//Flag set as data not saved in the FRAM
+					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+
+				}
 				else{
 					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 					//HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
@@ -1989,6 +2050,10 @@ uint8_t CODADCCapture(uint8_t command)
 
 				//TSS factory equation
 				float factory_tss_value = pow(TSS_RAW,2) *k[2] + pow(TSS_RAW,1) *k[1] + k[0];
+
+				//Get the sensor calibration factor from modus
+				COD_SensorCalibration_t.slope = HoldingRegister_t.SensorCalibration_t.COD_CF;
+				COD_SensorCalibration_t.intercept = HoldingRegister_t.SensorCalibration_t.COD_Intercept;
 
 				//COD actual value
 				COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope + COD_SensorCalibration_t.intercept;
