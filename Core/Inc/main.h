@@ -382,22 +382,23 @@ typedef struct{
 	uint8_t ModeCommandHMI_H;		/*<Request command from HMI*/
 	uint16_t CommonCommandHMI;		/*<Request command from HMI*/
 	//uint32_t RES[10];				/*<Reserve memory 40 bytes*/
-	float CS_PUMP1_ONTIME;		/*<Cleaning pump on time for Check screen*/
-	float CS_PUMP1_DELAY;		/*<Cleaning pump de-gas time for check screen*/
-	float CS_PUMP2_ONTIME;		/*<Sample pump on time for check screen*/
-	float CS_PUMP2_DELAY;		/*<Cleaning pump de-gas time for check screen*/
-	float CS_FLASH;				/*<IF 1 : 100 FLASHES; IF 2 : 500 flashes*/
-	float CS_PD_1_MIN;			/*<Gives the minimum values from the array of flashes*/
-	float CS_PD_1_MAX;			/*<Gives the maximum values from the array of flashes*/
-	float CS_PD_2_MIN;			/*<Gives the minimum values from the array of flashes*/
-	float CS_PD_2_MAX;			/*<Gives the maximum values from the array of flashes*/
-	float Reserve;
+	float CS_PUMP1_ONTIME;			/*<Cleaning pump on time for Check screen*/
+	float CS_PUMP1_DELAY;			/*<Cleaning pump de-gas time for check screen*/
+	float CS_PUMP2_ONTIME;			/*<Sample pump on time for check screen*/
+	float CS_PUMP2_DELAY;			/*<Cleaning pump de-gas time for check screen*/
+	float CS_FLASH;					/*<IF 1 : 100 FLASHES; IF 2 : 500 flashes*/
+	float CS_PD_1_MIN;				/*<Gives the minimum values from the array of flashes*/
+	float CS_PD_1_MAX;				/*<Gives the maximum values from the array of flashes*/
+	float CS_PD_2_MIN;				/*<Gives the minimum values from the array of flashes*/
+	float CS_PD_2_MAX;				/*<Gives the maximum values from the array of flashes*/
+	float AUTO_ZERO;				/*<Auto Zero, if SET : Perform zeroing else : only perform flashing*/
 	float HMI_Ver_Major;
 	float HMI_Ver_Minor;
 	float HMI_Ver_BugFix;
 	float FW_Ver_Major;
 	float FW_Ver_Minor;
 	float FW_Ver_BugFix;
+	float RL[8];					/*<Relay 1 - 8*/
 }ModeCommandHandle_t;
 
 typedef struct{
@@ -499,7 +500,7 @@ typedef union{
 		//40000
 		ModeCommandHandle_t ModeCommand_t;
 		//uint8_t RES_1[100 - 4];					/*<Reserve for additional MODBUS register*/
-		uint8_t RES_1[100 - 36 - 4 - 28];						/*<Reserve for additional MODBUS register*/
+		uint8_t RES_1[100 - 36 - 4 - 28 - 32];						/*<Reserve for additional MODBUS register*/
 		//41000
 		IOUTConfigHanldle_t IOUTConfig_t[8];
 		uint8_t RES_2[100];						/*<Reserve for additional MODBUS register*/
@@ -597,6 +598,7 @@ typedef union{
 		uint16_t common_cmd;
 		float RES_1[10];
 		LastCalibrationSensorHandle_t pH_lastSensorCalibration;
+		float auto_zero;//test
 	};
 }UHolding_Modbus_2_t;
 UHolding_Modbus_2_t UHolding_Modbus_2;
@@ -882,7 +884,7 @@ void Error_Handler(void);
 
 
 //#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t) + 100 - 4)
-#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t) + 100 - 36 - 4 - 28)
+#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t) + 100 - 36 - 4 - 28 - 32)
 #define HOLDING_REGISTER_ADDRESS_42000	(uint16_t)(HOLDING_REGISTER_ADDRESS_41000\
 													+ (8*sizeof(IOUTConfigHanldle_t))\
 													+ 100)

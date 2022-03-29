@@ -808,5 +808,5 @@ void setRTUData(void)
 		  UHolding_Modbus_2.pH_lastSensorCalibration.epochtimestamp[i] = InputRegister_t.pH_lastSensorCalibration.epochtimestamp[i];
 	  }
 	  UHolding_Modbus_2.pH_lastSensorCalibration.overflowFlag = InputRegister_t.pH_lastSensorCalibration.overflowFlag;
-
+	  UHolding_Modbus_2.auto_zero = CoilStatusRegister_t.CoilStatus_t.AUTOZERO;
 }

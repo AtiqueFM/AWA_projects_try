@@ -860,6 +860,7 @@ void ProcessModesCommands(void)
 			}
 			case Relay_test:
 			{
+				AWAOperationStatus_t.ElectronicCal_AO = 1;
 				RelayToggle();
 				//RelayToggleCoilInputUpdate();
 				break;
@@ -1890,7 +1891,7 @@ uint8_t CODADCCapture(uint8_t command)
 			filter_data_PD1_mean = 0;
 			filter_data_PD2_mean = 0;
 			//Perform this condition dusring Auto zero
-			if(command == AUTO_COD_ZERO)
+			if(command == AUTO_COD_ZERO && HoldingRegister_t.ModeCommand_t.AUTO_ZERO == SET)
 			{
 				//store the pD1 and PD2 mean vales to the global PD1 zero and PD2 zero
 				PD1_Zero = TempMeanPd1;
@@ -1909,6 +1910,37 @@ uint8_t CODADCCapture(uint8_t command)
 
 				//Flag set when the PD1 and PD2 zero values are measured and stored
 				COD_MeasurementStatus.COD_ZERO = 0x01;
+
+				/*-----------------------------*/
+				//TSS_MeasurementValues_t.PD2_Zero = TSS_MeasurementValues_t.PD2_New;
+
+				//Calculate the COD RAW
+				float TSS_RAW = HoldingRegister_t.ModeCommand_t.TSS_SF *(log(TSS_MeasurementValues_t.PD2_Zero/TSS_MeasurementValues_t.PD2_New));
+				//Publish the values to the MODBUS
+				InputRegister_t.PV_info.TSS_RAW = TSS_RAW;
+				//InputRegister_t.PV_info.TSS_PD2_0 = TSS_MeasurementValues_t.PD2_Zero;
+				//Reset the command
+				//HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
+				AWADataStoreState.factoryTSS_setzero = SET;
+				//Flag set as data not saved in the FRAM
+				//AWAOperationStatus_t.AWADataSave_Calibration = SET;
+				/*******************************/
+
+				/*--------------------------------*/
+				//set the current PD1 and PD2 mean values to the PD1(0) and PD2(0)
+				//COD_MeasurementValues_t.PD1_Zero = COD_MeasurementValues_t.PD1_New;
+				//COD_MeasurementValues_t.PD2_Zero = COD_MeasurementValues_t.PD2_New;
+
+				//Calculate the COD RAW
+				float COD_RAW = HoldingRegister_t.ModeCommand_t.COD_SF *(log(COD_MeasurementValues_t.PD1_Zero/COD_MeasurementValues_t.PD1_New) - log(COD_MeasurementValues_t.PD2_Zero/COD_MeasurementValues_t.PD2_New));
+				//Publish the values to the MODBUS
+				InputRegister_t.PV_info.COD_RAW = COD_RAW;
+				//Reset the command
+				HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
+				AWADataStoreState.factoryCOD_setzero = SET;
+				//Flag set as data not saved in the FRAM
+				AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+				/**********************************/
 			}
 			//Perform this condition during the measure or auto measure command
 			else if(command == AUTO_COD_MEASURE || command == COD_Measure)
@@ -2524,7 +2556,7 @@ void HMIInterlockingFlag(uint8_t lock,uint8_t state)
 void RelayToggle(void)
 {
 
-#if 1
+#if 0
 	if(CoilStatusRegister_t.CoilStatus_t.relay[0] == 1)
 	{
 		RELAY_1_ON();
@@ -2574,50 +2606,50 @@ void RelayToggle(void)
 		RELAY_8_OFF();
 	}
 #endif
-#if 0
-	if(HoldingRegister_t.ModeCommand_t.relay[0] == 1)
+#if 1
+	if(HoldingRegister_t.ModeCommand_t.RL[0] == 1)
 	{
 		RELAY_1_ON();
 	}else{
 		RELAY_1_OFF();
 	}
-	if(HoldingRegister_t.ModeCommand_t.relay[1] == 1)
+	if(HoldingRegister_t.ModeCommand_t.RL[1] == 1)
 	{
 		RELAY_2_ON();
 	}else{
 		RELAY_2_OFF();
 	}
-	if(HoldingRegister_t.ModeCommand_t.relay[2] == 1)
+	if(HoldingRegister_t.ModeCommand_t.RL[2] == 1)
 	{
 		RELAY_3_ON();
 	}else{
 		RELAY_3_OFF();
 	}
-	if(HoldingRegister_t.ModeCommand_t.relay[3] == 1)
+	if(HoldingRegister_t.ModeCommand_t.RL[3] == 1)
 	{
 		RELAY_4_ON();
 	}else{
 		RELAY_4_OFF();
 	}
-	if(HoldingRegister_t.ModeCommand_t.relay[4] == 1)
+	if(HoldingRegister_t.ModeCommand_t.RL[4] == 1)
 	{
 		RELAY_5_ON();
 	}else{
 		RELAY_5_OFF();
 	}
-	if(HoldingRegister_t.ModeCommand_t.relay[5] == 1)
+	if(HoldingRegister_t.ModeCommand_t.RL[5] == 1)
 	{
 		RELAY_6_ON();
 	}else{
 		RELAY_6_OFF();
 	}
-	if(HoldingRegister_t.ModeCommand_t.relay[6] == 1)
+	if(HoldingRegister_t.ModeCommand_t.RL[6] == 1)
 	{
 		RELAY_7_ON();
 	}else{
 		RELAY_7_OFF();
 	}
-	if(HoldingRegister_t.ModeCommand_t.relay[7] == 1)
+	if(HoldingRegister_t.ModeCommand_t.RL[7] == 1)
 	{
 		RELAY_8_ON();
 	}else{
