@@ -109,6 +109,8 @@ void HoldingRegisterdefaultData(void)
 	HoldingRegister_t.ModeCommand_t.FW_Ver_Major = FW_VER_MAJOR;
 	HoldingRegister_t.ModeCommand_t.FW_Ver_Minor = FW_VER_MINOR;
 	HoldingRegister_t.ModeCommand_t.FW_Ver_BugFix = FW_VER_BUGFIX;
+
+	HoldingRegister_t.ModeCommand_t.treand_time = 20;
 }
 
 void DMA_UART6_RX_Init(void)

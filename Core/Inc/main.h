@@ -356,7 +356,8 @@ typedef struct{
 	float OIW_I[10];
 	float M[3];//added new
 	float OIW_SF;
-	uint16_t Procedure_State;
+	//uint16_t Procedure_State;
+	uint16_t treand_time;
 	uint16_t HMI_onUpdate;
 	uint16_t SlaveID;
 	uint16_t Baud;
@@ -522,7 +523,7 @@ typedef struct{
 	uint8_t relay[8];//relay 1 - relay 8
 	uint8_t spare[2];
 	uint8_t NEW_COMMAND_FLAG;	/*<Set by HMI is there is new command, Reset by uC after receiving the command.*/
-	uint8_t TSS_USECOEFF;		/*<NA*/
+	uint8_t TRED_TRIGGER;		/*<NA*/
 	uint8_t pH_USECOEFF;		/*<NA*/
 	uint8_t OIW_USECOEFF;		/*<NA*/
 	uint8_t AUTOCLEAN;			/*<NA*/

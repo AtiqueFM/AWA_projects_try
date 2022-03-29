@@ -117,7 +117,7 @@ void ProcessModesCommands(void)
 				}
 				else{
 					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
-					HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+					//HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 				}
 				break;
 			}
@@ -1787,6 +1787,9 @@ uint8_t CODADCCapture(uint8_t command)
 			//Set HMI inter-locking flag
 			HMIInterlockingFlag(HMI_INTERLOCK_MEASURE,SET);
 
+			//Reset the trend capture trigger
+			//CoilStatusRegister_t.CoilStatus_t.TRED_TRIGGER = RESET;
+
 		  }
 
 		if(TIM2State == TIME_6MS && ReadADCFlag == 1)
@@ -2013,6 +2016,9 @@ uint8_t CODADCCapture(uint8_t command)
 				AWAOperationStatus_t.AWADataSave_ProcessValues = SET;
 
 				AWADataStoreState.analyzerPocessvalue = SET;
+
+				//Set the trend capture trigger
+				//CoilStatusRegister_t.CoilStatus_t.TRED_TRIGGER = SET;
 
 			}
 
@@ -4237,8 +4243,14 @@ void Application_StoreData(void)
 
 void Application_MODBUSParseQuery(void)
 {
+	static int data = 0;
 	  if(RxFlag == 0x01)
 	  {
+		  data += 1;
+		  InputRegister_t.PV_info.CODValue = ((float)(data));
+		  InputRegister_t.PV_info.BODValue = ((float)(data));
+		  InputRegister_t.PV_info.TSSValue = ((float)(data));
+		  InputRegister_t.PV_info.pH_value = ((float)(data));
 		  RxFlag = 0;
 		  ProcessModbusQuery();
 	  }
