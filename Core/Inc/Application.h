@@ -153,4 +153,15 @@ void Application_MODBUSRXprocess(void);
 void Application_StoreData(void);		//Stores the process variables and calibration data if the flag is raised
 
 void Application_MODBUSParseQuery(void);	//Will parse the modbus query from Master and also perform the action on the command received
+
+uint32_t adjust_time_zone_to_epoch(int tz, uint32_t epoch);
+
+uint32_t adjust_time_zone_to_epoch_add(int tz, uint32_t epoch);
+
+uint32_t date_time_to_epoch(date_time_t* date_time);
+
+void epoch_to_date_time(date_time_t* date_time, uint32_t epoch);
+
+void calculate_Next_ProcessTime(void);
+
 #endif /* INC_APPLICATION_H_ */

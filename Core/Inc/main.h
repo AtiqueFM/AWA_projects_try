@@ -199,14 +199,15 @@ typedef struct{
 	float OIW_raw;
 	float TSS_PD2_0;
 	float SPARE[3];
-	float Iout_1_value;
-	float Iout_2_value;
-	float Iout_3_value;
-	float Iout_4_value;
-	float Iout_5_value;
-	float Iout_6_value;
-	float Iout_7_value;
-	float Iout_8_value;
+//	float Iout_1_value;
+//	float Iout_2_value;
+//	float Iout_3_value;
+//	float Iout_4_value;
+//	float Iout_5_value;
+//	float Iout_6_value;
+//	float Iout_7_value;
+//	float Iout_8_value;
+	float Iout_value[8];
 	float SPARE_A[10];
 	float CODValueUser;		/*<This value is for the Developer only*/
 	float TSSValueUser;		/*<This value is for the Developer only*/
@@ -484,6 +485,11 @@ typedef struct{
 	float pH_intercept;				/*<For HMI display*/
 //	float pH_1_pt_slope;					/*<For HMI display*/
 //	float pH_1_pt_intercept;				/*<For HMI display*/
+	uint16_t NextProcessTime_Hr;	/*<From HMI, Batch mode hour*/
+	uint16_t NextProcessTime_Min;	/*<From HMI, Batch mode min*/
+	uint16_t NextProcessTime_Sec;	/*<From HMI, Batch mode sec*/
+	uint32_t LastBatchTime;			/*<Epoch time from HMI*/
+	uint32_t NextProcessTime;		/*<Epoch time for next process time*/
 }SensoralibrationHandle_t;
 
 typedef union{
@@ -599,6 +605,7 @@ typedef union{
 		float RES_1[10];
 		LastCalibrationSensorHandle_t pH_lastSensorCalibration;
 		float auto_zero;//test
+		float SchedulerTime;				//<modbus address : 239
 	};
 }UHolding_Modbus_2_t;
 UHolding_Modbus_2_t UHolding_Modbus_2;
@@ -945,6 +952,7 @@ void Error_Handler(void);
 #define Default							0x11
 #define Edit							0x12
 #define Save							0x14
+#define SchedulerSave					0x15
 /*Sensor Calibration*/
 #define Calibrate_COD					0x21
 #define Calibrate_TSS					0x22
@@ -1605,6 +1613,27 @@ typedef union{
 
 }CardIDInfo_Handler_t;
 CardIDInfo_Handler_t CardID_Info;
+// Date-Time structure, used to store date-time values such as seconds, minutes etc...
+typedef struct
+{
+    unsigned char second; // 0-59
+    unsigned char minute; // 0-59
+    unsigned char hour;   // 0-23
+    unsigned char day;    // 1-31
+    unsigned char month;  // 1-12
+    unsigned char year;   // 0-99 (representing 2000-2099)
+}
+date_time_t;
+
+// Days array
+static unsigned short days[4][12] =
+{
+    {   0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335},
+    { 366, 397, 425, 456, 486, 517, 547, 578, 609, 639, 670, 700},
+    { 731, 762, 790, 821, 851, 882, 912, 943, 974,1004,1035,1065},
+    {1096,1127,1155,1186,1216,1247,1277,1308,1339,1369,1400,1430},
+};
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

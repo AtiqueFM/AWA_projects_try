@@ -33,6 +33,7 @@
 #include "Application.h"
 #include "Calibration.h"
 #include "Initialization.h"
+#include <time.h>
 
 
 #define ITM_Port32(n)	(*((volatile unsigned long *)(0xe0000000 +4*n)))
@@ -270,6 +271,7 @@ int main(void)
 	  /*COD process controls*/
 	  FlowSensorReadStatus();
 	  MILSwitchReadStatus();
+
 
   }
   /* USER CODE END 3 */

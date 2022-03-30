@@ -17,6 +17,7 @@
 #include "FM24CL64B.h"
 #include <stdio.h>
 #include "Initialization.h"
+#include <time.h>
 
 uint16_t CurrentTestValues_mA[5] = {4,8,12,16,20};
 
@@ -82,6 +83,8 @@ void ProcessModesCommands(void)
 				//Auto measurement, background process
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == AUTO_COD_MEASURE  && AWAOperationStatus_t.MILSwitchState == SET)
 				{
+					//Change the next process time
+					calculate_Next_ProcessTime();
 					//First operate the sample pump
 					PumpOperation(0x02);
 
@@ -200,8 +203,85 @@ void ProcessModesCommands(void)
 			case Save:
 			{
 				ModbusSaveConfiguration(SAVE_CONFIGURATION_DATA);
+#if 0
+				uint32_t epoch = 1648645808;//HoldingRegister_t.ModeCommand_t.Epoch_Timestamp;
+				epoch_to_date_time(&systemTime,epoch);
+
+				//Next process time
+				int next_batch_hr = HoldingRegister_t.SensorCalibration_t.NextProcessTime_Hr;
+				int next_batch_min = HoldingRegister_t.SensorCalibration_t.NextProcessTime_Min;
+				int next_batch_sec = HoldingRegister_t.SensorCalibration_t.NextProcessTime_Sec;
+
+				next_batch_hr *= 3600;
+				next_batch_min *= 60;
+				epoch += (next_batch_hr + next_batch_min + next_batch_sec);
+
+				if(next_batch_hr + systemTime.hour > 24)
+				{
+					int pre24_delta = 24 - systemTime.hour;
+					int post24_delta = abs(next_batch_hr - pre24_delta);
+					next_batch_hr = post24_delta;
+//					systemTime.day += 2;//not required
+
+				}else if(next_batch_hr + systemTime.hour == 24)
+				{
+					next_batch_hr = 24;
+				}
+				else{
+					next_batch_hr += systemTime.hour;
+				}
+
+				if(next_batch_min + systemTime.minute > 60)
+				{
+					int pre24_delta = 60 - systemTime.minute;
+					int post24_delta = abs(next_batch_min - pre24_delta);
+					next_batch_min = post24_delta;
+					next_batch_hr += 1;
+
+				}else{
+					next_batch_min += systemTime.minute;
+				}
+
+				if(next_batch_sec + systemTime.second > 60)
+				{
+					int pre24_delta = 60 - systemTime.second;
+					int post24_delta = abs(next_batch_sec - pre24_delta);
+					next_batch_sec = post24_delta;
+					next_batch_sec += 1;
+
+				}else{
+					next_batch_sec += systemTime.second;
+				}
+
+
+				date_time_t ti;
+				memset(&ti,'\0',sizeof(ti));
+				ti.hour = next_batch_hr;//HoldingRegister_t.SensorCalibration_t.NextProcessTime_Hr;
+				ti.second = next_batch_sec;//HoldingRegister_t.SensorCalibration_t.NextProcessTime_Sec;
+				ti.minute = next_batch_min;//HoldingRegister_t.SensorCalibration_t.NextProcessTime_Min;
+				ti.day = systemTime.day;
+				ti.month = systemTime.month;
+				ti.year = systemTime.year;
+
+				uint32_t next_cal_time = date_time_to_epoch(&ti);
+
+				HoldingRegister_t.SensorCalibration_t.NextProcessTime = epoch;//next_cal_time;// + 1648629116;//HoldingRegister_t.ModeCommand_t.Epoch_Timestamp;
+#endif
 				HoldingRegister_t.ModeCommand_t.ModeCommand_H = 0x23;
 				HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x10;
+
+				HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
+				HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+				break;
+			}
+			case SchedulerSave:
+			{
+				//ModbusSaveConfiguration(SAVE_CONFIGURATION_DATA);
+
+				calculate_Next_ProcessTime();
+
+				HoldingRegister_t.ModeCommand_t.ModeCommand_H = 0x23;
+				HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x00;
 
 				HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
@@ -718,6 +798,7 @@ void ProcessModesCommands(void)
 					AWADataStoreState.electronicPT = SET;/*<TODO: to RESET after storing the data in FRAM*/
 					HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x50;
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0x0;
+					HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 				}else{
 					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				}
@@ -3469,6 +3550,7 @@ void ParameterIOutProcess(void)
 			float OP_CurrentValue = 4.0f +(((Parameter_Value - Parameter_min)/(Parameter_max - Parameter_min)) * (20.0f - 4.0f));
 			uint32_t PWM_count= (OP_CurrentValue - CurrentOutputCalibration_t[channel-1].AO_intercept)/CurrentOutputCalibration_t[channel-1].AO_slope;
 			PWMCurrentCalibOutput(channel,PWM_count);
+			InputRegister_t.PV_info.Iout_value[channel - 1] = OP_CurrentValue;
 		}
 	}
 }
@@ -4037,6 +4119,22 @@ void AWA_RangeSelect(void)
 		break;
 	}
 
+	//Reflect in calibration history
+
+	//Set the flags for the parameters to be reflected in calibration history
+	AWADataStoreState.sensorCOD = SET;
+	AWADataStoreState.sensorTSS = SET;
+	AWADataStoreState.sensorpH = SET;
+	AWADataStoreState.factoryCOD = SET;
+	AWADataStoreState.factoryTSS = SET;
+
+	//Store the Data into FRAM and reflect it in the Calibration history
+	Application_LastCaldataToModbus();
+
+	//Flag set as data not saved in the FRAM
+	AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+
+	//Set the flag as range has been selected for the analyser
 	AWADataStoreState.analyzerRangeSelect = SET;
 }
 
@@ -4340,14 +4438,8 @@ void Application_StoreData(void)
 
 void Application_MODBUSParseQuery(void)
 {
-	static int data = 0;
 	  if(RxFlag == 0x01)
 	  {
-		  data += 1;
-		  InputRegister_t.PV_info.CODValue = ((float)(data));
-		  InputRegister_t.PV_info.BODValue = ((float)(data));
-		  InputRegister_t.PV_info.TSSValue = ((float)(data));
-		  InputRegister_t.PV_info.pH_value = ((float)(data));
 		  RxFlag = 0;
 		  ProcessModbusQuery();
 	  }
@@ -4364,4 +4456,75 @@ void Application_MODBUSParseQuery(void)
 		  //ProcessMOD2_ModbusQuery();
 		  ProcessMOD2_ModbusQuery_DMA();
 	  }
+}
+uint32_t adjust_time_zone_to_epoch(int tz, uint32_t epoch){
+    return epoch - ((5 * 60 * 60) + (30 * 60));
+}
+
+uint32_t adjust_time_zone_to_epoch_add(int tz, uint32_t epoch){
+    return epoch + ((5 * 60 * 60) + (30 * 60));
+}
+
+uint32_t date_time_to_epoch(date_time_t* date_time)
+{
+
+    unsigned int second = date_time->second;  // 0-59
+    unsigned int minute = date_time->minute;  // 0-59
+    unsigned int hour   = date_time->hour;    // 0-23
+    unsigned int day    = date_time->day-1;   // 0-30
+    unsigned int month  = date_time->month-1; // 0-11
+    unsigned int year   = date_time->year;    // 0-99
+    /*
+    unsigned int second = in_sec;  // 0-59
+    unsigned int minute = in_min;  // 0-59
+    unsigned int hour   = in_hour;    // 0-23
+    unsigned int day    = in_day;   // 0-30
+    unsigned int month  = in_month; // 0-11
+    unsigned int year   = in_year;    // 0-99
+*/
+    uint32_t epoch = 946684800 + (((year/4*(365*4+1)+days[year%4][month]+day)*24+hour)*60+minute)*60+second;
+    epoch = adjust_time_zone_to_epoch(22,epoch) ;
+    return epoch ;
+}
+
+void epoch_to_date_time(date_time_t* date_time, uint32_t epoch)
+{
+    epoch = epoch - 946684800 ;
+    epoch = adjust_time_zone_to_epoch_add(22,epoch);
+    date_time->second = epoch%60; epoch /= 60;
+    date_time->minute = epoch%60; epoch /= 60;
+    date_time->hour   = epoch%24; epoch /= 24;
+    uint32_t years = epoch/(365*4+1)*4; epoch %= 365*4+1;
+    uint32_t year;
+    for (year=3; year>0; year--)
+    {
+        if (epoch >= days[year][0])
+            break;
+    }
+    uint32_t month;
+    for (month=11; month>0; month--)
+    {
+        if (epoch >= days[year][month])
+            break;
+    }
+    date_time->year  = years+year;
+    date_time->month = month+1;
+    date_time->day   = epoch-days[year][month]+1;
+}
+
+
+void calculate_Next_ProcessTime(void)
+{
+	uint32_t epoch = 0;
+	epoch = HoldingRegister_t.SensorCalibration_t.LastBatchTime;
+	//Next process time
+	int next_batch_hr = HoldingRegister_t.SensorCalibration_t.NextProcessTime_Hr;
+	int next_batch_min = HoldingRegister_t.SensorCalibration_t.NextProcessTime_Min;
+	int next_batch_sec = HoldingRegister_t.SensorCalibration_t.NextProcessTime_Sec;
+
+	next_batch_hr *= 3600;
+	next_batch_min *= 60;
+	epoch += (next_batch_hr + next_batch_min + next_batch_sec);
+
+	HoldingRegister_t.SensorCalibration_t.NextProcessTime = epoch;
 }

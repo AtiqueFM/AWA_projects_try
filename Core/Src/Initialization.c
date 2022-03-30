@@ -809,4 +809,5 @@ void setRTUData(void)
 	  }
 	  UHolding_Modbus_2.pH_lastSensorCalibration.overflowFlag = InputRegister_t.pH_lastSensorCalibration.overflowFlag;
 	  UHolding_Modbus_2.auto_zero = CoilStatusRegister_t.CoilStatus_t.AUTOZERO;
+	  UHolding_Modbus_2.SchedulerTime = HoldingRegister_t.ModeCommand_t.treand_time;
 }
