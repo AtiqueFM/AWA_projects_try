@@ -34,10 +34,10 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 /*SOftware Version for HMI and Firmware*/
 #define HMI_VER_MAJOR		1
-#define HMI_VER_MINOR		0
+#define HMI_VER_MINOR		1
 #define HMI_VER_BUGFIX		0
 #define FW_VER_MAJOR		1
-#define FW_VER_MINOR		0
+#define FW_VER_MINOR		1
 #define FW_VER_BUGFIX		0
 
 #define MODBUS_1000_BYTES					1
