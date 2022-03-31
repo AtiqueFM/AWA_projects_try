@@ -283,6 +283,9 @@ void ProcessModesCommands(void)
 				HoldingRegister_t.ModeCommand_t.ModeCommand_H = 0x23;
 				HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x00;
 
+				HoldingRegister_t.ModeCommand_t.ModeCommandHMI_H = 0x23;
+				HoldingRegister_t.ModeCommand_t.ModeCommandHMI_L = 0x00;
+
 				HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 				break;
