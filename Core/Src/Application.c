@@ -3573,18 +3573,19 @@ void ParameterRelayAlarmProcess(void)
 		if(HoldingRegister_t.RelayOUTConfig_t[relay].Relay_OP_HIGHLOW == 0x01)//high
 		{
 			if(parameterValue >= threshold)
-				CoilStatusRegister_t.CoilStatus_t.relay[relay] = 0x01;//alarm high
+				HoldingRegister_t.ModeCommand_t.RL[relay] = 0x01;//alarm high
 			if(parameterValue <= threshold - hysterisis)
-				CoilStatusRegister_t.CoilStatus_t.relay[relay] = 0x00;//alarm low
+				HoldingRegister_t.ModeCommand_t.RL[relay] = 0x00;//alarm low
 		}else if(HoldingRegister_t.RelayOUTConfig_t[relay].Relay_OP_HIGHLOW == 0x02)//low
 		{
 			if(parameterValue <= threshold)
-				CoilStatusRegister_t.CoilStatus_t.relay[relay] = 0x01;//alarm high
+				HoldingRegister_t.ModeCommand_t.RL[relay] = 0x01;//alarm high
 			if(parameterValue >= threshold + hysterisis)
-				CoilStatusRegister_t.CoilStatus_t.relay[relay] = 0x00;//alarm low
+				HoldingRegister_t.ModeCommand_t.RL[relay] = 0x00;//alarm low
 		}
 	}
 	RelayToggle();
+//	RelayToggleCoilInputUpdate();
 }
 
 /*
