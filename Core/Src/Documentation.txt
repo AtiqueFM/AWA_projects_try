@@ -155,3 +155,8 @@ Updates				:-
 						1. Relay transfered from coil status to holding register.
 						2. Auto zero selction addedin sheduler.
 						3. Manual sensor calibration data manupulation will be seen in calibration history and will be taken in actual process value calculation.
+						
+Date				:- 5/4/2022
+Updates				:-
+						1. Added bits in coil status register measure,read_acid,read_sample and NoProcess for MIMIC process.
+						2. Next process time will be seen on the main screen, after the process automatically next process time will be calculated according to the HMI input and shown on the HMI.

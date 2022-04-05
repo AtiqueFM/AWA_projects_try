@@ -1880,6 +1880,11 @@ uint8_t CheckScreen_CODADCCapture(uint8_t command)
 
 			//Reset the HMI inter-locking flag
 			HMIInterlockingFlag(HMI_INTERLOCK_MEASURE,RESET);
+			//HMI bits for MIMICS
+			CoilStatusRegister_t.CoilStatus_t.measure = RESET;
+			CoilStatusRegister_t.CoilStatus_t.read_acid = RESET;
+			CoilStatusRegister_t.CoilStatus_t.read_sample = RESET;
+			CoilStatusRegister_t.CoilStatus_t.NoProcess = SET;
 		}
 
 	  }
@@ -1931,7 +1936,7 @@ uint8_t CODADCCapture(uint8_t command)
 			//Set the COD measure flag to "1", tp indicate the start of flashing sequence
 			cod_flash_operation = 1;
 			//Set HMI inter-locking flag
-			HMIInterlockingFlag(HMI_INTERLOCK_MEASURE,SET);
+			HMIInterlockingFlag(HMI_INTERLOCK_MEASURE,SET);CoilStatusRegister_t.CoilStatus_t.measure = SET;
 
 			//Reset the trend capture trigger
 			//CoilStatusRegister_t.CoilStatus_t.TRED_TRIGGER = RESET;
@@ -2281,6 +2286,11 @@ uint8_t CODADCCapture(uint8_t command)
 
 			//Reset the HMI inter-locking flag
 			HMIInterlockingFlag(HMI_INTERLOCK_MEASURE,RESET);
+			//HMI bits for MIMIC
+			CoilStatusRegister_t.CoilStatus_t.measure = RESET;
+			CoilStatusRegister_t.CoilStatus_t.read_acid = RESET;
+			CoilStatusRegister_t.CoilStatus_t.read_sample = RESET;
+			CoilStatusRegister_t.CoilStatus_t.NoProcess = SET;
 		}
 
 	  }
@@ -2334,7 +2344,7 @@ uint8_t CODADCCapture_Sensor(uint8_t command,uint8_t sens_calib_point)
 			cod_flash_operation = 1;
 
 			//Set the HMI inter-locking flag
-			HMIInterlockingFlag(HMI_INTERLOCK_SENSOR_MEASURE,SET);
+			HMIInterlockingFlag(HMI_INTERLOCK_SENSOR_MEASURE,SET); CoilStatusRegister_t.CoilStatus_t.measure = SET;
 		  }
 
 		if(TIM2State == TIME_6MS && ReadADCFlag == 1)
@@ -2614,7 +2624,7 @@ uint8_t CODADCCapture_Sensor(uint8_t command,uint8_t sens_calib_point)
 			//Reset the HMI inter-locking flag
 			HMIInterlockingFlag(HMI_INTERLOCK_SENSOR_MEASURE,RESET);
 
-			HMIInterlockingFlag(HMI_INTERLOCKING_RESETALL, RESET);
+			HMIInterlockingFlag(HMI_INTERLOCKING_RESETALL, RESET); CoilStatusRegister_t.CoilStatus_t.measure = RESET;CoilStatusRegister_t.CoilStatus_t.NoProcess = SET;
 		}
 
 	  }
@@ -2832,7 +2842,7 @@ void PumpOperation(uint8_t PumpNo)
 			//turn on pump 1
 			PUMP1_ON();
 			//Set the HMI inter-locking flag for sample pump
-			HMIInterlockingFlag(HMI_INTERLOCK_ACID_PUMP, SET);
+			HMIInterlockingFlag(HMI_INTERLOCK_ACID_PUMP, SET);CoilStatusRegister_t.CoilStatus_t.read_acid = SET;CoilStatusRegister_t.CoilStatus_t.NoProcess = RESET;
 		}
 		else if (PumpNo == PUMP2)//0x02)//pump2
 		{
@@ -2846,7 +2856,7 @@ void PumpOperation(uint8_t PumpNo)
 			//turn on the pump 2
 			HAL_GPIO_WritePin(SYS_LED_STATUS_GPIO_Port, SYS_LED_STATUS_Pin, GPIO_PIN_RESET);
 			//Set the HMI inter-locking flag for sample pump
-			HMIInterlockingFlag(HMI_INTERLOCK_SAMPLE_PUMP, SET);
+			HMIInterlockingFlag(HMI_INTERLOCK_SAMPLE_PUMP, SET);CoilStatusRegister_t.CoilStatus_t.read_sample = SET;CoilStatusRegister_t.CoilStatus_t.NoProcess = RESET;
 		}
 		//Enable Interrupt
 //		htim6.Instance->DIER |= TIM_IT_UPDATE; // enable timer interrupt flag
@@ -2930,7 +2940,7 @@ void CheckScreen_PumpOperation(uint8_t PumpNo)
 			//turn on pump 1
 			PUMP1_ON();
 			//Set the HMI inter-locking flag for sample pump
-			HMIInterlockingFlag(HMI_INTERLOCK_ACID_PUMP, SET);
+			HMIInterlockingFlag(HMI_INTERLOCK_ACID_PUMP, SET);CoilStatusRegister_t.CoilStatus_t.read_acid = SET;CoilStatusRegister_t.CoilStatus_t.NoProcess = RESET;
 		}
 		else if (PumpNo == PUMP2)//0x02)//pump2
 		{
@@ -2944,7 +2954,7 @@ void CheckScreen_PumpOperation(uint8_t PumpNo)
 			//turn on the pump 2
 			HAL_GPIO_WritePin(SYS_LED_STATUS_GPIO_Port, SYS_LED_STATUS_Pin, GPIO_PIN_RESET);
 			//Set the HMI inter-locking flag for sample pump
-			HMIInterlockingFlag(HMI_INTERLOCK_SAMPLE_PUMP, SET);
+			HMIInterlockingFlag(HMI_INTERLOCK_SAMPLE_PUMP, SET);CoilStatusRegister_t.CoilStatus_t.read_sample = SET;
 		}
 		//Enable Interrupt
 //		htim6.Instance->DIER |= TIM_IT_UPDATE; // enable timer interrupt flag
@@ -3006,7 +3016,7 @@ void CheckScreen_PumpOperation(uint8_t PumpNo)
 
 		HoldingRegister_t.ModeCommand_t.CommonCommand = 0x0;
 
-		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;//CoilStatusRegister_t.CoilStatus_t.read_acid = RESET;CoilStatusRegister_t.CoilStatus_t.read_sample = RESET;
 	}
 }
 void currentOutputTest(uint8_t CurrentChannel)

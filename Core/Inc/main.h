@@ -531,7 +531,7 @@ typedef struct{
 	uint8_t spare[2];
 	uint8_t NEW_COMMAND_FLAG;	/*<Set by HMI is there is new command, Reset by uC after receiving the command.*/
 	uint8_t TRED_TRIGGER;		/*<NA*/
-	uint8_t pH_USECOEFF;		/*<NA*/
+	uint8_t NoProcess;		/*<NA*/
 	uint8_t OIW_USECOEFF;		/*<NA*/
 	uint8_t AUTOCLEAN;			/*<NA*/
 	uint8_t AUTOZERO;			/*<If set; Perform zeroing of PD1 and PD2 Zero*/
