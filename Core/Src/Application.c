@@ -653,6 +653,7 @@ void ProcessModesCommands(void)
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == Electronics_Calibration_mV_Calibrate)//change the command
 				{
 					pHElectronicCalibrationmV();
+//					HoldingRegister_t.SensorCalibration_t.pHElecMeaages = 4;//Calibrated
 					/*<TODO: Push the slope and intercept to Last Calibration Input register*/
 
 					/*----------------------------------------------------------------------*/
@@ -2624,7 +2625,13 @@ uint8_t CODADCCapture_Sensor(uint8_t command,uint8_t sens_calib_point)
 			//Reset the HMI inter-locking flag
 			HMIInterlockingFlag(HMI_INTERLOCK_SENSOR_MEASURE,RESET);
 
-			HMIInterlockingFlag(HMI_INTERLOCKING_RESETALL, RESET); CoilStatusRegister_t.CoilStatus_t.measure = RESET;CoilStatusRegister_t.CoilStatus_t.NoProcess = SET;
+			HMIInterlockingFlag(HMI_INTERLOCKING_RESETALL, RESET);
+
+			//HMI bits for MIMIC
+			CoilStatusRegister_t.CoilStatus_t.measure = RESET;
+			CoilStatusRegister_t.CoilStatus_t.read_acid = RESET;
+			CoilStatusRegister_t.CoilStatus_t.read_sample = RESET;
+			CoilStatusRegister_t.CoilStatus_t.NoProcess = SET;
 		}
 
 	  }
@@ -2954,7 +2961,7 @@ void CheckScreen_PumpOperation(uint8_t PumpNo)
 			//turn on the pump 2
 			HAL_GPIO_WritePin(SYS_LED_STATUS_GPIO_Port, SYS_LED_STATUS_Pin, GPIO_PIN_RESET);
 			//Set the HMI inter-locking flag for sample pump
-			HMIInterlockingFlag(HMI_INTERLOCK_SAMPLE_PUMP, SET);CoilStatusRegister_t.CoilStatus_t.read_sample = SET;
+			HMIInterlockingFlag(HMI_INTERLOCK_SAMPLE_PUMP, SET);CoilStatusRegister_t.CoilStatus_t.read_sample = SET;CoilStatusRegister_t.CoilStatus_t.NoProcess = RESET;
 		}
 		//Enable Interrupt
 //		htim6.Instance->DIER |= TIM_IT_UPDATE; // enable timer interrupt flag
@@ -3016,7 +3023,10 @@ void CheckScreen_PumpOperation(uint8_t PumpNo)
 
 		HoldingRegister_t.ModeCommand_t.CommonCommand = 0x0;
 
-		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;//CoilStatusRegister_t.CoilStatus_t.read_acid = RESET;CoilStatusRegister_t.CoilStatus_t.read_sample = RESET;
+		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+		CoilStatusRegister_t.CoilStatus_t.read_acid = RESET;
+		CoilStatusRegister_t.CoilStatus_t.read_sample = RESET;
+		CoilStatusRegister_t.CoilStatus_t.NoProcess = SET;
 	}
 }
 void currentOutputTest(uint8_t CurrentChannel)
@@ -3024,6 +3034,7 @@ void currentOutputTest(uint8_t CurrentChannel)
 
 	uint32_t PWM_count= (CurrentTestValues_mA[HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Test_Command - 1] - CurrentOutputCalibration_t[CurrentChannel-1].AO_intercept)/CurrentOutputCalibration_t[CurrentChannel-1].AO_slope;
 	PWMCurrentCalibOutput(CurrentChannel,PWM_count);
+	InputRegister_t.PV_info.Iout_value[CurrentChannel - 1] = CurrentTestValues_mA[HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Test_Command - 1];
 }
 
 void analyzerRangeSelectFRAMSaveData(void)

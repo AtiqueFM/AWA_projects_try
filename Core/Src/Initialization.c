@@ -111,6 +111,10 @@ void HoldingRegisterdefaultData(void)
 	HoldingRegister_t.ModeCommand_t.FW_Ver_BugFix = FW_VER_BUGFIX;
 
 	HoldingRegister_t.ModeCommand_t.treand_time = 20;
+
+	CoilStatusRegister_t.CoilStatus_t.NoProcess = SET;
+
+	HoldingRegister_t.SensorCalibration_t.pHElecMeaages = 1;//simulate 414mV
 }
 
 void DMA_UART6_RX_Init(void)
@@ -810,4 +814,9 @@ void setRTUData(void)
 	  UHolding_Modbus_2.pH_lastSensorCalibration.overflowFlag = InputRegister_t.pH_lastSensorCalibration.overflowFlag;
 	  UHolding_Modbus_2.auto_zero = CoilStatusRegister_t.CoilStatus_t.AUTOZERO;
 	  UHolding_Modbus_2.SchedulerTime = HoldingRegister_t.ModeCommand_t.treand_time;
+	  UHolding_Modbus_2.measure = CoilStatusRegister_t.CoilStatus_t.measure;
+	  UHolding_Modbus_2.read_acid = CoilStatusRegister_t.CoilStatus_t.read_acid;
+	  UHolding_Modbus_2.read_sample = CoilStatusRegister_t.CoilStatus_t.read_sample;
+	  UHolding_Modbus_2.NoProcess = CoilStatusRegister_t.CoilStatus_t.NoProcess;
+
 }

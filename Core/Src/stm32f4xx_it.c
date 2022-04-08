@@ -516,12 +516,22 @@ void TIM6_DAC_IRQHandler(void)
 //	htim6.Instance->DIER &= ~TIM_IT_UPDATE; // enable timer interrupt flag
 //	htim6.Instance->CR1 &= ~TIM_CR1_CEN; // enable timer
   PUMPControlHandle_t.u16TIM6_count += 1;
+//  if(PUMPControlHandle_t.u8PUMP_no == PUMP1)//0x01)//pump 1
+//	  CoilStatusRegister_t.CoilStatus_t.read_acid = !CoilStatusRegister_t.CoilStatus_t.read_acid;
+//  if(PUMPControlHandle_t.u8PUMP_no == PUMP2)//0x01)//pump 1
+//	  CoilStatusRegister_t.CoilStatus_t.read_sample = !CoilStatusRegister_t.CoilStatus_t.read_sample;
   if(PUMPControlHandle_t.u16TIM6_count >= PUMPControlHandle_t.u16TIM6_limit)
   {
 	  if(PUMPControlHandle_t.u8PUMP_no == PUMP1)//0x01)//pump 1
+	  {
 		  PUMPControlHandle_t.u8PUMP_action = PUMP1_TURN_OFF;//0x05;//turn off the pump 1
+//		  CoilStatusRegister_t.CoilStatus_t.read_acid = SET;
+	  }
 	  if(PUMPControlHandle_t.u8PUMP_no == PUMP2)//0x02)//pump 2
+	  {
 		  PUMPControlHandle_t.u8PUMP_action = PUMP2_TURN_OFF;//0x06;//turn off the pump 2
+//		  CoilStatusRegister_t.CoilStatus_t.read_sample = SET;
+	  }
 	  if(PUMPControlHandle_t.u8PUMP_delayaction == 0x01)
 		  PUMPControlHandle_t.u8PUMP_action = 0x07;// for pump delay time
   }else

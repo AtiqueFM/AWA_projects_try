@@ -258,6 +258,7 @@ void pH_ElectronicCalibrationGetValues(void)
 			pH_ElectronicCalibpoints_t.pH_ElectronicCalib_p414V_count = pH_ElectronicCalibpoints_t.pH_ADCCounts;
 			HoldingRegister_t.IOUTCalibandTest_t.pH_ADC_Counts_p414mA = pH_ElectronicCalibpoints_t.pH_ElectronicCalib_p414V_count;
 			pH_ElectronicCalibpoints_t.flag_p414 = 1;
+//			HoldingRegister_t.SensorCalibration_t.pHElecMeaages = 2;//simulate -414mV
 			HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command = 0;
 		}
 		else if(pH_ElectronicCalibpoints_t.flag_p414)
@@ -265,6 +266,7 @@ void pH_ElectronicCalibrationGetValues(void)
 			pH_ElectronicCalibpoints_t.pH_ElectronicCalib_n414V_count = pH_ElectronicCalibpoints_t.pH_ADCCounts;
 			HoldingRegister_t.IOUTCalibandTest_t.pH_ADC_Counts_n414mA = pH_ElectronicCalibpoints_t.pH_ElectronicCalib_n414V_count;
 			pH_ElectronicCalibpoints_t.flag_p414 = 0;
+//			HoldingRegister_t.SensorCalibration_t.pHElecMeaages = 3;//Press calibrate
 			HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command = 0;
 		}
 	}

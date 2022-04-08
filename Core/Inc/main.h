@@ -33,11 +33,11 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /*SOftware Version for HMI and Firmware*/
-#define HMI_VER_MAJOR		1
-#define HMI_VER_MINOR		1
+#define HMI_VER_MAJOR		2
+#define HMI_VER_MINOR		0
 #define HMI_VER_BUGFIX		0
-#define FW_VER_MAJOR		1
-#define FW_VER_MINOR		1
+#define FW_VER_MAJOR		2
+#define FW_VER_MINOR		0
 #define FW_VER_BUGFIX		0
 
 #define MODBUS_1000_BYTES					1
@@ -490,6 +490,7 @@ typedef struct{
 	uint16_t NextProcessTime_Sec;	/*<From HMI, Batch mode sec*/
 	uint32_t LastBatchTime;			/*<Epoch time from HMI*/
 	uint32_t NextProcessTime;		/*<Epoch time for next process time*/
+	uint32_t pHElecMeaages;			/*1. p4141, 2. n414, 3. calibrated*/
 }SensoralibrationHandle_t;
 
 typedef union{
@@ -531,9 +532,9 @@ typedef struct{
 	uint8_t spare[2];
 	uint8_t NEW_COMMAND_FLAG;	/*<Set by HMI is there is new command, Reset by uC after receiving the command.*/
 	uint8_t TRED_TRIGGER;		/*<NA*/
-	uint8_t NoProcess;		/*<NA*/
-	uint8_t OIW_USECOEFF;		/*<NA*/
-	uint8_t AUTOCLEAN;			/*<NA*/
+	uint8_t NoProcess;			/*<NA*/
+	uint8_t pHn414message;		/*<NA*/
+	uint8_t pHelecCalibrate;	/*<NA*/
 	uint8_t AUTOZERO;			/*<If set; Perform zeroing of PD1 and PD2 Zero*/
 	uint8_t MeasureReady;		/*<NA*/
 	uint8_t CleanReady;			/*<NA*/
@@ -606,6 +607,10 @@ typedef union{
 		LastCalibrationSensorHandle_t pH_lastSensorCalibration;
 		float auto_zero;//test
 		float SchedulerTime;				//<modbus address : 239
+		float measure;
+		float read_acid;
+		float read_sample;
+		float NoProcess;
 	};
 }UHolding_Modbus_2_t;
 UHolding_Modbus_2_t UHolding_Modbus_2;
