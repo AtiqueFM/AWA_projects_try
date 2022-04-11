@@ -181,6 +181,7 @@ void ProcessModesCommands(void)
 				}
 				else{
 					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
+					CoilStatusRegister_t.CoilStatus_t.NoProcess = SET;
 					//HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 				}
 				break;
@@ -607,8 +608,10 @@ void ProcessModesCommands(void)
 		//AWAOperationStatus_t.FactoryMode = 0x01;
 		switch (HoldingRegister_t.ModeCommand_t.ModeCommand_L)
 		{
+		static uint8_t count = 0;
 			case Electronics_Calibration_mV: //page
 			{
+				count += 1;
 				//AWAOperationStatus_t.FactoryMode = 0x01;
 				PH_SEL2_ON(CARD_SLOT_6);
 #if 0
@@ -627,10 +630,18 @@ void ProcessModesCommands(void)
 					adc_temp += raw_adc.data;
 				}
 #endif
-				pH_ElectronicCalibpoints_t.pH_ADCCounts = ADS1115_OperationpHMeasurement(0x01);//(float)adc_temp / (float)sample_no;
+				if(count >= 10)
+				{
+					pH_ElectronicCalibpoints_t.pH_ADCCounts = ADS1115_OperationpHMeasurement(0x01);//(float)adc_temp / (float)sample_no;
+					count = 0;
+				}
 				InputRegister_t.SlotParameter.pH_ADC_Counts = pH_ElectronicCalibpoints_t.pH_ADCCounts;
 				InputRegister_t.SlotParameter.pH_Live_Volatge = 0.0f;
-				pH_ElectronicCalibrationGetValues();
+
+
+					pH_ElectronicCalibrationGetValues();
+
+
 #if 0
 				if(HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command == 9)
 				{
@@ -716,7 +727,7 @@ void ProcessModesCommands(void)
 					currentOutputTest(HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command);
 					HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Test_Command = 0;
 					//Set the Flag for FRAM to store the AO Electronics calibration data
-					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+					//AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 				}
 				break;
 			}
@@ -1081,7 +1092,10 @@ void ProcessModesCommands(void)
 				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
 					pumpOperationStop();
 				else
+				{
 					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
+					CoilStatusRegister_t.CoilStatus_t.NoProcess = SET;
+				}
 				break;
 			}
 			case TSS_Check:
@@ -1153,7 +1167,10 @@ void ProcessModesCommands(void)
 				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
 					pumpOperationStop();
 				else
+				{
 					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
+					CoilStatusRegister_t.CoilStatus_t.NoProcess = SET;
+				}
 				break;
 			}
 		}
@@ -1937,7 +1954,10 @@ uint8_t CODADCCapture(uint8_t command)
 			//Set the COD measure flag to "1", tp indicate the start of flashing sequence
 			cod_flash_operation = 1;
 			//Set HMI inter-locking flag
-			HMIInterlockingFlag(HMI_INTERLOCK_MEASURE,SET);CoilStatusRegister_t.CoilStatus_t.measure = SET;
+			HMIInterlockingFlag(HMI_INTERLOCK_MEASURE,SET);
+
+			if(HoldingRegister_t.ModeCommand_t.ModeCommand_H != FACTORY_MODE)
+				CoilStatusRegister_t.CoilStatus_t.measure = SET;
 
 			//Reset the trend capture trigger
 			//CoilStatusRegister_t.CoilStatus_t.TRED_TRIGGER = RESET;
@@ -2176,7 +2196,7 @@ uint8_t CODADCCapture(uint8_t command)
 				else if(COD_MeasurementValues_t.Cal_Value > COD_UpperLimit)
 				{
 					InputRegister_t.PV_info.CODValue = COD_UpperLimit;
-					InputRegister_t.PV_info.BODValue = HoldingRegister_t.ModeCommand_t.BOD_CF * BOD_UpperLimit;
+					InputRegister_t.PV_info.BODValue = BOD_UpperLimit;
 				}
 				else
 				{
@@ -2849,7 +2869,13 @@ void PumpOperation(uint8_t PumpNo)
 			//turn on pump 1
 			PUMP1_ON();
 			//Set the HMI inter-locking flag for sample pump
-			HMIInterlockingFlag(HMI_INTERLOCK_ACID_PUMP, SET);CoilStatusRegister_t.CoilStatus_t.read_acid = SET;CoilStatusRegister_t.CoilStatus_t.NoProcess = RESET;
+			HMIInterlockingFlag(HMI_INTERLOCK_ACID_PUMP, SET);
+
+			if(HoldingRegister_t.ModeCommand_t.ModeCommand_H != FACTORY_MODE)
+			{
+				CoilStatusRegister_t.CoilStatus_t.read_acid = SET;
+				CoilStatusRegister_t.CoilStatus_t.NoProcess = RESET;
+			}
 		}
 		else if (PumpNo == PUMP2)//0x02)//pump2
 		{
@@ -2863,7 +2889,13 @@ void PumpOperation(uint8_t PumpNo)
 			//turn on the pump 2
 			HAL_GPIO_WritePin(SYS_LED_STATUS_GPIO_Port, SYS_LED_STATUS_Pin, GPIO_PIN_RESET);
 			//Set the HMI inter-locking flag for sample pump
-			HMIInterlockingFlag(HMI_INTERLOCK_SAMPLE_PUMP, SET);CoilStatusRegister_t.CoilStatus_t.read_sample = SET;CoilStatusRegister_t.CoilStatus_t.NoProcess = RESET;
+			HMIInterlockingFlag(HMI_INTERLOCK_SAMPLE_PUMP, SET);
+
+			if(HoldingRegister_t.ModeCommand_t.ModeCommand_H != FACTORY_MODE)
+			{
+				CoilStatusRegister_t.CoilStatus_t.read_sample = SET;
+				CoilStatusRegister_t.CoilStatus_t.NoProcess = RESET;
+			}
 		}
 		//Enable Interrupt
 //		htim6.Instance->DIER |= TIM_IT_UPDATE; // enable timer interrupt flag
@@ -4285,6 +4317,12 @@ void pumpOperationStop(void)
 		HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = 0x0;
 	}
+
+	//HMI bits for MIMIC
+	CoilStatusRegister_t.CoilStatus_t.measure = RESET;
+	CoilStatusRegister_t.CoilStatus_t.read_acid = RESET;
+	CoilStatusRegister_t.CoilStatus_t.read_sample = RESET;
+	CoilStatusRegister_t.CoilStatus_t.NoProcess = SET;
 }
 
 void Application_commandCheckandProcess(void)

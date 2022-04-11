@@ -165,3 +165,9 @@ Updates				:-
 Date				:- 8/4/2022
 Updates				:- 
 						1. MIMIC and optimum communication configuration.
+						
+Date				:- 11/4/2022
+Updates				:-
+						1. BUG:- NoProcess bit is resetting, reason UNK.
+						2. Forced the NoProcess bit as SET.
+						3. pH electronic calibration ADC value read only after 10 cycles, once in 10 cycles as MODBUS was giving timeout.

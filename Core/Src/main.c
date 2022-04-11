@@ -230,9 +230,9 @@ int main(void)
   //FRAM_OperationWrite(FRAM_ADDRESS_LASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t)],sizeof(InputRegister_t.bytes));
   //int size = sizeof(PVhandle_t) + sizeof(InputRegister_t.COD_lastCalibration);
 
-  float arrayADC [1000];
+  //float arrayADC [1000];
   uint16_t samples = 100;
-  float avgs = (float)samples;
+  //float avgs = (float)samples;
 
   /*Start the internal ADC*/
   InternalADCStartConversion();
