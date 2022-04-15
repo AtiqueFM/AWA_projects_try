@@ -741,11 +741,11 @@ void DMA2_Stream5_IRQHandler(void)
 				break;
 			case MODBUS_FUNCODE_MULTI_PRESET_HOLDING:
 			{
-				uint16_t byteCount = Rxbuff[5];//lower byte
-				byteCount |= (Rxbuff[4] << 8);//higher byte
-				byteCount *= 2;//number of words to number of bytes
+				uint16_t byteCount = Rxbuff[6];//lower byte
+				//byteCount |= (Rxbuff[4] << 8);//higher byte
+				//byteCount *= 2;//number of words to number of bytes
 				uint16_t noOfTransaction = byteCount + 1;//Byte count + Data + CRC
-				DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[6]),
+				DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[8]),
 						noOfTransaction);
 				RxCRCIndex = 8 + byteCount;
 				/*Enable the DMAR*/

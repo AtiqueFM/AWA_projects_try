@@ -43,7 +43,7 @@ extern "C" {
 #define MODBUS_1000_BYTES					1
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1500
 #define UART_6_RX_DESTINATION_ADDR			(uint32_t)0x20005000
-#define QUERRY_RX_INIT_LEN_6				1
+#define QUERRY_RX_INIT_LEN_6				0
 uint8_t DMA_TX_FLAG;
 uint8_t DMA_TX_FLAG_HMI;
 //If you want to skip the auto zero process for the HMI testing
