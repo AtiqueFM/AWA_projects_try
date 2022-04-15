@@ -4470,7 +4470,11 @@ void Application_MODBUSRXprocess(void)
 		huart1.Instance->CR3 |= USART_CR3_DMAR;
 
 		/*Configure the Stream 5 Rx with DMA_FIRST_TRANSACTION_NO*/
+#if QUERRY_RX_INIT_LEN_6
 		DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),DMA_FIRST_TRANSACTION_NO);
+#else
+		DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),8);
+#endif
 
 		/*Enable the Stream 5 IRQ*/
 		//HAL_NVIC_EnableIRQ(DMA2_Stream5_IRQn);

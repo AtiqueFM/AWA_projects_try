@@ -173,7 +173,11 @@ int main(void)
 
   //Configure DMA for UART 1 RX
   //DMA_UART1_RX_Init();
+#if QUERRY_RX_INIT_LEN_6
   DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),DMA_FIRST_TRANSACTION_NO); /*< Initialize the DMA2 Stream 5 with DMA_FIRST_TRANSACTION_NO*/
+#else
+  DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),8); /*< Initialize the DMA2 Stream 5 with DMA_FIRST_TRANSACTION_NO*/
+#endif
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */

@@ -819,8 +819,11 @@ void ProcessModbusQuery(void)
 		}
 		else
 		{
-
+#if QUERRY_RX_INIT_LEN_6
 			DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),DMA_FIRST_TRANSACTION_NO); /*< Initialize the DMA2 Stream 5 with DMA_FIRST_TRANSACTION_NO*/
+#else
+			DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),8); /*< Initialize the DMA2 Stream 5 with DMA_FIRST_TRANSACTION_NO*/
+#endif
 
 			/*Enable the DMAR*/
 			huart1.Instance->CR3 |= USART_CR3_DMAR;
@@ -831,9 +834,11 @@ void ProcessModbusQuery(void)
 	}
 	else // invalid slave ID
 	{
-
+#if QUERRY_RX_INIT_LEN_6
 		DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),DMA_FIRST_TRANSACTION_NO); /*< Initialize the DMA2 Stream 5 with DMA_FIRST_TRANSACTION_NO*/
-
+#else
+		DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),8); /*< Initialize the DMA2 Stream 5 with DMA_FIRST_TRANSACTION_NO*/
+#endif
 		/*Enable the DMAR*/
 		huart1.Instance->CR3 |= USART_CR3_DMAR;
 		//TODO: Increment the MODBUS_DMA_querry_count to 1.

@@ -607,13 +607,18 @@ void DMA2_Stream6_IRQHandler(void)
 /*UART 1 RX*/
 void DMA2_Stream5_IRQHandler(void)
 {
+#if !QUERRY_RX_INIT_LEN_6
+	static uint8_t startTransmission = RESET;
+	static uint8_t presetWriteTransaction = RESET;
+	static uint8_t transactionCount = 0;
+#endif
 	//test
 	static uint8_t multipresetcoilgetdataflag = 0;
 	/*Clear the FLAG*/
 	DMAInterruptHandle(&DMA_UART1_RX_handle_t);
 	/*CLear DMAR*/
 	huart1.Instance->CR3 &= !USART_CR3_DMAR;
-
+#if QUERRY_RX_INIT_LEN_6
 	if(!MODBUS_DMA_querry_count)
 	{
 		//TODO: Reconfigure the DMA Rx for remaining MODBUS transaction.
@@ -717,7 +722,66 @@ void DMA2_Stream5_IRQHandler(void)
 		DMAPeripheralEnable(DMA2_Stream5,DISABLE);
 
 	}
+#else
+	//TODO: Reconfigure the DMA Rx for remaining MODBUS transaction.
+	DMAPeripheralEnable(DMA2_Stream5,DISABLE);
 
+	if(presetWriteTransaction == RESET)
+	{
+		/*
+		 * Will enter this only during first query.
+		 */
+		switch(Rxbuff[1])
+		{
+			case MODBUS_FUNCODE_READ_HOLDING:
+				//TODO: End reception and start the Transmission
+				startTransmission = SET;
+				//Give the CRC index value from RX buffer
+				RxCRCIndex = 7;
+				break;
+			case MODBUS_FUNCODE_MULTI_PRESET_HOLDING:
+			{
+				uint16_t byteCount = Rxbuff[5];//lower byte
+				byteCount |= (Rxbuff[4] << 8);//higher byte
+				byteCount *= 2;//number of words to number of bytes
+				uint16_t noOfTransaction = byteCount + 1;//Byte count + Data + CRC
+				DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[6]),
+						noOfTransaction);
+				RxCRCIndex = 8 + byteCount;
+				/*Enable the DMAR*/
+				huart1.Instance->CR3 |= USART_CR3_DMAR;
+				//TODO: Increment the MODBUS_DMA_querry_count to 1.
+				DMAPeripheralEnable(DMA2_Stream5,ENABLE);
+				presetWriteTransaction = SET;
+				break;
+			}
+		}
+
+	}else
+	{
+		startTransmission = SET;
+		presetWriteTransaction = RESET;
+	}
+
+	if(startTransmission == SET)
+	{
+		//Reset the transmission flag
+		startTransmission = RESET;
+
+		//Enable reception
+		/*Disable the Stream 5 IRQ*/
+		HAL_NVIC_DisableIRQ(DMA2_Stream5_IRQn);
+
+		/*Enable the MODBUS Query process flag*/
+		RxFlag = 0x01;
+
+		/*Clear the UART1 Transfer complete flag*/
+		huart1.Instance->SR &= !USART_SR_TC;
+
+		/*Disable the DMA2 Stream 5*/
+		DMAPeripheralEnable(DMA2_Stream5,DISABLE);
+	}
+#endif
 }
 
 void DMA2_Stream7_IRQHandler(void)
