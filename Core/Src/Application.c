@@ -1407,7 +1407,7 @@ void CardAction(uint8_t CardID)
 
 	case MI420:
 		AdCounts_pH = 0;
-#if 0
+#if 1
 		//Software PT100 select SEL1 pin HIGH
 		if(HoldingRegister_t.IOUTCalibandTest_t.CalibrationType == TEMP_TYPE_PT100)//PT100
 			SEL1_PT100();
