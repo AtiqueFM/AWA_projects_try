@@ -38,7 +38,7 @@ extern "C" {
 #define HMI_VER_BUGFIX		0
 #define FW_VER_MAJOR		2
 #define FW_VER_MINOR		1 /*<pH Electronic calibration changes, once in 10 cycles*/
-#define FW_VER_BUGFIX		0
+#define FW_VER_BUGFIX		1 /*<Minor Bugs*/
 
 #define MODBUS_1000_BYTES					1
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1500
