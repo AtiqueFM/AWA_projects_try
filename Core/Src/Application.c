@@ -1796,7 +1796,7 @@ uint8_t CheckScreen_CODADCCapture(uint8_t command)
 				else if(COD_MeasurementValues_t.Cal_Value > COD_UpperLimit)
 				{
 					InputRegister_t.PV_info.CODValue = COD_UpperLimit;
-					InputRegister_t.PV_info.BODValue = HoldingRegister_t.ModeCommand_t.BOD_CF * BOD_UpperLimit;
+					InputRegister_t.PV_info.BODValue = BOD_UpperLimit;
 				}
 				else
 				{
