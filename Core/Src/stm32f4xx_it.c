@@ -733,12 +733,6 @@ void DMA2_Stream5_IRQHandler(void)
 		 */
 		switch(Rxbuff[1])
 		{
-//			case MODBUS_FUNCODE_READ_HOLDING:
-//				//TODO: End reception and start the Transmission
-//				startTransmission = SET;
-//				//Give the CRC index value from RX buffer
-//				RxCRCIndex = 7;
-//				break;
 			case MODBUS_FUNCODE_MULTI_PRESET_INPUTCOIL:
 			case MODBUS_FUNCODE_MULTI_PRESET_HOLDING:
 			{
@@ -760,6 +754,7 @@ void DMA2_Stream5_IRQHandler(void)
 			}
 			case MODBUS_FUNCODE_READ_HOLDING:
 			case MODBUS_FUNCODE_READ_STATUSCOIL:
+			case MODBUS_FUNCODE_SINGLE_PRESET_INPUTCOIL:
 			case MODBUS_FUNCODE_READ_INPUTCOIL:
 			case MODBUS_FUNCODE_READ_INPUT:
 			case MODBUS_FUNCODE_SINGLE_PRESET_HOLDING:
