@@ -62,7 +62,7 @@
 <stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_STOP_AT_MAIN_SYMBOL" value="main"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Debug\AWA_V_1.2.16_13012022_CODE_CLEANUP_GIT_V4.1.elf"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="AWA_V_1.2.16_13012022_CODE_CLEANUP_GIT_V4.1"/>
-<booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="true"/>
+<booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="false"/>
 <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1850232399"/>
 <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
 <listEntry value="/AWA_V_1.2.16_13012022_CODE_CLEANUP_GIT_V4.1"/>

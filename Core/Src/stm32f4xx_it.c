@@ -88,7 +88,7 @@ extern UART_HandleTypeDef huart1;
 /* USER CODE END EV */
 
 /******************************************************************************/
-/*           Cortex-M4 Processor Interruption and Exception Handlers          */
+/*           Cortex-M4 Processor Interruption and Exception Handlers          */ 
 /******************************************************************************/
 /**
   * @brief This function handles Non maskable interrupt.
@@ -733,12 +733,13 @@ void DMA2_Stream5_IRQHandler(void)
 		 */
 		switch(Rxbuff[1])
 		{
-			case MODBUS_FUNCODE_READ_HOLDING:
-				//TODO: End reception and start the Transmission
-				startTransmission = SET;
-				//Give the CRC index value from RX buffer
-				RxCRCIndex = 7;
-				break;
+//			case MODBUS_FUNCODE_READ_HOLDING:
+//				//TODO: End reception and start the Transmission
+//				startTransmission = SET;
+//				//Give the CRC index value from RX buffer
+//				RxCRCIndex = 7;
+//				break;
+			case MODBUS_FUNCODE_MULTI_PRESET_INPUTCOIL:
 			case MODBUS_FUNCODE_MULTI_PRESET_HOLDING:
 			{
 				uint16_t byteCount = Rxbuff[6];//lower byte
@@ -747,14 +748,26 @@ void DMA2_Stream5_IRQHandler(void)
 				uint16_t noOfTransaction = byteCount + 1;//Byte count + Data + CRC
 				DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[8]),
 						noOfTransaction);
-				RxCRCIndex = 8 + byteCount;
+				RxCRCIndex = 7 + byteCount + 2;//Decrements while extracting CRC data
+				//TODO: Increment the MODBUS_DMA_querry_count to 1.
+				DMAPeripheralEnable(DMA2_Stream5,ENABLE);
 				/*Enable the DMAR*/
 				huart1.Instance->CR3 |= USART_CR3_DMAR;
 				//TODO: Increment the MODBUS_DMA_querry_count to 1.
-				DMAPeripheralEnable(DMA2_Stream5,ENABLE);
+				//DMAPeripheralEnable(DMA2_Stream5,ENABLE);
 				presetWriteTransaction = SET;
 				break;
 			}
+			case MODBUS_FUNCODE_READ_HOLDING:
+			case MODBUS_FUNCODE_READ_STATUSCOIL:
+			case MODBUS_FUNCODE_READ_INPUTCOIL:
+			case MODBUS_FUNCODE_READ_INPUT:
+			case MODBUS_FUNCODE_SINGLE_PRESET_HOLDING:
+				//TODO: End reception and start the Transmission
+				startTransmission = SET;
+				//Give the CRC index value from RX buffer
+				RxCRCIndex = 7;
+				break;
 		}
 
 	}else

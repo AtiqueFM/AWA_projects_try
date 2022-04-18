@@ -152,6 +152,7 @@ int main(void)
 
 
   /* USER CODE END 1 */
+  
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -290,11 +291,11 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Configure the main internal regulator output voltage
+  /** Configure the main internal regulator output voltage 
   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-  /** Initializes the CPU, AHB and APB busses clocks
+  /** Initializes the CPU, AHB and APB busses clocks 
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
@@ -308,7 +309,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks
+  /** Initializes the CPU, AHB and APB busses clocks 
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -340,7 +341,7 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 1 */
 
   /* USER CODE END ADC1_Init 1 */
-  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
   */
   hadc1.Instance = ADC1;
   hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
@@ -358,7 +359,7 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
-  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
   */
   sConfig.Channel = ADC_CHANNEL_3;
   sConfig.Rank = 1;
@@ -836,21 +837,21 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOE, CARD_7_SPI_SS_Pin|RELAY_6_Pin|RELAY_7_Pin|RELAY_8_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, CARD_7_PWR_Pin|CARD_7_SEL1_Pin|CARD_7_SEL2_Pin|RELAY_3_Pin
-                          |RELAY_4_Pin|CARD_5_SEL2_Pin|CARD_5_SEL1_Pin|ADM_2_CLTR_Pin
+  HAL_GPIO_WritePin(GPIOC, CARD_7_PWR_Pin|CARD_7_SEL1_Pin|CARD_7_SEL2_Pin|RELAY_3_Pin 
+                          |RELAY_4_Pin|CARD_5_SEL2_Pin|CARD_5_SEL1_Pin|ADM_2_CLTR_Pin 
                           |CARD_3_SPI_SS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOF, CARD_6_SPI_SS_Pin|CARD_6_PWR_Pin|CARD_6_SEL1_Pin|CARD_6_SEL2_Pin
-                          |DO_LV_CH3_Pin|DO_LV_CH4_Pin|DO_LV_CH6_Pin|SYS_LED_ERROR_Pin
+  HAL_GPIO_WritePin(GPIOF, CARD_6_SPI_SS_Pin|CARD_6_PWR_Pin|CARD_6_SEL1_Pin|CARD_6_SEL2_Pin 
+                          |DO_LV_CH3_Pin|DO_LV_CH4_Pin|DO_LV_CH6_Pin|SYS_LED_ERROR_Pin 
                           |CARD_1_SPI_SS_Pin|CARD_1_PWR_Pin|CARD_1_SEL1_Pin|CARD_1_SEL2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, RELAY_5_Pin|ADM_CLTR_Pin|CARD_3_SEL2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, CARD_5_PWR_Pin|CARD_5_SPI_SS_Pin|SYS_LED_STATUS_Pin|RELAY_1_Pin
-                          |RELAY_2_Pin|CARD_8_PWR_Pin|CARD_8_SEL1_Pin|CARD_8_SEL2_Pin
+  HAL_GPIO_WritePin(GPIOB, CARD_5_PWR_Pin|CARD_5_SPI_SS_Pin|SYS_LED_STATUS_Pin|RELAY_1_Pin 
+                          |RELAY_2_Pin|CARD_8_PWR_Pin|CARD_8_SEL1_Pin|CARD_8_SEL2_Pin 
                           |CARD_8_SPI_SS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
@@ -859,9 +860,9 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOG, CARD_2_PWR_Pin|CARD_2_SEL1_Pin|CARD_2_SEL2_Pin|CARD_3_SEL1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : CARD_8_ID3_Pin CARD_7_ID1_Pin CARD_7_ID2_Pin CARD_7_ID3_Pin
+  /*Configure GPIO pins : CARD_8_ID3_Pin CARD_7_ID1_Pin CARD_7_ID2_Pin CARD_7_ID3_Pin 
                            CARD_1_ID3_Pin RESERVE_PE15_Pin CARD_8_ID1_Pin CARD_8_ID2_Pin */
-  GPIO_InitStruct.Pin = CARD_8_ID3_Pin|CARD_7_ID1_Pin|CARD_7_ID2_Pin|CARD_7_ID3_Pin
+  GPIO_InitStruct.Pin = CARD_8_ID3_Pin|CARD_7_ID1_Pin|CARD_7_ID2_Pin|CARD_7_ID3_Pin 
                           |CARD_1_ID3_Pin|RESERVE_PE15_Pin|CARD_8_ID1_Pin|CARD_8_ID2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -874,11 +875,11 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : CARD_7_PWR_Pin CARD_7_SEL1_Pin CARD_7_SEL2_Pin RELAY_3_Pin
-                           RELAY_4_Pin CARD_5_SEL2_Pin CARD_5_SEL1_Pin ADM_2_CLTR_Pin
+  /*Configure GPIO pins : CARD_7_PWR_Pin CARD_7_SEL1_Pin CARD_7_SEL2_Pin RELAY_3_Pin 
+                           RELAY_4_Pin CARD_5_SEL2_Pin CARD_5_SEL1_Pin ADM_2_CLTR_Pin 
                            CARD_3_SPI_SS_Pin */
-  GPIO_InitStruct.Pin = CARD_7_PWR_Pin|CARD_7_SEL1_Pin|CARD_7_SEL2_Pin|RELAY_3_Pin
-                          |RELAY_4_Pin|CARD_5_SEL2_Pin|CARD_5_SEL1_Pin|ADM_2_CLTR_Pin
+  GPIO_InitStruct.Pin = CARD_7_PWR_Pin|CARD_7_SEL1_Pin|CARD_7_SEL2_Pin|RELAY_3_Pin 
+                          |RELAY_4_Pin|CARD_5_SEL2_Pin|CARD_5_SEL1_Pin|ADM_2_CLTR_Pin 
                           |CARD_3_SPI_SS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -891,20 +892,20 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : CARD_6_SPI_SS_Pin CARD_6_PWR_Pin CARD_6_SEL1_Pin CARD_6_SEL2_Pin
-                           DO_LV_CH3_Pin DO_LV_CH4_Pin DO_LV_CH6_Pin SYS_LED_ERROR_Pin
+  /*Configure GPIO pins : CARD_6_SPI_SS_Pin CARD_6_PWR_Pin CARD_6_SEL1_Pin CARD_6_SEL2_Pin 
+                           DO_LV_CH3_Pin DO_LV_CH4_Pin DO_LV_CH6_Pin SYS_LED_ERROR_Pin 
                            CARD_1_SPI_SS_Pin CARD_1_PWR_Pin CARD_1_SEL1_Pin CARD_1_SEL2_Pin */
-  GPIO_InitStruct.Pin = CARD_6_SPI_SS_Pin|CARD_6_PWR_Pin|CARD_6_SEL1_Pin|CARD_6_SEL2_Pin
-                          |DO_LV_CH3_Pin|DO_LV_CH4_Pin|DO_LV_CH6_Pin|SYS_LED_ERROR_Pin
+  GPIO_InitStruct.Pin = CARD_6_SPI_SS_Pin|CARD_6_PWR_Pin|CARD_6_SEL1_Pin|CARD_6_SEL2_Pin 
+                          |DO_LV_CH3_Pin|DO_LV_CH4_Pin|DO_LV_CH6_Pin|SYS_LED_ERROR_Pin 
                           |CARD_1_SPI_SS_Pin|CARD_1_PWR_Pin|CARD_1_SEL1_Pin|CARD_1_SEL2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : MIL_SWITCH_Pin CARD_5_ID1_Pin CARD_5_ID2_Pin CARD_5_ID3_Pin
+  /*Configure GPIO pins : MIL_SWITCH_Pin CARD_5_ID1_Pin CARD_5_ID2_Pin CARD_5_ID3_Pin 
                            CARD_3_ID1_Pin CARD_3_ID2_Pin */
-  GPIO_InitStruct.Pin = MIL_SWITCH_Pin|CARD_5_ID1_Pin|CARD_5_ID2_Pin|CARD_5_ID3_Pin
+  GPIO_InitStruct.Pin = MIL_SWITCH_Pin|CARD_5_ID1_Pin|CARD_5_ID2_Pin|CARD_5_ID3_Pin 
                           |CARD_3_ID1_Pin|CARD_3_ID2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -917,22 +918,22 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : CARD_5_PWR_Pin CARD_5_SPI_SS_Pin SYS_LED_STATUS_Pin RELAY_1_Pin
-                           RELAY_2_Pin CARD_8_PWR_Pin CARD_8_SEL1_Pin CARD_8_SEL2_Pin
+  /*Configure GPIO pins : CARD_5_PWR_Pin CARD_5_SPI_SS_Pin SYS_LED_STATUS_Pin RELAY_1_Pin 
+                           RELAY_2_Pin CARD_8_PWR_Pin CARD_8_SEL1_Pin CARD_8_SEL2_Pin 
                            CARD_8_SPI_SS_Pin */
-  GPIO_InitStruct.Pin = CARD_5_PWR_Pin|CARD_5_SPI_SS_Pin|SYS_LED_STATUS_Pin|RELAY_1_Pin
-                          |RELAY_2_Pin|CARD_8_PWR_Pin|CARD_8_SEL1_Pin|CARD_8_SEL2_Pin
+  GPIO_InitStruct.Pin = CARD_5_PWR_Pin|CARD_5_SPI_SS_Pin|SYS_LED_STATUS_Pin|RELAY_1_Pin 
+                          |RELAY_2_Pin|CARD_8_PWR_Pin|CARD_8_SEL1_Pin|CARD_8_SEL2_Pin 
                           |CARD_8_SPI_SS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : CARD_1_ID1_Pin CARD_1_ID2_Pin CARD_2_ID1_Pin CARD_2_ID2_Pin
-                           CARD_2_ID3_Pin RESERVE_PG8_Pin CARD_3_ID3_Pin RESERVE_PG11_Pin
+  /*Configure GPIO pins : CARD_1_ID1_Pin CARD_1_ID2_Pin CARD_2_ID1_Pin CARD_2_ID2_Pin 
+                           CARD_2_ID3_Pin RESERVE_PG8_Pin CARD_3_ID3_Pin RESERVE_PG11_Pin 
                            RESERVE_PG12_Pin RESERVE_PG13_Pin RESERVE_PG14_Pin RESERVE_PG15_Pin */
-  GPIO_InitStruct.Pin = CARD_1_ID1_Pin|CARD_1_ID2_Pin|CARD_2_ID1_Pin|CARD_2_ID2_Pin
-                          |CARD_2_ID3_Pin|RESERVE_PG8_Pin|CARD_3_ID3_Pin|RESERVE_PG11_Pin
+  GPIO_InitStruct.Pin = CARD_1_ID1_Pin|CARD_1_ID2_Pin|CARD_2_ID1_Pin|CARD_2_ID2_Pin 
+                          |CARD_2_ID3_Pin|RESERVE_PG8_Pin|CARD_3_ID3_Pin|RESERVE_PG11_Pin 
                           |RESERVE_PG12_Pin|RESERVE_PG13_Pin|RESERVE_PG14_Pin|RESERVE_PG15_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -1198,7 +1199,7 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line)
-{
+{ 
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */

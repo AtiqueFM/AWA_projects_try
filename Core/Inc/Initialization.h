@@ -11,7 +11,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-#define DMA_FIRST_TRANSACTION_NO						( ( uint16_t ) 8 )
+#define DMA_FIRST_TRANSACTION_NO						( ( uint16_t ) 6 )
 #define DMA_SECOND_HOLDINGREAD_TRANSACTION_NO			( ( uint16_t ) 2 )
 #define DMA_SECOND_INPUTREAD_TRANSACTION_NO				( ( uint16_t ) 2 )
 #define DMA_SECOND_SINGLEPRESETHOLDING_TRANSACTION_NO	( ( uint16_t ) 2 )
