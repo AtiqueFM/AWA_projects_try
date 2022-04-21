@@ -670,11 +670,16 @@ void ProcessModesCommands(void)
 					/*----------------------------------------------------------------------*/
 					AWAOperationStatus_t.FactoryMode = 0x0;
 					//Flag set as data not saved in the FRAM
-					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+					//AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 					//Set the state of which data to store
-					AWADataStoreState.electronicpH = SET;/*<TODO: to RESET after storing the data in FRAM*/
+					//AWADataStoreState.electronicpH = SET;/*<TODO: to RESET after storing the data in FRAM*/
 					HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x50;
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0x0;
+					HoldingRegister_t.ModeCommand_t.CommonCommandHMI = 0x0;
+					//Flag set as data not saved in the FRAM
+					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+
+					AWADataStoreState.electronicpH = SET;/*<TODO: to RESET after storing the data in FRAM*/
 					break;
 				}else{
 					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
