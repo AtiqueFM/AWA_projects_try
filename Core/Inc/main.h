@@ -44,6 +44,7 @@ extern "C" {
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1500
 #define UART_6_RX_DESTINATION_ADDR			(uint32_t)0x20005000
 #define QUERRY_RX_INIT_LEN_6				0
+#define NEW_PUMP2_PIN						1
 uint8_t DMA_TX_FLAG;
 uint8_t DMA_TX_FLAG_HMI;
 //If you want to skip the auto zero process for the HMI testing
@@ -759,6 +760,8 @@ void Error_Handler(void);
 #define DO_LV_CH4_GPIO_Port GPIOF
 #define DO_LV_CH6_Pin GPIO_PIN_10
 #define DO_LV_CH6_GPIO_Port GPIOF
+#define DO_LV_CH8_Pin GPIO_PIN_1
+#define DO_LV_CH8_GPIO_Port GPIOC
 #define RELAY_3_Pin GPIO_PIN_2
 #define RELAY_3_GPIO_Port GPIOC
 #define RELAY_4_Pin GPIO_PIN_3
@@ -1077,8 +1080,13 @@ void Error_Handler(void);
 //pump control definition - GPIO toggle action
 #define PUMP1_ON()						HAL_GPIO_WritePin(DO_LV_CH3_GPIO_Port, DO_LV_CH3_Pin, GPIO_PIN_SET)
 #define PUMP1_OFF()						HAL_GPIO_WritePin(DO_LV_CH3_GPIO_Port, DO_LV_CH3_Pin, GPIO_PIN_RESET)
+#if !NEW_PUMP2_PIN
 #define PUMP2_ON()						HAL_GPIO_WritePin(DO_LV_CH4_GPIO_Port, DO_LV_CH4_Pin, GPIO_PIN_SET)
 #define PUMP2_OFF()						HAL_GPIO_WritePin(DO_LV_CH4_GPIO_Port, DO_LV_CH4_Pin, GPIO_PIN_RESET)
+#else
+#define PUMP2_ON()						HAL_GPIO_WritePin(DO_LV_CH8_GPIO_Port, DO_LV_CH8_Pin, GPIO_PIN_SET)
+#define PUMP2_OFF()						HAL_GPIO_WritePin(DO_LV_CH8_GPIO_Port, DO_LV_CH8_Pin, GPIO_PIN_RESET)
+#endif
 #define VALVE_ON()						HAL_GPIO_WritePin(DO_LV_CH6_GPIO_Port, DO_LV_CH6_Pin, GPIO_PIN_SET)
 #define VALVE_OFF()						HAL_GPIO_WritePin(DO_LV_CH6_GPIO_Port, DO_LV_CH6_Pin, GPIO_PIN_RESET)
 

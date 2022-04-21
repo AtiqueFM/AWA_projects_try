@@ -38,6 +38,7 @@
 
 #define ITM_Port32(n)	(*((volatile unsigned long *)(0xe0000000 +4*n)))
 #define SINGLE_SHOT 0
+#define TEST	0
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -234,7 +235,10 @@ int main(void)
 //  int flag_= 0;
   //FRAM_OperationWrite(FRAM_ADDRESS_LASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t)],sizeof(InputRegister_t.bytes));
   //int size = sizeof(PVhandle_t) + sizeof(InputRegister_t.COD_lastCalibration);
-
+#if TEST
+  memset(&CurrentOutputCalibration_t,'\0',sizeof(CurrentOutputCalibration_t));
+  FRAM_OperationWrite(FRAM_ADDRESS_AO_ELEC_CALIB, (uint8_t*)&CurrentOutputCalibration_t, sizeof(CurrentOutputCalibration_t));
+#endif
   //float arrayADC [1000];
   uint16_t samples = 100;
   //float avgs = (float)samples;
@@ -837,9 +841,9 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOE, CARD_7_SPI_SS_Pin|RELAY_6_Pin|RELAY_7_Pin|RELAY_8_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, CARD_7_PWR_Pin|CARD_7_SEL1_Pin|CARD_7_SEL2_Pin|RELAY_3_Pin 
-                          |RELAY_4_Pin|CARD_5_SEL2_Pin|CARD_5_SEL1_Pin|ADM_2_CLTR_Pin 
-                          |CARD_3_SPI_SS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, CARD_7_PWR_Pin|CARD_7_SEL1_Pin|CARD_7_SEL2_Pin|DO_LV_CH8_Pin 
+                          |RELAY_3_Pin|RELAY_4_Pin|CARD_5_SEL2_Pin|CARD_5_SEL1_Pin 
+                          |ADM_2_CLTR_Pin|CARD_3_SPI_SS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOF, CARD_6_SPI_SS_Pin|CARD_6_PWR_Pin|CARD_6_SEL1_Pin|CARD_6_SEL2_Pin 
@@ -875,12 +879,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : CARD_7_PWR_Pin CARD_7_SEL1_Pin CARD_7_SEL2_Pin RELAY_3_Pin 
-                           RELAY_4_Pin CARD_5_SEL2_Pin CARD_5_SEL1_Pin ADM_2_CLTR_Pin 
-                           CARD_3_SPI_SS_Pin */
-  GPIO_InitStruct.Pin = CARD_7_PWR_Pin|CARD_7_SEL1_Pin|CARD_7_SEL2_Pin|RELAY_3_Pin 
-                          |RELAY_4_Pin|CARD_5_SEL2_Pin|CARD_5_SEL1_Pin|ADM_2_CLTR_Pin 
-                          |CARD_3_SPI_SS_Pin;
+  /*Configure GPIO pins : CARD_7_PWR_Pin CARD_7_SEL1_Pin CARD_7_SEL2_Pin DO_LV_CH8_Pin 
+                           RELAY_3_Pin RELAY_4_Pin CARD_5_SEL2_Pin CARD_5_SEL1_Pin 
+                           ADM_2_CLTR_Pin CARD_3_SPI_SS_Pin */
+  GPIO_InitStruct.Pin = CARD_7_PWR_Pin|CARD_7_SEL1_Pin|CARD_7_SEL2_Pin|DO_LV_CH8_Pin 
+                          |RELAY_3_Pin|RELAY_4_Pin|CARD_5_SEL2_Pin|CARD_5_SEL1_Pin 
+                          |ADM_2_CLTR_Pin|CARD_3_SPI_SS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
