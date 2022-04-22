@@ -38,13 +38,13 @@ extern "C" {
 #define HMI_VER_BUGFIX		0
 #define FW_VER_MAJOR		2
 #define FW_VER_MINOR		1 /*<pH Electronic calibration changes, once in 10 cycles*/
-#define FW_VER_BUGFIX		2 /*<MODBUS CHANGE to 8 byte*/
+#define FW_VER_BUGFIX		3 /*<MODBUS CHANGE to 8 byte*/
 
 #define MODBUS_1000_BYTES					1
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1500
 #define UART_6_RX_DESTINATION_ADDR			(uint32_t)0x20005000
 #define QUERRY_RX_INIT_LEN_6				0
-#define NEW_PUMP2_PIN						1
+#define NEW_PUMP2_PIN						0
 uint8_t DMA_TX_FLAG;
 uint8_t DMA_TX_FLAG_HMI;
 //If you want to skip the auto zero process for the HMI testing

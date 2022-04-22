@@ -176,3 +176,10 @@ Date				:- 18/4/2022
 Updates				:-	
 						1. MODBUS changed from 6 + 2 byte transaction to 8 bytes transactions.
 						2. FW version changed to 2.1.2
+
+Date 				:- 22/4/2022
+Updates				:-
+						1. PUMP 2 DO selection Macro.
+						2. AO calibraton data erase Macro.
+						3. pH electronic calibration common command BUG solve.
+						4. FW version changed to 2.1.3
