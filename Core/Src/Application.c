@@ -47,6 +47,15 @@ extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart3;
 extern UART_HandleTypeDef huart6;
 extern uint8_t performAUTOZERO;
+
+extern TIM_HandleTypeDef htim7;
+extern UART_HandleTypeDef huart6;
+extern uint8_t uart_rx_buffer;						/*< Will receive single byte from UART and will transfer it to the RX buffer array.*/
+extern volatile uint8_t uart_rx_bytes; 			/*< Will contain the received byte count.*/
+extern volatile uint8_t uart_rcv_bytes;			/*< Flag will be set when the first byte will be received, will be served in the timer ISR*/
+extern volatile uint16_t uart_rx_timeout_counter;
+extern volatile uint8_t uart_rx_process_query;		/*< This flag will be set when the slave ID is correct and the query needs to be processed.*/
+
 uint8_t cod_flash_operation;
 uint16_t dataptr1;
 uint16_t dataptr;
@@ -4440,9 +4449,41 @@ void Application_AWAIOProcess(void)
 
 void Application_MODBUSRXprocess(void)
 {
+	/****TEST***/
+	if(uart_rx_process_query)
+	{
+		uart_rx_process_query = RESET;
+
+		HAL_TIM_Base_Stop_IT(&htim7);
+		/*3. if the Slave ID is not correct the flush the RX buffer*/
+		memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+		//Reset the rx byte counter
+		uart_rx_bytes = 0;
+		//Reset the query processing flag.
+		uart_rx_process_query = RESET;
+		//re-start the uart reception interrupt
+		HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+		HAL_TIM_Base_Start_IT(&htim7);
+	}
+	/*******/
 	  //RTU
 	  if(DMA_TX_FLAG == 1)
 	  {
+#if MODBUS_MULTI_DROP
+		HAL_TIM_Base_Stop_IT(&htim7);
+		/*3. if the Slave ID is not correct the flush the RX buffer*/
+		memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+		//Reset the rx byte counter
+		uart_rx_bytes = 0;
+		//Reset the query processing flag.
+		uart_rx_process_query = RESET;
+		//re-start the uart reception interrupt
+		HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+		HAL_TIM_Base_Start_IT(&htim7);
+
+		ADM_2_CLTR_LOW();
+		DMA_TX_FLAG = 0;
+#else
 		/*Clear the UART6 Transfer complete flag*/
 		while(!(huart6.Instance->SR & USART_SR_TC));
 		huart6.Instance->SR &= !USART_SR_TC;
@@ -4460,6 +4501,7 @@ void Application_MODBUSRXprocess(void)
 		DMAPeripheralEnable(DMA2_Stream2,ENABLE);
 		ADM_2_CLTR_LOW();
 		DMA_TX_FLAG = 0;
+#endif
 	  }
 	  //HMI
 	  if(DMA_TX_FLAG_HMI == 1)

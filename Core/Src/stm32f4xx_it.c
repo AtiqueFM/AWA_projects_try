@@ -48,6 +48,13 @@ volatile uint16_t TIM2Flag = TIMER_TICKS_46MS, TIM2State = TIME_46MS;
 volatile uint32_t tst = 0, tst1 = 0;
 volatile uint8_t RxFlag = 0, ReadADCFlag = 0;
 
+uint8_t uart_rx_buffer;						/*< Will receive single byte from UART and will transfer it to the RX buffer array.*/
+volatile uint8_t uart_rx_bytes; 			/*< Will contain the received byte count.*/
+volatile uint8_t uart_rcv_bytes;			/*< Flag will be set when the first byte will be received, will be served in the timer ISR*/
+volatile uint16_t uart_rx_timeout_counter;
+volatile uint8_t uart_rx_process_query;		/*< This flag will be set when the slave ID is correct and the query needs to be processed.*/
+static uint32_t budrate_9600 = 9600;		/*<For testing, lateron will be replaced by the moodbus register.*/
+
 //For RTU MODBUS
 volatile uint8_t MOD2_RxFlag;
 extern volatile uint8_t MOD2_Rxbuff[310];
@@ -81,7 +88,9 @@ extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 extern TIM_HandleTypeDef htim6;
+extern TIM_HandleTypeDef htim7;
 extern UART_HandleTypeDef huart3;
+extern UART_HandleTypeDef huart6;
 /* USER CODE BEGIN EV */
 extern UART_HandleTypeDef huart6;
 extern UART_HandleTypeDef huart1;
@@ -549,8 +558,138 @@ void TIM6_DAC_IRQHandler(void)
   /* USER CODE END TIM6_DAC_IRQn 1 */
 }
 
-/* USER CODE BEGIN 1 */
+/**
+  * @brief This function handles TIM7 global interrupt.
+  */
+void TIM7_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM7_IRQn 0 */
+  int flag = 0;
+  /* USER CODE END TIM7_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim7);
+  /* USER CODE BEGIN TIM7_IRQn 1 */
+  //Will be incremented every 100us
+  uart_rx_timeout_counter += 1;
 
+  switch(budrate_9600)/*TODO: this variable will be changed to a modbus register (USER SELECTABLE)*/
+  {
+  case 9600:
+	  //3.7ms timeout
+	  if(uart_rx_timeout_counter >= 37)
+	  {
+		  flag = SET;
+	  	  HAL_TIM_Base_Stop_IT(&htim7);
+	  }
+	  else{}
+	  break;
+  case 19200:
+	  //1.9ms timeout
+	  if(uart_rx_timeout_counter >= 19)
+		  flag = SET;
+	  else{}
+	  break;
+  case 115200:
+	  //300us timeout
+	  if(uart_rx_timeout_counter >= 3)
+		  flag = SET;
+	  else{}
+	  break;
+  }
+
+  if(flag == SET)
+  {
+	  /* TODO:	if the timer expires; the frame has been received from the master,
+	   * 		now process the query received.
+	   */
+
+	  /*1. Check for the slave ID*/
+	  if(MOD2_Rxbuff[SLAVE_ID] == 2)
+	  {
+		  /*2. If slave ID is correct, set the flag for processing the query, this flag will be served in the super / while loop.*/
+		  uart_rx_process_query = SET;
+		  //MOD2_RxFlag = uart_rx_process_query;
+
+		  /*3. Stop the timer*/
+		  //HAL_TIM_Base_Stop_IT(&htim7);
+	  }
+	  else
+	  {
+		  //HAL_TIM_Base_Stop_IT(&htim7);
+		  /*3. if the Slave ID is not correct the flush the RX buffer*/
+		  memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+		  //Reset the rx byte counter
+		  uart_rx_bytes = 0;
+		  //Reset the query processing flag.
+		  uart_rx_process_query = RESET;
+		  //re-start the uart reception interrupt
+		  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+		  HAL_TIM_Base_Start_IT(&htim7);
+
+	  }
+
+  }
+  /* USER CODE END TIM7_IRQn 1 */
+}
+
+/**
+  * @brief This function handles USART6 global interrupt.
+  */
+void USART6_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART6_IRQn 0 */
+
+  /* USER CODE END USART6_IRQn 0 */
+  HAL_UART_IRQHandler(&huart6);
+  /* USER CODE BEGIN USART6_IRQn 1 */
+
+  /* USER CODE END USART6_IRQn 1 */
+}
+
+/* USER CODE BEGIN 1 */
+/**
+  * @brief  Rx Transfer completed callbacks.
+  * @param  huart  Pointer to a UART_HandleTypeDef structure that contains
+  *                the configuration information for the specified UART module.
+  * @retval None
+  */
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+  /* NOTE: This function should not be modified, when the callback is needed,
+           the HAL_UART_RxCpltCallback could be implemented in the user file
+   */
+	//Read the received data from UART from Data Register.
+//	HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+
+	//Fill the RX array buffer
+	MOD2_Rxbuff[uart_rx_bytes] = uart_rx_buffer;
+
+	//increment the counter
+	uart_rx_bytes += 1;
+
+	/*1. if the first byte is received i.e; uart_rx_bytes == 1, then load the timer counter / start the timer counter.
+	* also set the flag rcv_flag for the processing of the query in the timer ISR, when timeout occurs.*/
+	if(uart_rx_bytes == 1)
+	{
+		//Set a flag to process the modbus query.
+		uart_rcv_bytes = SET;
+		//MOD2_RxFlag = uart_rcv_bytes;
+		HAL_TIM_Base_Start_IT(&htim7);
+
+		/*Depending on the baud rate selected load the timer with that counter (ALREADY DONE IN THE TIMER ISR)*/
+	}
+
+	/**TEST***/
+	if(uart_rx_bytes >= 8)
+	{
+		uart_rx_bytes = 8;
+	}
+	/*****/
+
+	HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+
+	/*2. else reset the timer counter*/
+	htim7.Instance->CNT = 0x00;
+}
 /*
  * DMA 2 Stream 2 IRQ Handler
  * 1. Resets the interrupt flag.
@@ -824,7 +963,5 @@ void DMA2_Stream7_IRQHandler(void)
 	/*Make the Direction GPIO pin LOW*/
 	DMA_TX_FLAG_HMI = 1;
 }
-
-
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -178,7 +178,7 @@ void DMA_UART6_TX_Init(void)
 	DMA_UART6_TX_handle_t.pDMAConfig.DestinationAddress = USART6_BASE + 0x04;//(uint32_t)(&MOD2_Rxbuff);//UART_6_RX_DESTINATION_ADDR;//0x40005410;//SRAM address
 	//enable interrupt at its default priority
 
-	HAL_NVIC_SetPriority(DMA2_Stream6_IRQn, 0, 1);
+	HAL_NVIC_SetPriority(DMA2_Stream6_IRQn, 0, 0);
 
 	//DMA_IRQITConfig(IRQ_NO_DMA2_Stream6,ENABLE);//TX
 	HAL_NVIC_EnableIRQ(DMA2_Stream6_IRQn);

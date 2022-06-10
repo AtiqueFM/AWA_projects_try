@@ -67,13 +67,14 @@ TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim6;
+TIM_HandleTypeDef htim7;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN PV */
-
+extern uint8_t uart_rx_buffer;	/*< Will receive single byte from UART and will transfer it to the RX buffer array.*/
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -90,6 +91,7 @@ static void MX_TIM6_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART6_UART_Init(void);
 static void MX_ADC1_Init(void);
+static void MX_TIM7_Init(void);
 /* USER CODE BEGIN PFP */
 
 void ProcessCommandCommands(void);
@@ -169,9 +171,12 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
   ITM_Port32(31) = 1;
-
+#if MODBUS_MULTI_DROP
+  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+#else
   //Configure DMA for UART 6 RX
   DMA_UART6_RX_Init();
+#endif
 
   //Configure DMA for UART 1 RX
   //DMA_UART1_RX_Init();
@@ -195,11 +200,15 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART6_UART_Init();
   MX_ADC1_Init();
+  MX_TIM7_Init();
   /* USER CODE BEGIN 2 */
   ITM_Port32(31) = 2;
 
   //Enable the DMA 2 Stream for UART 6 RX
   DMAPeripheralEnable(DMA2_Stream2, ENABLE);
+
+  //Start the reception in UART6 using interrupt
+  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
 
   //Enable the DMA 2 Stream for UART 1 RX
   DMAPeripheralEnable(DMA2_Stream5, ENABLE);
@@ -715,6 +724,46 @@ static void MX_TIM6_Init(void)
 }
 
 /**
+  * @brief TIM7 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM7_Init(void)
+{
+
+  /* USER CODE BEGIN TIM7_Init 0 */
+
+  /* USER CODE END TIM7_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM7_Init 1 */
+
+  /* USER CODE END TIM7_Init 1 */
+  htim7.Instance = TIM7;
+  htim7.Init.Prescaler = 2499;
+  htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim7.Init.Period = 1;
+  htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM7_Init 2 */
+
+  /*Start the timer in interrupt mode*/
+//  HAL_TIM_Base_Start_IT(&htim7);
+  /* USER CODE END TIM7_Init 2 */
+
+}
+
+/**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
@@ -813,7 +862,7 @@ static void MX_USART6_UART_Init(void)
   //huart6.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
   //Enable DMA receive
   huart6.Instance->SR &= !USART_SR_TC;
-  huart6.Instance->CR3 |= USART_CR3_DMAR;
+  //huart6.Instance->CR3 |= USART_CR3_DMAR;
   /* USER CODE END USART6_Init 2 */
 
 }

@@ -33,18 +33,19 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /*SOftware Version for HMI and Firmware*/
-#define HMI_VER_MAJOR		2
-#define HMI_VER_MINOR		1 /*<MIMIC updates*/
-#define HMI_VER_BUGFIX		0
-#define FW_VER_MAJOR		2
-#define FW_VER_MINOR		1 /*<pH Electronic calibration changes, once in 10 cycles*/
-#define FW_VER_BUGFIX		3 /*<MODBUS CHANGE to 8 byte*/
+#define HMI_VER_MAJOR		2 /*<*/
+#define HMI_VER_MINOR		1 /*<*/
+#define HMI_VER_BUGFIX		0 /*<*/
+#define FW_VER_MAJOR		2 /*<*/
+#define FW_VER_MINOR		3 /*<Addition on multi-drop*/
+#define FW_VER_BUGFIX		0 /*<*/
 
 #define MODBUS_1000_BYTES					1
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1500
 #define UART_6_RX_DESTINATION_ADDR			(uint32_t)0x20005000
 #define QUERRY_RX_INIT_LEN_6				0
 #define NEW_PUMP2_PIN						0
+#define MODBUS_MULTI_DROP					1
 uint8_t DMA_TX_FLAG;
 uint8_t DMA_TX_FLAG_HMI;
 //If you want to skip the auto zero process for the HMI testing
@@ -1648,6 +1649,12 @@ static unsigned short days[4][12] =
     {1096,1127,1155,1186,1216,1247,1277,1308,1339,1369,1400,1430},
 };
 
+typedef enum{
+	SLAVE_ID	= 0,
+	FUNCTION_CODE,
+	START_ADDRESS_HIGH,
+	START_ADDRESS_LOW,
+}modbus_frame_t;
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus
