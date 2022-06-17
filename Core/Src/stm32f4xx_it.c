@@ -53,8 +53,9 @@ volatile uint8_t uart_rx_bytes; 			/*< Will contain the received byte count.*/
 volatile uint8_t uart_rcv_bytes;			/*< Flag will be set when the first byte will be received, will be served in the timer ISR*/
 volatile uint16_t uart_rx_timeout_counter;
 volatile uint8_t uart_rx_process_query;		/*< This flag will be set when the slave ID is correct and the query needs to be processed.*/
-static uint32_t budrate_9600 = 9600;		/*<For testing, lateron will be replaced by the moodbus register.*/
+static uint32_t budrate_9600 = 38400;//19200;//9600;		/*<For testing, lateron will be replaced by the moodbus register.*/
 uint8_t tx_byte_count = 0;
+uint8_t rx_byte_count = 0;
 
 //For RTU MODBUS
 volatile uint8_t MOD2_RxFlag;
@@ -587,6 +588,15 @@ void TIM7_IRQHandler(void)
   case 19200:
 	  //1.9ms timeout
 	  if(uart_rx_timeout_counter >= 19)
+	  {
+		  flag = SET;
+	  	  HAL_TIM_Base_Stop_IT(&htim7);
+	  }
+	  else{}
+	  break;
+  case 38400:
+	  //911us timeout
+	  if(uart_rx_timeout_counter >= 10)
 		  flag = SET;
 	  else{}
 	  break;
@@ -605,12 +615,14 @@ void TIM7_IRQHandler(void)
 	   */
 	  flag = RESET;
 	  /*1. Check for the slave ID*/
-	  if(MOD2_Rxbuff[SLAVE_ID] == 2)
+	  //if(MOD2_Rxbuff[SLAVE_ID] == 2)
+      if(Rxbuff[SLAVE_ID] == 1)
 	  {
 		  /*2. If slave ID is correct, set the flag for processing the query, this flag will be served in the super / while loop.*/
 		  //uart_rx_process_query = SET;
 		  MOD2_RxFlag = SET;
-
+		  //Copy the no of bytes received to a global variable for its use is MODBUS file.
+		  rx_byte_count = uart_rx_bytes;
 		  //Reset the UART 6 timeout counter.
 		  uart_rx_timeout_counter = 0;
 		  /*3. Stop the timer*/
@@ -625,6 +637,7 @@ void TIM7_IRQHandler(void)
 		  //HAL_TIM_Base_Stop_IT(&htim7);
 		  /*3. if the Slave ID is not correct the flush the RX buffer*/
 		  memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+		  memset(Rxbuff,'\0',sizeof(Rxbuff));
 		  //Reset the rx byte counter
 		  uart_rx_bytes = 0;
 		  //Reset the query processing flag.
@@ -674,6 +687,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 		//Fill the RX array buffer
 		MOD2_Rxbuff[uart_rx_bytes] = uart_rx_buffer;
+		Rxbuff[uart_rx_bytes] = uart_rx_buffer;
 
 		//increment the counter
 		uart_rx_bytes += 1;
@@ -691,7 +705,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		}
 
 		/**TEST***/
-		if(uart_rx_bytes >= 8)
+		if(uart_rx_bytes == 8)
 		{
 			uart_rx_bytes = 8;
 		}

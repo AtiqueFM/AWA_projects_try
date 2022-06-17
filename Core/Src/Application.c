@@ -4568,7 +4568,9 @@ void Application_MODBUSParseQuery(void)
 
 		  MOD2_RxFlag = 0;
 		  //ProcessMOD2_ModbusQuery();
-		  ProcessMOD2_ModbusQuery_DMA();
+//		  ProcessMOD2_ModbusQuery_DMA();
+
+		  ProcessModbusQuery_ISR();
 	  }
 }
 uint32_t adjust_time_zone_to_epoch(int tz, uint32_t epoch){
