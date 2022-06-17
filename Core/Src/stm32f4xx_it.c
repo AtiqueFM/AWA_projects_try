@@ -601,7 +601,7 @@ void TIM7_IRQHandler(void)
 	  /* TODO:	if the timer expires; the frame has been received from the master,
 	   * 		now process the query received.
 	   */
-
+	  flag = RESET;
 	  /*1. Check for the slave ID*/
 	  if(MOD2_Rxbuff[SLAVE_ID] == 2)
 	  {
@@ -614,6 +614,10 @@ void TIM7_IRQHandler(void)
 	  }
 	  else
 	  {
+		  //Abort the UART Rx interupt
+		  HAL_UART_AbortReceive_IT(&huart6);
+		  //Reset the timer 7 timeout counter
+		  uart_rx_timeout_counter = 0;
 		  //HAL_TIM_Base_Stop_IT(&htim7);
 		  /*3. if the Slave ID is not correct the flush the RX buffer*/
 		  memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
@@ -623,7 +627,7 @@ void TIM7_IRQHandler(void)
 		  uart_rx_process_query = RESET;
 		  //re-start the uart reception interrupt
 		  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
-		  HAL_TIM_Base_Start_IT(&htim7);
+		  //HAL_TIM_Base_Start_IT(&htim7);//this of commented as after restart of rx interrupt timer will be turned on.
 
 	  }
 
@@ -659,6 +663,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
    */
 	//Read the received data from UART from Data Register.
 //	HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+	//Reset the timer 7 UART 6 timeout counter.
 	uart_rx_timeout_counter = 0;
 
 	//Fill the RX array buffer
@@ -684,12 +689,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	{
 		uart_rx_bytes = 8;
 	}
+	if(uart_rx_bytes == 6)
+	{
+		uart_rx_bytes = 6;
+	}
 	/*****/
 
+	//Start the reception of the next byte.
 	HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
 
 	/*2. else reset the timer counter*/
-	//htim7.Instance->CNT = 0x00;
+	htim7.Instance->CNT = 0x00;
 }
 /*
  * DMA 2 Stream 2 IRQ Handler
