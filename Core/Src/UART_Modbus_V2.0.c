@@ -39,6 +39,7 @@ uint16_t uart6_tx_length = 0;
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart6;
+extern TIM_HandleTypeDef htim7;
 uint16_t crc_calc(char* input_str, int len);
 void ProcessModbusQuery(void);
 void ProcessMOD2_ModbusQuery_DMA(void);
@@ -1310,14 +1311,14 @@ void ProcessMOD2_ModbusQuery_DMA(void)
 		else
 		{
 #if MODBUS_MULTI_DROP
-			/*3. if the Slave ID is not correct the flush the RX buffer*/
-			memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
-			//Reset the rx byte counter
-			uart_rx_bytes = 0;
-			//Reset the query processing flag.
-			uart_rx_process_query = RESET;
-			//re-start the uart reception interrupt
-			HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+//			/*3. if the Slave ID is not correct the flush the RX buffer*/
+//			memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+//			//Reset the rx byte counter
+//			uart_rx_bytes = 0;
+//			//Reset the query processing flag.
+//			uart_rx_process_query = RESET;
+//			//re-start the uart reception interrupt
+//			HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
 #else
 			//Configure DMA for UART 6 RX
 			DMA_UART6_RX_Init();
@@ -1334,19 +1335,36 @@ void ProcessMOD2_ModbusQuery_DMA(void)
 			DMAPeripheralEnable(DMA2_Stream2, ENABLE);
 //			ADM_2_CLTR_LOW();
 #endif
+
+			  HAL_TIM_Base_Stop_IT(&htim7);
+			  //Abort the UART Rx interupt
+			  HAL_UART_AbortReceive_IT(&huart6);
+			  //Reset the timer 7 timeout counter
+			  uart_rx_timeout_counter = 0;
+			  //HAL_TIM_Base_Stop_IT(&htim7);
+			  /*3. if the Slave ID is not correct the flush the RX buffer*/
+			  memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+			  //Reset the rx byte counter
+			  uart_rx_bytes = 0;
+			  //Reset the query processing flag.
+			  uart_rx_process_query = RESET;
+			  //re-start the uart reception interrupt
+			  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+
+			  ADM_2_CLTR_LOW();
 		}
 	}
 	else // invalid slave ID
 	{
 #if MODBUS_MULTI_DROP
-			/*3. if the Slave ID is not correct the flush the RX buffer*/
-			memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
-			//Reset the rx byte counter
-			uart_rx_bytes = 0;
-			//Reset the query processing flag.
-			uart_rx_process_query = RESET;
-			//re-start the uart reception interrupt
-			HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+//			/*3. if the Slave ID is not correct the flush the RX buffer*/
+//			memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+//			//Reset the rx byte counter
+//			uart_rx_bytes = 0;
+//			//Reset the query processing flag.
+//			uart_rx_process_query = RESET;
+//			//re-start the uart reception interrupt
+//			HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
 #else
 		//Configure DMA for UART 6 RX
 		DMA_UART6_RX_Init();
@@ -1371,5 +1389,22 @@ void ProcessMOD2_ModbusQuery_DMA(void)
 //		//TODO: Increment the MODBUS_DMA_querry_count to 1.
 //		DMAPeripheralEnable(DMA2_Stream5,ENABLE);
 #endif
+
+		  HAL_TIM_Base_Stop_IT(&htim7);
+		  //Abort the UART Rx interupt
+		  HAL_UART_AbortReceive_IT(&huart6);
+		  //Reset the timer 7 timeout counter
+		  uart_rx_timeout_counter = 0;
+		  //HAL_TIM_Base_Stop_IT(&htim7);
+		  /*3. if the Slave ID is not correct the flush the RX buffer*/
+		  memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+		  //Reset the rx byte counter
+		  uart_rx_bytes = 0;
+		  //Reset the query processing flag.
+		  uart_rx_process_query = RESET;
+		  //re-start the uart reception interrupt
+		  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+
+		  ADM_2_CLTR_LOW();
 	}
 }

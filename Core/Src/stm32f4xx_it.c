@@ -608,7 +608,7 @@ void TIM7_IRQHandler(void)
 	  if(MOD2_Rxbuff[SLAVE_ID] == 2)
 	  {
 		  /*2. If slave ID is correct, set the flag for processing the query, this flag will be served in the super / while loop.*/
-		  uart_rx_process_query = SET;
+		  //uart_rx_process_query = SET;
 		  MOD2_RxFlag = SET;
 
 		  //Reset the UART 6 timeout counter.
@@ -665,45 +665,48 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
   /* NOTE: This function should not be modified, when the callback is needed,
            the HAL_UART_RxCpltCallback could be implemented in the user file
    */
-	//Read the received data from UART from Data Register.
-//	HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
-	//Reset the timer 7 UART 6 timeout counter.
-	uart_rx_timeout_counter = 0;
-
-	//Fill the RX array buffer
-	MOD2_Rxbuff[uart_rx_bytes] = uart_rx_buffer;
-
-	//increment the counter
-	uart_rx_bytes += 1;
-
-	/*1. if the first byte is received i.e; uart_rx_bytes == 1, then load the timer counter / start the timer counter.
-	* also set the flag rcv_flag for the processing of the query in the timer ISR, when timeout occurs.*/
-	if(uart_rx_bytes == 1)
+	if(huart == &huart6)
 	{
-		//Set a flag to process the modbus query.
-		uart_rcv_bytes = SET;
-		//MOD2_RxFlag = uart_rcv_bytes;
-		HAL_TIM_Base_Start_IT(&htim7);
+		//Read the received data from UART from Data Register.
+	//	HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+		//Reset the timer 7 UART 6 timeout counter.
+		uart_rx_timeout_counter = 0;
 
-		/*Depending on the baud rate selected load the timer with that counter (ALREADY DONE IN THE TIMER ISR)*/
+		//Fill the RX array buffer
+		MOD2_Rxbuff[uart_rx_bytes] = uart_rx_buffer;
+
+		//increment the counter
+		uart_rx_bytes += 1;
+
+		/*1. if the first byte is received i.e; uart_rx_bytes == 1, then load the timer counter / start the timer counter.
+		* also set the flag rcv_flag for the processing of the query in the timer ISR, when timeout occurs.*/
+		if(uart_rx_bytes == 1)
+		{
+			//Set a flag to process the modbus query.
+			uart_rcv_bytes = SET;
+			//MOD2_RxFlag = uart_rcv_bytes;
+			HAL_TIM_Base_Start_IT(&htim7);
+
+			/*Depending on the baud rate selected load the timer with that counter (ALREADY DONE IN THE TIMER ISR)*/
+		}
+
+		/**TEST***/
+		if(uart_rx_bytes >= 8)
+		{
+			uart_rx_bytes = 8;
+		}
+		if(uart_rx_bytes == 6)
+		{
+			uart_rx_bytes = 6;
+		}
+		/*****/
+
+		//Start the reception of the next byte.
+		HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+
+		/*2. else reset the timer counter*/
+		htim7.Instance->CNT = 0x00;
 	}
-
-	/**TEST***/
-	if(uart_rx_bytes >= 8)
-	{
-		uart_rx_bytes = 8;
-	}
-	if(uart_rx_bytes == 6)
-	{
-		uart_rx_bytes = 6;
-	}
-	/*****/
-
-	//Start the reception of the next byte.
-	HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
-
-	/*2. else reset the timer counter*/
-	htim7.Instance->CNT = 0x00;
 }
 
 /**
@@ -718,14 +721,16 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
   /* NOTE: This function should not be modified, when the callback is needed,
            the HAL_UART_TxCpltCallback could be implemented in the user file
    */
+	if(huart == &huart6)
+	{
+		//increment the counter on byte transmitted
+		DMA_TX_FLAG = 1;
 
-	//increment the counter on byte transmitted
-	DMA_TX_FLAG = 1;
-
-//	if(tx_byte_count >= uart6_tx_length)
-//	{
-//		tx_byte_count = 0;
-//	}
+	//	if(tx_byte_count >= uart6_tx_length)
+	//	{
+	//		tx_byte_count = 0;
+	//	}
+	}
 
 }
 /*
