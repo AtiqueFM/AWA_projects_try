@@ -659,6 +659,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
    */
 	//Read the received data from UART from Data Register.
 //	HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+	uart_rx_timeout_counter = 0;
 
 	//Fill the RX array buffer
 	MOD2_Rxbuff[uart_rx_bytes] = uart_rx_buffer;
@@ -688,7 +689,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
 
 	/*2. else reset the timer counter*/
-	htim7.Instance->CNT = 0x00;
+	//htim7.Instance->CNT = 0x00;
 }
 /*
  * DMA 2 Stream 2 IRQ Handler

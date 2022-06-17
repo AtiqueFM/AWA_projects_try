@@ -172,7 +172,7 @@ int main(void)
   /* USER CODE BEGIN SysInit */
   ITM_Port32(31) = 1;
 #if MODBUS_MULTI_DROP
-  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+  //HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
 #else
   //Configure DMA for UART 6 RX
   DMA_UART6_RX_Init();
@@ -205,7 +205,7 @@ int main(void)
   ITM_Port32(31) = 2;
 
   //Enable the DMA 2 Stream for UART 6 RX
-  DMAPeripheralEnable(DMA2_Stream2, ENABLE);
+  //DMAPeripheralEnable(DMA2_Stream2, ENABLE);
 
   //Start the reception in UART6 using interrupt
   HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
@@ -758,7 +758,7 @@ static void MX_TIM7_Init(void)
   /* USER CODE BEGIN TIM7_Init 2 */
 
   /*Start the timer in interrupt mode*/
-//  HAL_TIM_Base_Start_IT(&htim7);
+  //HAL_TIM_Base_Start_IT(&htim7);
   /* USER CODE END TIM7_Init 2 */
 
 }
