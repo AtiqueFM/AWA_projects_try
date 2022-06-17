@@ -34,6 +34,7 @@ volatile uint8_t MOD2_Txbuff[310];
 volatile uint16_t MOD2_Rxptr = 0, MOD2_Txptr = 0, MOD2_RxBytes = 0, MOD2_TxBytes = 0;
 volatile uint16_t DMA_Transaction_no_Tx_uart6 = 0;//RTU
 volatile uint16_t DMA_Transaction_no_Tx_uart1 = 0;//HMI
+uint16_t uart6_tx_length = 0;
 
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart1;
@@ -1282,25 +1283,26 @@ void ProcessMOD2_ModbusQuery_DMA(void)
 			for(Temp1 = 0; Temp1 < 310; Temp1++)
 				MOD2_Rxbuff[Temp1] = 0;
 			MOD2_Txptr = 0;
-			//huart6.Instance->CR1 |= UART_MODE_TX;// Tx mode enable
-			//huart6.Instance->CR1 |= UART_IT_TXE; // tx empty interrupt enable
-#if MODBUS_MULTI_DROP
-			//Enable UART 6 DMAT
-			huart6.Instance->CR3 |= USART_CR3_DMAT;
-#else
-			//Enable UART 6 DMAT
-			huart6.Instance->CR3 &= !USART_CR3_DMAR;
-			huart6.Instance->CR3 |= USART_CR3_DMAT;
-#endif
-			//Disable the interrupt for UART RX
-			//DMA_IRQITConfig(IRQ_NO_DMA2_Stream2,DISABLE);
-
-			/*Configure the DMA 2 Stream 6 and enable the IRQ*/
-			DMA_UART6_TX_Init();
-
-			/*Enable the DMA2 Stream 6*/
-			DMAPeripheralEnable(DMA2_Stream6, ENABLE);
-
+//			//huart6.Instance->CR1 |= UART_MODE_TX;// Tx mode enable
+//			//huart6.Instance->CR1 |= UART_IT_TXE; // tx empty interrupt enable
+//#if MODBUS_MULTI_DROP
+//			//Enable UART 6 DMAT
+//			huart6.Instance->CR3 |= USART_CR3_DMAT;
+//#else
+//			//Enable UART 6 DMAT
+//			huart6.Instance->CR3 &= !USART_CR3_DMAR;
+//			huart6.Instance->CR3 |= USART_CR3_DMAT;
+//#endif
+//			//Disable the interrupt for UART RX
+//			//DMA_IRQITConfig(IRQ_NO_DMA2_Stream2,DISABLE);
+//
+//			/*Configure the DMA 2 Stream 6 and enable the IRQ*/
+//			DMA_UART6_TX_Init();
+//
+//			/*Enable the DMA2 Stream 6*/
+//			DMAPeripheralEnable(DMA2_Stream6, ENABLE);
+			uart6_tx_length = DMA_Transaction_no_Tx_uart6 + 5;
+			HAL_UART_Transmit_IT(&huart6, (uint8_t*)MOD2_Txbuff,uart6_tx_length);
 			/*Direction pin to HIGH for Tx*/
 			ADM_2_CLTR_HIGH();
 

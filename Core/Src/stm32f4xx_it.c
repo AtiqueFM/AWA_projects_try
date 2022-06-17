@@ -54,12 +54,14 @@ volatile uint8_t uart_rcv_bytes;			/*< Flag will be set when the first byte will
 volatile uint16_t uart_rx_timeout_counter;
 volatile uint8_t uart_rx_process_query;		/*< This flag will be set when the slave ID is correct and the query needs to be processed.*/
 static uint32_t budrate_9600 = 9600;		/*<For testing, lateron will be replaced by the moodbus register.*/
+uint8_t tx_byte_count = 0;
 
 //For RTU MODBUS
 volatile uint8_t MOD2_RxFlag;
 extern volatile uint8_t MOD2_Rxbuff[310];
 extern volatile uint8_t MOD2_Txbuff[310];
 extern volatile uint16_t MOD2_Rxptr, MOD2_Txptr, MOD2_RxBytes, MOD2_TxBytes;
+extern uint16_t uart6_tx_length;
 
 uint8_t state = 1;
 extern uint8_t codSlotNO;
@@ -607,8 +609,10 @@ void TIM7_IRQHandler(void)
 	  {
 		  /*2. If slave ID is correct, set the flag for processing the query, this flag will be served in the super / while loop.*/
 		  uart_rx_process_query = SET;
-		  //MOD2_RxFlag = uart_rx_process_query;
+		  MOD2_RxFlag = SET;
 
+		  //Reset the UART 6 timeout counter.
+		  uart_rx_timeout_counter = 0;
 		  /*3. Stop the timer*/
 		  //HAL_TIM_Base_Stop_IT(&htim7);
 	  }
@@ -700,6 +704,29 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 	/*2. else reset the timer counter*/
 	htim7.Instance->CNT = 0x00;
+}
+
+/**
+  * @brief  Tx Transfer completed callbacks.
+  * @param  huart  Pointer to a UART_HandleTypeDef structure that contains
+  *                the configuration information for the specified UART module.
+  * @retval None
+  */
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+
+  /* NOTE: This function should not be modified, when the callback is needed,
+           the HAL_UART_TxCpltCallback could be implemented in the user file
+   */
+
+	//increment the counter on byte transmitted
+	DMA_TX_FLAG = 1;
+
+//	if(tx_byte_count >= uart6_tx_length)
+//	{
+//		tx_byte_count = 0;
+//	}
+
 }
 /*
  * DMA 2 Stream 2 IRQ Handler
