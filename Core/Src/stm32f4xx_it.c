@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "stm32f4xx_dma.h"
 #include "Initialization.h"
+#include <string.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -597,7 +598,10 @@ void TIM7_IRQHandler(void)
   case 38400:
 	  //911us timeout
 	  if(uart_rx_timeout_counter >= 10)
+	  {
 		  flag = SET;
+		  HAL_TIM_Base_Stop_IT(&htim7);
+	  }
 	  else{}
 	  break;
   case 115200:
@@ -636,7 +640,7 @@ void TIM7_IRQHandler(void)
 		  uart_rx_timeout_counter = 0;
 		  //HAL_TIM_Base_Stop_IT(&htim7);
 		  /*3. if the Slave ID is not correct the flush the RX buffer*/
-		  memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+		  //memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
 		  memset(Rxbuff,'\0',sizeof(Rxbuff));
 		  //Reset the rx byte counter
 		  uart_rx_bytes = 0;
@@ -686,7 +690,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		uart_rx_timeout_counter = 0;
 
 		//Fill the RX array buffer
-		MOD2_Rxbuff[uart_rx_bytes] = uart_rx_buffer;
+		//MOD2_Rxbuff[uart_rx_bytes] = uart_rx_buffer;
 		Rxbuff[uart_rx_bytes] = uart_rx_buffer;
 
 		//increment the counter
@@ -705,14 +709,14 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		}
 
 		/**TEST***/
-		if(uart_rx_bytes == 8)
-		{
-			uart_rx_bytes = 8;
-		}
-		if(uart_rx_bytes == 6)
-		{
-			uart_rx_bytes = 6;
-		}
+//		if(uart_rx_bytes == 8)
+//		{
+//			uart_rx_bytes = 8;
+//		}
+//		if(uart_rx_bytes == 6)
+//		{
+//			uart_rx_bytes = 6;
+//		}
 		/*****/
 
 		//Start the reception of the next byte.
@@ -738,7 +742,23 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 	if(huart == &huart6)
 	{
 		//increment the counter on byte transmitted
-		DMA_TX_FLAG = 1;
+		//DMA_TX_FLAG = 1;//Caused delay in transmission
+
+#if 1
+		HAL_TIM_Base_Stop_IT(&htim7);
+		/*3. if the Slave ID is not correct the flush the RX buffer*/
+		//memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+		memset((uint16_t*)Rxbuff,'\0',sizeof(Rxbuff));
+		//Reset the rx byte counter
+		uart_rx_bytes = 0;
+		//Reset the query processing flag.
+		uart_rx_process_query = RESET;
+		//re-start the uart reception interrupt
+
+		ADM_2_CLTR_LOW();
+		HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+		HAL_TIM_Base_Start_IT(&htim7);
+#endif
 
 	//	if(tx_byte_count >= uart6_tx_length)
 	//	{

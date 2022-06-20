@@ -4467,21 +4467,25 @@ void Application_MODBUSRXprocess(void)
 	}
 	/*******/
 	  //RTU
+	/***************DEPRICATED************************/
 	  if(DMA_TX_FLAG == 1)
 	  {
 #if MODBUS_MULTI_DROP
 		HAL_TIM_Base_Stop_IT(&htim7);
 		/*3. if the Slave ID is not correct the flush the RX buffer*/
-		memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+		//memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+		memset((uint16_t*)Rxbuff,'\0',sizeof(Rxbuff));
 		//Reset the rx byte counter
 		uart_rx_bytes = 0;
 		//Reset the query processing flag.
 		uart_rx_process_query = RESET;
 		//re-start the uart reception interrupt
+
+		ADM_2_CLTR_LOW();
 		HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
 		HAL_TIM_Base_Start_IT(&htim7);
 
-		ADM_2_CLTR_LOW();
+		//ADM_2_CLTR_LOW();
 		DMA_TX_FLAG = 0;
 #else
 		/*Clear the UART6 Transfer complete flag*/
@@ -4503,6 +4507,7 @@ void Application_MODBUSRXprocess(void)
 		DMA_TX_FLAG = 0;
 #endif
 	  }
+	  /**************************************************************************/
 	  //HMI
 	  if(DMA_TX_FLAG_HMI == 1)
 	  {
@@ -4564,7 +4569,7 @@ void Application_MODBUSParseQuery(void)
 	  if(MOD2_RxFlag == 0x01)
 	  {
 		  //Copy the data from Analyzer to RTU buffer
-		  setRTUData();
+		  //setRTUData();
 
 		  MOD2_RxFlag = 0;
 		  //ProcessMOD2_ModbusQuery();

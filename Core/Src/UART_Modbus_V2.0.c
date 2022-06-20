@@ -8,6 +8,7 @@
 #include "main.h"
 #include "stm32f4xx_dma.h"
 #include "Initialization.h"
+#include <string.h>
 
 
 #define CRC_POLY_16         0xA001
@@ -1414,6 +1415,7 @@ void ProcessModbusQuery_ISR(void)
 	uint16_t Temp1 = 0, Temp2 = 0, startadd = 0, length = 0, Temp = 0;
 	uint16_t u16RxCRCDataPacketLength = 0;
 
+	memset((uint16_t*)Txbuff,'\0',620);
 
 	//huart3.Instance->CR1 |= UART_IT_TXE;
 	if(Rxbuff[0] == 1)//SlaveID) // check slave ID
@@ -2122,12 +2124,13 @@ void ProcessModbusQuery_ISR(void)
 //
 //			/*Enable the DMA2 Stream 7*/
 //			DMAPeripheralEnable(DMA2_Stream7, ENABLE);
-
+			/*Direction pin to HIGH for Tx*/
+			ADM_2_CLTR_HIGH();
 			uart6_tx_length = DMA_Transaction_no_Tx_uart1;// + 5;
 			HAL_UART_Transmit_IT(&huart6, (uint8_t*)Txbuff,uart6_tx_length);
 
 			/*Direction pin to HIGH for Tx*/
-			ADM_2_CLTR_HIGH();
+			//ADM_2_CLTR_HIGH();
 
 		}
 		else
@@ -2150,15 +2153,17 @@ void ProcessModbusQuery_ISR(void)
 			  uart_rx_timeout_counter = 0;
 			  //HAL_TIM_Base_Stop_IT(&htim7);
 			  /*3. if the Slave ID is not correct the flush the RX buffer*/
-			  memset(Rxbuff,'\0',sizeof(Rxbuff));
+			  memset((uint16_t*)Rxbuff,'\0',sizeof(Rxbuff));
 			  //Reset the rx byte counter
 			  uart_rx_bytes = 0;
 			  //Reset the query processing flag.
 			  uart_rx_process_query = RESET;
+
+			  ADM_2_CLTR_LOW();
 			  //re-start the uart reception interrupt
 			  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
 
-			  ADM_2_CLTR_LOW();
+			  //ADM_2_CLTR_LOW();
 
 		}
 	}
@@ -2181,15 +2186,17 @@ void ProcessModbusQuery_ISR(void)
 		  uart_rx_timeout_counter = 0;
 		  //HAL_TIM_Base_Stop_IT(&htim7);
 		  /*3. if the Slave ID is not correct the flush the RX buffer*/
-		  memset(Rxbuff,'\0',sizeof(Rxbuff));
+		  memset((uint16_t*)Rxbuff,'\0',sizeof(Rxbuff));
 		  //Reset the rx byte counter
 		  uart_rx_bytes = 0;
 		  //Reset the query processing flag.
 		  uart_rx_process_query = RESET;
+
+		  ADM_2_CLTR_LOW();
 		  //re-start the uart reception interrupt
 		  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
 
-		  ADM_2_CLTR_LOW();
+		  //ADM_2_CLTR_LOW();
 	}
 
 
