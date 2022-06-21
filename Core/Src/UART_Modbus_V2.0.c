@@ -2129,6 +2129,9 @@ void ProcessModbusQuery_ISR(void)
 			uart6_tx_length = DMA_Transaction_no_Tx_uart1;// + 5;
 			HAL_UART_Transmit_IT(&huart6, (uint8_t*)Txbuff,uart6_tx_length);
 
+			/*Send the response using DMA*/
+			//HAL_UART_Transmit_DMA(&huart6, (uint8_t*)Txbuff, uart6_tx_length);
+
 			/*Direction pin to HIGH for Tx*/
 			//ADM_2_CLTR_HIGH();
 

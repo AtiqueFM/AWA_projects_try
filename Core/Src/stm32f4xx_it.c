@@ -93,6 +93,7 @@ extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
 extern TIM_HandleTypeDef htim6;
 extern TIM_HandleTypeDef htim7;
+extern DMA_HandleTypeDef hdma_usart6_tx;
 extern UART_HandleTypeDef huart3;
 extern UART_HandleTypeDef huart6;
 /* USER CODE BEGIN EV */
@@ -634,6 +635,7 @@ void TIM7_IRQHandler(void)
 	  }
 	  else
 	  {
+		  //HAL_UART_DMAStop(&huart6);
 		  //Abort the UART Rx interupt
 		  HAL_UART_AbortReceive_IT(&huart6);
 		  //Reset the timer 7 timeout counter
@@ -654,6 +656,32 @@ void TIM7_IRQHandler(void)
 
   }
   /* USER CODE END TIM7_IRQn 1 */
+}
+
+/**
+  * @brief This function handles DMA2 stream7 global interrupt.
+  */
+void DMA2_Stream7_IRQHandler(void)
+{
+  /* USER CODE BEGIN DMA2_Stream7_IRQn 0 */
+
+  /* USER CODE END DMA2_Stream7_IRQn 0 */
+  HAL_DMA_IRQHandler(&hdma_usart6_tx);
+  /* USER CODE BEGIN DMA2_Stream7_IRQn 1 */
+	HAL_TIM_Base_Stop_IT(&htim7);
+	/*3. if the Slave ID is not correct the flush the RX buffer*/
+	//memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+	memset((uint16_t*)Rxbuff,'\0',sizeof(Rxbuff));
+	//Reset the rx byte counter
+	uart_rx_bytes = 0;
+	//Reset the query processing flag.
+	uart_rx_process_query = RESET;
+	//re-start the uart reception interrupt
+
+	ADM_2_CLTR_LOW();
+	HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+	//HAL_TIM_Base_Start_IT(&htim7);
+  /* USER CODE END DMA2_Stream7_IRQn 1 */
 }
 
 /**
@@ -727,6 +755,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	}
 }
 
+/*********************DEPRICATED CODE******************************/
+#if 1
 /**
   * @brief  Tx Transfer completed callbacks.
   * @param  huart  Pointer to a UART_HandleTypeDef structure that contains
@@ -767,6 +797,8 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 	}
 
 }
+#endif
+#if 0
 /*
  * DMA 2 Stream 2 IRQ Handler
  * 1. Resets the interrupt flag.
@@ -1040,5 +1072,6 @@ void DMA2_Stream7_IRQHandler(void)
 	/*Make the Direction GPIO pin LOW*/
 	DMA_TX_FLAG_HMI = 1;
 }
+#endif
 /* USER CODE END 1 */
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
