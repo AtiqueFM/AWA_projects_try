@@ -4560,7 +4560,8 @@ void Application_MODBUSParseQuery(void)
 	  if(RxFlag == 0x01)
 	  {
 		  RxFlag = 0;
-		  ProcessModbusQuery();
+//		  ProcessModbusQuery();
+		  ProcessMOD2_ModbusQuery_DMA();
 	  }
 
 	  //Comparing current command and new command

@@ -36,6 +36,7 @@ volatile uint16_t MOD2_Rxptr = 0, MOD2_Txptr = 0, MOD2_RxBytes = 0, MOD2_TxBytes
 volatile uint16_t DMA_Transaction_no_Tx_uart6 = 0;//RTU
 volatile uint16_t DMA_Transaction_no_Tx_uart1 = 0;//HMI
 uint16_t uart6_tx_length = 0;
+uint16_t uart1_tx_length = 0;
 
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart1;
@@ -57,6 +58,9 @@ extern volatile uint8_t uart_rcv_bytes;			/*< Flag will be set when the first by
 extern volatile uint16_t uart_rx_timeout_counter;
 extern volatile uint8_t uart_rx_process_query;		/*< This flag will be set when the slave ID is correct and the query needs to be processed.*/
 extern uint8_t rx_byte_count;						/*<Count of bytes received from UART 6*/
+extern uint8_t tx_byte_count_uart1;
+extern uint8_t rx_byte_count_uart1;
+
 //void MX_USART3_UART_Init(void);
 
 /**
@@ -860,19 +864,21 @@ void ProcessModbusQuery(void)
 
 
 }
-
+//UART 1
 void ProcessMOD2_ModbusQuery_DMA(void)
 {
 	uint16_t Temp1 = 0, Temp2 = 0, startadd = 0, length = 0, Temp = 0;
 
+	memset(Txbuff,'\0',sizeof(Txbuff));
 
 	//huart3.Instance->CR1 |= UART_IT_TXE;
 	if(MOD2_Rxbuff[0] == MOD2_SlaveID) // check slave ID
 	{
-		Temp1 = MOD2_Rxbuff[7] << 8;
-		Temp1 |= MOD2_Rxbuff[6];
+		rx_byte_count_uart1 -= 1;
+		Temp1 = MOD2_Rxbuff[rx_byte_count_uart1] << 8;
+		Temp1 |= MOD2_Rxbuff[--rx_byte_count_uart1];
 		// calculate CRC of received packet
-		Temp2 = crc_calc((char*)MOD2_Rxbuff, 6);
+		Temp2 = crc_calc((char*)MOD2_Rxbuff, rx_byte_count_uart1);
 		if(Temp2 == Temp1) // verify CRC
 		{
 			MOD2_TxBytes = 0;
@@ -1000,7 +1006,7 @@ void ProcessMOD2_ModbusQuery_DMA(void)
 						}
 							startadd = startadd * 2;
 							Temp1 = length * 2;//Set this as global variable
-							DMA_Transaction_no_Tx_uart6 = Temp1;
+							DMA_Transaction_no_Tx_uart1 = Temp1 + 5;
 							MOD2_Txbuff[MOD2_TxBytes++] = Temp1; // byte count
 
 							for(Temp2 = 0; Temp2 < length; Temp2++)
@@ -1303,10 +1309,14 @@ void ProcessMOD2_ModbusQuery_DMA(void)
 //
 //			/*Enable the DMA2 Stream 6*/
 //			DMAPeripheralEnable(DMA2_Stream6, ENABLE);
-			uart6_tx_length = DMA_Transaction_no_Tx_uart6 + 5;
-			HAL_UART_Transmit_IT(&huart6, (uint8_t*)MOD2_Txbuff,uart6_tx_length);
+			//uart6_tx_length = DMA_Transaction_no_Tx_uart6 + 5;
+			//HAL_UART_Transmit_IT(&huart6, (uint8_t*)MOD2_Txbuff,uart6_tx_length);
 			/*Direction pin to HIGH for Tx*/
-			ADM_2_CLTR_HIGH();
+			//ADM_2_CLTR_HIGH();
+
+			ADM_CLTR_HIGH();
+			uart1_tx_length = DMA_Transaction_no_Tx_uart1;// + 5;
+			HAL_UART_Transmit_IT(&huart1, (uint8_t*)MOD2_Txbuff,uart1_tx_length);
 
 		}
 		else
@@ -1337,22 +1347,22 @@ void ProcessMOD2_ModbusQuery_DMA(void)
 //			ADM_2_CLTR_LOW();
 #endif
 
-			  HAL_TIM_Base_Stop_IT(&htim7);
-			  //Abort the UART Rx interupt
-			  HAL_UART_AbortReceive_IT(&huart6);
-			  //Reset the timer 7 timeout counter
-			  uart_rx_timeout_counter = 0;
-			  //HAL_TIM_Base_Stop_IT(&htim7);
-			  /*3. if the Slave ID is not correct the flush the RX buffer*/
-			  memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
-			  //Reset the rx byte counter
-			  uart_rx_bytes = 0;
-			  //Reset the query processing flag.
-			  uart_rx_process_query = RESET;
-			  //re-start the uart reception interrupt
-			  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
-
-			  ADM_2_CLTR_LOW();
+//			  HAL_TIM_Base_Stop_IT(&htim7);
+//			  //Abort the UART Rx interupt
+//			  HAL_UART_AbortReceive_IT(&huart6);
+//			  //Reset the timer 7 timeout counter
+//			  uart_rx_timeout_counter = 0;
+//			  //HAL_TIM_Base_Stop_IT(&htim7);
+//			  /*3. if the Slave ID is not correct the flush the RX buffer*/
+//			  memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+//			  //Reset the rx byte counter
+//			  uart_rx_bytes = 0;
+//			  //Reset the query processing flag.
+//			  uart_rx_process_query = RESET;
+//			  //re-start the uart reception interrupt
+//			  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+//
+//			  ADM_2_CLTR_LOW();
 		}
 	}
 	else // invalid slave ID
@@ -1391,22 +1401,22 @@ void ProcessMOD2_ModbusQuery_DMA(void)
 //		DMAPeripheralEnable(DMA2_Stream5,ENABLE);
 #endif
 
-		  HAL_TIM_Base_Stop_IT(&htim7);
-		  //Abort the UART Rx interupt
-		  HAL_UART_AbortReceive_IT(&huart6);
-		  //Reset the timer 7 timeout counter
-		  uart_rx_timeout_counter = 0;
-		  //HAL_TIM_Base_Stop_IT(&htim7);
-		  /*3. if the Slave ID is not correct the flush the RX buffer*/
-		  memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
-		  //Reset the rx byte counter
-		  uart_rx_bytes = 0;
-		  //Reset the query processing flag.
-		  uart_rx_process_query = RESET;
-		  //re-start the uart reception interrupt
-		  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
-
-		  ADM_2_CLTR_LOW();
+//		  HAL_TIM_Base_Stop_IT(&htim7);
+//		  //Abort the UART Rx interupt
+//		  HAL_UART_AbortReceive_IT(&huart6);
+//		  //Reset the timer 7 timeout counter
+//		  uart_rx_timeout_counter = 0;
+//		  //HAL_TIM_Base_Stop_IT(&htim7);
+//		  /*3. if the Slave ID is not correct the flush the RX buffer*/
+//		  memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+//		  //Reset the rx byte counter
+//		  uart_rx_bytes = 0;
+//		  //Reset the query processing flag.
+//		  uart_rx_process_query = RESET;
+//		  //re-start the uart reception interrupt
+//		  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+//
+//		  ADM_2_CLTR_LOW();
 	}
 }
 

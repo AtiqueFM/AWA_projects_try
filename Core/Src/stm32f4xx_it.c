@@ -50,13 +50,19 @@ volatile uint32_t tst = 0, tst1 = 0;
 volatile uint8_t RxFlag = 0, ReadADCFlag = 0;
 
 uint8_t uart_rx_buffer;						/*< Will receive single byte from UART and will transfer it to the RX buffer array.*/
+uint8_t uart_rx_buffer_uart1;				/*< Will receive single byte from UART and will transfer it to the RX buffer array.*/
 volatile uint8_t uart_rx_bytes; 			/*< Will contain the received byte count.*/
+volatile uint8_t uart_rx_bytes_uart1; 		/*< Will contain the received byte count.*/
 volatile uint8_t uart_rcv_bytes;			/*< Flag will be set when the first byte will be received, will be served in the timer ISR*/
 volatile uint16_t uart_rx_timeout_counter;
+volatile uint16_t uart_rx_timeout_counter_uart1;
 volatile uint8_t uart_rx_process_query;		/*< This flag will be set when the slave ID is correct and the query needs to be processed.*/
 static uint32_t budrate_9600 = 38400;//19200;//9600;		/*<For testing, lateron will be replaced by the moodbus register.*/
+static uint32_t baudrate_uart1 = 9600;		/*<For testing, lateron will be replaced by the moodbus register.*/
 uint8_t tx_byte_count = 0;
 uint8_t rx_byte_count = 0;
+uint8_t tx_byte_count_uart1 = 0;
+uint8_t rx_byte_count_uart1 = 0;
 
 //For RTU MODBUS
 volatile uint8_t MOD2_RxFlag;
@@ -91,9 +97,11 @@ extern volatile uint8_t RxCRCDataPacketLength;/*<For extracting the data from Rx
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim4;
+extern TIM_HandleTypeDef htim5;
 extern TIM_HandleTypeDef htim6;
 extern TIM_HandleTypeDef htim7;
 extern DMA_HandleTypeDef hdma_usart6_tx;
+extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart3;
 extern UART_HandleTypeDef huart6;
 /* USER CODE BEGIN EV */
@@ -462,6 +470,20 @@ void TIM4_IRQHandler(void)
 }
 
 /**
+  * @brief This function handles USART1 global interrupt.
+  */
+void USART1_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART1_IRQn 0 */
+
+  /* USER CODE END USART1_IRQn 0 */
+  HAL_UART_IRQHandler(&huart1);
+  /* USER CODE BEGIN USART1_IRQn 1 */
+
+  /* USER CODE END USART1_IRQn 1 */
+}
+
+/**
   * @brief This function handles USART3 global interrupt.
   */
 void USART3_IRQHandler(void)
@@ -515,6 +537,99 @@ void USART3_IRQHandler(void)
 
 
   /* USER CODE END USART3_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM5 global interrupt.
+  */
+void TIM5_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM5_IRQn 0 */
+  int flag = 0;
+  /* USER CODE END TIM5_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim5);
+  /* USER CODE BEGIN TIM5_IRQn 1 */
+  uart_rx_timeout_counter_uart1 += 1;
+
+  switch(baudrate_uart1)/*TODO: this variable will be changed to a modbus register (USER SELECTABLE)*/
+  {
+  case 9600:
+	  //3.7ms timeout
+	  if(uart_rx_timeout_counter_uart1 >= 37)
+	  {
+		  flag = SET;
+	  	  HAL_TIM_Base_Stop_IT(&htim5);
+	  }
+	  else{}
+	  break;
+  case 19200:
+	  //1.9ms timeout
+	  if(uart_rx_timeout_counter_uart1 >= 19)
+	  {
+		  flag = SET;
+	  	  HAL_TIM_Base_Stop_IT(&htim5);
+	  }
+	  else{}
+	  break;
+  case 38400:
+	  //911us timeout
+	  if(uart_rx_timeout_counter_uart1 >= 10)
+	  {
+		  flag = SET;
+		  HAL_TIM_Base_Stop_IT(&htim5);
+	  }
+	  else{}
+	  break;
+  case 115200:
+	  //300us timeout
+	  if(uart_rx_timeout_counter_uart1 >= 3)
+		  flag = SET;
+	  else{}
+	  break;
+  }
+
+  if(flag == SET)
+  {
+	  /* TODO:	if the timer expires; the frame has been received from the master,
+	   * 		now process the query received.
+	   */
+	  flag = RESET;
+	  /*1. Check for the slave ID*/
+	  //if(MOD2_Rxbuff[SLAVE_ID] == 2)
+      if(MOD2_Rxbuff[SLAVE_ID] == 2)
+	  {
+		  /*2. If slave ID is correct, set the flag for processing the query, this flag will be served in the super / while loop.*/
+		  //uart_rx_process_query = SET;
+		  RxFlag = SET;//Query processing flag
+		  //Copy the no of bytes received to a global variable for its use is MODBUS file.
+		  rx_byte_count_uart1 = uart_rx_bytes_uart1;
+		  //Reset the UART 6 timeout counter.
+		  uart_rx_timeout_counter_uart1 = 0;
+		  /*3. Stop the timer*/
+		  //HAL_TIM_Base_Stop_IT(&htim7);
+	  }
+	  else
+	  {
+		  //HAL_UART_DMAStop(&huart6);
+		  //Abort the UART Rx interupt
+		  HAL_UART_AbortReceive_IT(&huart1);
+		  //Reset the timer 7 timeout counter
+		  uart_rx_timeout_counter_uart1 = 0;
+		  //HAL_TIM_Base_Stop_IT(&htim7);
+		  /*3. if the Slave ID is not correct the flush the RX buffer*/
+		  //memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+		  memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+		  //Reset the rx byte counter
+		  uart_rx_bytes_uart1 = 0;
+		  //Reset the query processing flag.
+		  //uart_rx_process_query = RESET;
+		  //re-start the uart reception interrupt
+		  HAL_UART_Receive_IT(&huart1, &uart_rx_buffer_uart1, 1);
+		  //HAL_TIM_Base_Start_IT(&htim7);//this of commented as after restart of rx interrupt timer will be turned on.
+
+	  }
+  }
+  /* USER CODE END TIM5_IRQn 1 */
 }
 
 /**
@@ -753,6 +868,32 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		/*2. else reset the timer counter*/
 		htim7.Instance->CNT = 0x00;
 	}
+
+	if(huart == &huart1)
+	{
+		//Reset the timer 5 UART 1 timeour counter
+		uart_rx_timeout_counter_uart1 = 0;
+
+		//Fill the RX buffer for RTU
+		MOD2_Rxbuff[uart_rx_bytes_uart1] = uart_rx_buffer_uart1;
+
+		//increment the counter
+		uart_rx_bytes_uart1 += 1;
+
+		if(uart_rx_bytes_uart1 == 1)
+		{
+			//Set a flag to process the modbus query.
+			//uart_rcv_bytes = SET;
+			//MOD2_RxFlag = uart_rcv_bytes;
+			HAL_TIM_Base_Start_IT(&htim5);
+		}
+
+		//Start the reception of the next byte.
+		HAL_UART_Receive_IT(&huart1, &uart_rx_buffer_uart1, 1);
+
+		/*2. else reset the timer counter*/
+		htim5.Instance->CNT = 0x00;
+	}
 }
 
 /*********************DEPRICATED CODE******************************/
@@ -794,6 +935,22 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 	//	{
 	//		tx_byte_count = 0;
 	//	}
+	}
+	if(huart == &huart1)
+	{
+		HAL_TIM_Base_Stop_IT(&htim5);
+		/*3. if the Slave ID is not correct the flush the RX buffer*/
+		memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+		//memset((uint16_t*)Rxbuff,'\0',sizeof(Rxbuff));
+		//Reset the rx byte counter
+		uart_rx_bytes_uart1 = 0;
+		//Reset the query processing flag.
+		//uart_rx_process_query = RESET;
+		//re-start the uart reception interrupt
+
+		ADM_CLTR_LOW();
+		HAL_UART_Receive_IT(&huart1, &uart_rx_buffer_uart1, 1);
+		HAL_TIM_Base_Start_IT(&htim5);
 	}
 
 }
