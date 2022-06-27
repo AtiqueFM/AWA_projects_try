@@ -774,29 +774,17 @@ void TIM7_IRQHandler(void)
 }
 
 /**
-  * @brief This function handles DMA2 stream7 global interrupt.
+  * @brief This function handles DMA2 stream6 global interrupt.
   */
-void DMA2_Stream7_IRQHandler(void)
+void DMA2_Stream6_IRQHandler(void)
 {
-  /* USER CODE BEGIN DMA2_Stream7_IRQn 0 */
+  /* USER CODE BEGIN DMA2_Stream6_IRQn 0 */
 
-  /* USER CODE END DMA2_Stream7_IRQn 0 */
+  /* USER CODE END DMA2_Stream6_IRQn 0 */
   HAL_DMA_IRQHandler(&hdma_usart6_tx);
-  /* USER CODE BEGIN DMA2_Stream7_IRQn 1 */
-	HAL_TIM_Base_Stop_IT(&htim7);
-	/*3. if the Slave ID is not correct the flush the RX buffer*/
-	//memset(MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
-	memset((uint16_t*)Rxbuff,'\0',sizeof(Rxbuff));
-	//Reset the rx byte counter
-	uart_rx_bytes = 0;
-	//Reset the query processing flag.
-	uart_rx_process_query = RESET;
-	//re-start the uart reception interrupt
+  /* USER CODE BEGIN DMA2_Stream6_IRQn 1 */
 
-	ADM_2_CLTR_LOW();
-	HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
-	//HAL_TIM_Base_Start_IT(&htim7);
-  /* USER CODE END DMA2_Stream7_IRQn 1 */
+  /* USER CODE END DMA2_Stream6_IRQn 1 */
 }
 
 /**

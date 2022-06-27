@@ -42,6 +42,7 @@ UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart6;
 extern TIM_HandleTypeDef htim7;
+extern TIM_HandleTypeDef htim5;
 uint16_t crc_calc(char* input_str, int len);
 void ProcessModbusQuery(void);
 void ProcessMOD2_ModbusQuery_DMA(void);
@@ -60,7 +61,9 @@ extern volatile uint8_t uart_rx_process_query;		/*< This flag will be set when t
 extern uint8_t rx_byte_count;						/*<Count of bytes received from UART 6*/
 extern uint8_t tx_byte_count_uart1;
 extern uint8_t rx_byte_count_uart1;
-
+extern volatile uint16_t uart_rx_timeout_counter_uart1;
+extern uint8_t uart_rx_buffer_uart1;
+extern volatile uint8_t uart_rx_bytes_uart1;
 //void MX_USART3_UART_Init(void);
 
 /**
@@ -1363,6 +1366,23 @@ void ProcessMOD2_ModbusQuery_DMA(void)
 //			  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
 //
 //			  ADM_2_CLTR_LOW();
+
+			  HAL_TIM_Base_Stop_IT(&htim5);
+			  //Abort the UART Rx interupt
+			  HAL_UART_AbortReceive_IT(&huart1);
+			  //Reset the timer 7 timeout counter
+			  uart_rx_timeout_counter_uart1 = 0;
+			  //HAL_TIM_Base_Stop_IT(&htim7);
+			  /*3. if the Slave ID is not correct the flush the RX buffer*/
+			  memset((uint16_t*)MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+			  //Reset the rx byte counter
+			  uart_rx_bytes_uart1 = 0;
+			  //Reset the query processing flag.
+			  //uart_rx_process_query = RESET;
+
+			  ADM_CLTR_LOW();
+			  //re-start the uart reception interrupt
+			  HAL_UART_Receive_IT(&huart1, &uart_rx_buffer_uart1, 1);
 		}
 	}
 	else // invalid slave ID
@@ -1417,6 +1437,23 @@ void ProcessMOD2_ModbusQuery_DMA(void)
 //		  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
 //
 //		  ADM_2_CLTR_LOW();
+
+		  HAL_TIM_Base_Stop_IT(&htim5);
+		  //Abort the UART Rx interupt
+		  HAL_UART_AbortReceive_IT(&huart1);
+		  //Reset the timer 7 timeout counter
+		  uart_rx_timeout_counter_uart1 = 0;
+		  //HAL_TIM_Base_Stop_IT(&htim7);
+		  /*3. if the Slave ID is not correct the flush the RX buffer*/
+		  memset((uint16_t*)MOD2_Rxbuff,'\0',sizeof(MOD2_Rxbuff));
+		  //Reset the rx byte counter
+		  uart_rx_bytes_uart1 = 0;
+		  //Reset the query processing flag.
+		  //uart_rx_process_query = RESET;
+
+		  ADM_CLTR_LOW();
+		  //re-start the uart reception interrupt
+		  HAL_UART_Receive_IT(&huart1, &uart_rx_buffer_uart1, 1);
 	}
 }
 
