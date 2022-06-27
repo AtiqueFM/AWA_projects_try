@@ -294,7 +294,7 @@ int main(void)
 	  Application_StoreData();
 
 	  //Will if data is transmitted by the slave and is ready for new query
-	  Application_MODBUSRXprocess();
+	  //Application_MODBUSRXprocess();
 
 	  /*COD process controls*/
 	  FlowSensorReadStatus();
