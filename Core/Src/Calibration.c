@@ -51,6 +51,11 @@ void pHSensorCalibrationmV(void)
 
 		pH_SensorCalibpoints_t.pH_Solpe = (y2-y1)/(x2-x1);
 		pH_SensorCalibpoints_t.pH_Intercept = y1 - pH_SensorCalibpoints_t.pH_Solpe * x1;
+		float inv = 1/pH_SensorCalibpoints_t.pH_Solpe;
+		pH_SensorCalibpoints_t.pH_Solpe = (inv/-0.05916f)*100.0f;
+		//if(pH_SensorCalibpoints_t.pH_Solpe < 0)
+			//pH_SensorCalibpoints_t.pH_Solpe *= -1;
+
 	}
 	else if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == 0x01)
 	{
@@ -73,6 +78,10 @@ void pHSensorCalibrationmV(void)
 
 		pH_SensorCalibpoints_t.pH_Solpe = (y2-y1)/(x2-x1);
 		pH_SensorCalibpoints_t.pH_Intercept = y1 - pH_SensorCalibpoints_t.pH_Solpe * x1;
+		float inv = 1/pH_SensorCalibpoints_t.pH_Solpe;
+		pH_SensorCalibpoints_t.pH_Solpe = (inv/-0.05916f)*100.0f;
+		//if(pH_SensorCalibpoints_t.pH_Solpe < 0)
+			//pH_SensorCalibpoints_t.pH_Solpe *= -1;
 	}
 
 	//Push to MODBUS
@@ -167,6 +176,14 @@ void pH_SensorCalibrationGetValues(void)
 			pH_SensorCalibpoints_t.pH_counts_1_x1 = pH_SensorCalibpoints_t.pH_ADCCounts;
 			HoldingRegister_t.SensorCalibration_t.pH_1pt_Cal_point_1_count = pH_SensorCalibpoints_t.pH_counts_1_x1;
 			pH_SensorCalibpoints_t.flag_display_count = 0x03;//no action on display value
+			HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command = 0;
+		}
+		//Reset command
+		if(HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command == 0x04)
+		{
+			pH_SensorCalibpoints_t.pH_counts_1_x1 = 0;
+			pH_SensorCalibpoints_t.pH_Solution_1_y1 = 0;
+			pH_SensorCalibpoints_t.flag_display_count = 0;
 			HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command = 0;
 		}
 		/*For HMI display*/
