@@ -162,6 +162,11 @@ void PT_ElectronicCalibration(void)
 void pH_SensorCalibrationGetValues(void)
 {
 	float milli_volt = 0.0f;
+	/*
+	 * 1 -> display y1
+	 * 2 -> display y2
+	 */
+	static uint8_t display_flag = 0;
 	//-------------------------1 point calibration--------------------------------------//
 	if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == 0x01)
 	{
@@ -173,7 +178,7 @@ void pH_SensorCalibrationGetValues(void)
 		}
 		if(HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command == 0x02)//set ADC counts
 		{
-			pH_SensorCalibpoints_t.pH_counts_1_x1 = pH_SensorCalibpoints_t.pH_ADCCounts;
+			pH_SensorCalibpoints_t.pH_counts_1_x1 = pH_SensorCalibpoints_t.pH_ADCCounts;//used in calibration
 			HoldingRegister_t.SensorCalibration_t.pH_1pt_Cal_point_1_count = pH_SensorCalibpoints_t.pH_counts_1_x1;
 			pH_SensorCalibpoints_t.flag_display_count = 0x03;//no action on display value
 			HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command = 0;
@@ -204,6 +209,101 @@ void pH_SensorCalibrationGetValues(void)
 	//------------------------ 2 point calibration--------------------------------------//
 	if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == 0x02)
 	{
+#if 1
+		//For x1 and y1
+		if(HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command == 0x01)//grab y1
+		{
+			display_flag = 1;//display x1
+			pH_SensorCalibpoints_t.pH_Solution_1_y1 = HoldingRegister_t.SensorCalibration_t.pH_PT.Y1;//used in calibration
+			HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command = 0;
+		}
+		if(HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command == 0x02)//grab y1
+		{
+			display_flag = 0;//FREEZE x1
+			pH_SensorCalibpoints_t.pH_counts_1_x1 = pH_SensorCalibpoints_t.pH_ADCCounts;//used in calibration
+			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_count = pH_SensorCalibpoints_t.pH_counts_1_x1;
+			HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command = 0;
+		}
+		if(HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command == 0x03)//grab y1
+		{
+			/*
+			 * Reset the X1 and Y1
+			 */
+
+			display_flag = 0;//FREEZE x1
+
+			pH_SensorCalibpoints_t.pH_Solution_1_y1 = 0;
+			pH_SensorCalibpoints_t.pH_counts_1_x1 = 0;
+
+			//reset the holding register
+			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_value = 0;
+			//HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = 0;
+			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_count = 0;
+			//HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count = 0;
+
+			HoldingRegister_t.SensorCalibration_t.pH_PT.Y1 = 0;
+
+
+			HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command = 0;
+		}
+		//for x2 y2
+		if(HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command == 0x04)//grab y2
+		{
+			display_flag = 2;//display x2
+			pH_SensorCalibpoints_t.pH_Solution_2_y2 = HoldingRegister_t.SensorCalibration_t.pH_PT.Y2;//used in calibration
+			HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command = 0;
+		}
+		if(HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command == 0x05)//grab y2
+		{
+			display_flag = 0;//FREEZE x2
+			pH_SensorCalibpoints_t.pH_counts_2_x2 = pH_SensorCalibpoints_t.pH_ADCCounts;
+			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count = pH_SensorCalibpoints_t.pH_counts_2_x2;
+			HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command = 0;
+		}
+		if(HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command == 0x06)//reset x2,y2
+		{
+			/*
+			 * Reset the X2 and Y2
+			 */
+			display_flag = 0;
+
+			pH_SensorCalibpoints_t.pH_Solution_2_y2 = 0;
+			pH_SensorCalibpoints_t.pH_counts_2_x2 = 0;
+
+			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = 0;
+			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count = 0;
+
+			HoldingRegister_t.SensorCalibration_t.pH_PT.Y2 = 0;
+
+			HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command = 0;
+		}
+		/*Display calculated pH*/
+		if(display_flag == 1)
+		{
+			//convert the mV to Calculated pH
+			float pH_calculated = (-16.908f * InputRegister_t.SlotParameter.pH_Live_Volatge) + 7.0f; /*<To be sent to the HMI, (414,14) and (-414,0) line equation*/
+
+
+			//Store in the live buffer
+			pH_SensorCalibpoints_t.pH_Calculated_1_x1 = pH_calculated;
+			//Read by HMI
+			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_value = pH_calculated;
+			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = 0;
+
+			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_count = pH_SensorCalibpoints_t.pH_ADCCounts;
+			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count = 0;
+		}else if(display_flag == 2)
+		{
+			//convert the mV to Calculated pH
+			float pH_calculated = (-16.908f * InputRegister_t.SlotParameter.pH_Live_Volatge) + 7.0f; /*<To be sent to the HMI, (414,14) and (-414,0) line equation*/
+
+			//Store in the live buffer
+			pH_SensorCalibpoints_t.pH_Calculated_2_x2 = pH_calculated;
+			//Read by HMI
+			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = pH_calculated;
+			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count = pH_SensorCalibpoints_t.pH_ADCCounts;
+		}
+#else
 		if(HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command == 0x01)//set sample
 		{
 			if(!pH_SensorCalibpoints_t.flag_sample_set)
@@ -262,6 +362,7 @@ void pH_SensorCalibrationGetValues(void)
 			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = pH_calculated;
 			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count = pH_SensorCalibpoints_t.pH_ADCCounts;
 		}
+#endif
 	}
 	//---------------------------- 2 point calibration end--------------------------------------------//
 }
