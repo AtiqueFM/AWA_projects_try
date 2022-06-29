@@ -28,7 +28,10 @@ void pHElectronicCalibrationmV(void)
 
 void pHSensorCalibrationmV(void)
 {
-	if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == 0x02)
+
+	uint8_t calib_error = RESET;
+
+	if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == TWO_POINT)
 	{
 		float x1_count = 0;
 		float x2_count = 0;
@@ -57,7 +60,7 @@ void pHSensorCalibrationmV(void)
 			//pH_SensorCalibpoints_t.pH_Solpe *= -1;
 
 	}
-	else if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == 0x01)
+	else if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == SINGLE_POINT)
 	{
 		float x1_count = 0;
 		float x2_count = 0;
@@ -83,7 +86,80 @@ void pHSensorCalibrationmV(void)
 		//if(pH_SensorCalibpoints_t.pH_Solpe < 0)
 			//pH_SensorCalibpoints_t.pH_Solpe *= -1;
 	}
+	else if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == THREE_POINT)
+	{
+		float x1_count = 0;
+		float x2_count = 0;
+		float x3_count = 0;
+		pH_SensorCalibpoints_t.pH_Solution_1_y1 = HoldingRegister_t.SensorCalibration_t.pH_PT.Y1;
+		pH_SensorCalibpoints_t.pH_Solution_2_y2 =  HoldingRegister_t.SensorCalibration_t.pH_PT.Y2;
+		pH_SensorCalibpoints_t.pH_Solution_3_y3 =  HoldingRegister_t.SensorCalibration_t.pH_Y3;
+		float y1 = pH_SensorCalibpoints_t.pH_Solution_1_y1;
+		float y2 = pH_SensorCalibpoints_t.pH_Solution_2_y2;
+		float y3 = pH_SensorCalibpoints_t.pH_Solution_3_y3;
 
+		if(pH_SensorCalibpoints_t.pH_counts_1_x1 > 0x7fff)
+			x1_count = (float)pH_SensorCalibpoints_t.pH_counts_1_x1 - 65535.0f;
+		else
+			x1_count = (float)pH_SensorCalibpoints_t.pH_counts_1_x1;
+		if(pH_SensorCalibpoints_t.pH_counts_2_x2 > 0x7fff)
+			x2_count = (float)pH_SensorCalibpoints_t.pH_counts_2_x2 - 65535.0f;
+		else
+			x2_count = (float)pH_SensorCalibpoints_t.pH_counts_2_x2;
+		if(pH_SensorCalibpoints_t.pH_counts_3_x3 > 0x7fff)
+			x3_count = (float)pH_SensorCalibpoints_t.pH_counts_3_x3 - 65535.0f;
+		else
+			x3_count = (float)pH_SensorCalibpoints_t.pH_counts_3_x3;
+
+		//Voltage 1
+		float x1 = pH_ElectronicCalibpoints_t.pH_Slope * x1_count + pH_ElectronicCalibpoints_t.pH_Intercept;
+		//Voltage 2
+		float x2 = pH_ElectronicCalibpoints_t.pH_Slope * x2_count + pH_ElectronicCalibpoints_t.pH_Intercept;
+		//voltage 3
+		float x3 = pH_ElectronicCalibpoints_t.pH_Slope * x3_count + pH_ElectronicCalibpoints_t.pH_Intercept;
+
+		pH_SensorCalibpoints_t.pH_Solpe = (y2-y1)/(x2-x1);
+		pH_SensorCalibpoints_t.pH_Intercept = y1 - pH_SensorCalibpoints_t.pH_Solpe * x1;
+		//Calculating percentage
+		float inv = 1/pH_SensorCalibpoints_t.pH_Solpe;
+		pH_SensorCalibpoints_t.pH_Solpe = (inv/-0.05916f)*100.0f;
+		/*
+		 * Procedure to follow
+		 * 1. Clear the following point that caused the error.
+		 * 2. reset the flags involved for that process.
+		 * 3. show the following messages.
+		 */
+		if(pH_SensorCalibpoints_t.pH_Solpe < 70.0f)
+		{
+			//pH slope below 70%
+			calib_error = SET;
+		}
+		if(pH_SensorCalibpoints_t.pH_Solpe > 130.0f)
+		{
+			//pH slope above 130%
+			calib_error = SET;
+		}
+		if(calib_error)
+		{
+			pH_SensorCalibpoints_t.pH_slope_range_2 = (y3-y2)/(x3-x2);
+			pH_SensorCalibpoints_t.pH_slope_range_2 = y2 - pH_SensorCalibpoints_t.pH_slope_range_2 * x2;
+			//Calculating percentage
+			inv = 1/pH_SensorCalibpoints_t.pH_slope_range_2;
+			pH_SensorCalibpoints_t.pH_slope_range_2 = (inv/-0.05916f)*100.0f;
+			if(pH_SensorCalibpoints_t.pH_slope_range_2 < 70.0f)
+			{
+				//pH slope below 70%
+				calib_error = SET;
+			}
+			if(pH_SensorCalibpoints_t.pH_slope_range_2 > 130.0f)
+			{
+				//pH slope above 130%
+				calib_error = SET;
+			}
+		}
+
+
+	}
 	//Push to MODBUS
 	HoldingRegister_t.SensorCalibration_t.pH_slope = pH_SensorCalibpoints_t.pH_Solpe;
 	HoldingRegister_t.SensorCalibration_t.pH_intercept = pH_SensorCalibpoints_t.pH_Intercept;

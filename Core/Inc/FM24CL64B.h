@@ -58,7 +58,9 @@
 //Process Values
 #define FRAM_ADDRESS_PROCESSVALUE			FRAM_ADDRESS_TSS_UPPERLIMIT + 4 //takes 16 byte add buffer for 10 process parameters (28 bytes)
 //Check Screen Variables
-#define FRAM_ADDRESS_CHECKSCREENVALUES		FRAM_ADDRESS_PROCESSVALUE + 100
+#define FRAM_ADDRESS_CHECKSCREENVALUES		FRAM_ADDRESS_PROCESSVALUE + 100//NOT USED, reserved 50 bytes
+//pH sensor calibration
+#define FRAM_ADDRESS_PH_SENSOR_CALIB		FRAM_ADDRESS_CHECKSCREENVALUES + 50//in use 50 bytes + 40 bytes reserved (10 float values)
 
 
 void FRAM_OperationWrite(uint16_t u16_address,uint8_t *u8_pData,uint16_t u16_noByte);

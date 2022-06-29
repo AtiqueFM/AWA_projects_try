@@ -494,6 +494,12 @@ typedef struct{
 	uint32_t LastBatchTime;			/*<Epoch time from HMI*/
 	uint32_t NextProcessTime;		/*<Epoch time for next process time*/
 	uint32_t pHElecMeaages;			/*1. p4141, 2. n414, 3. calibrated*/
+	/*3-POINT CALIBRATION*/
+	float pH_Y3;
+	float pH_slope_range_2;
+	float pH_intercept_range_2;
+	float RES_1[10];
+	/*********************/
 }SensoralibrationHandle_t;
 
 typedef union{
@@ -1493,6 +1499,36 @@ typedef union{
 }ElectronicCalibpHHandle_t;
 ElectronicCalibpHHandle_t pH_ElectronicCalibpoints_t;
 
+#if 1
+typedef union{
+	uint8_t byte[90];//40 bytes reserved
+	struct{
+		//Stored in FRAM
+		float pH_Solpe;					/*<Slope for range 1*/
+		float pH_Intercept;				/*<Intercept range 1*/
+		float pH_slope_range_2;			/*<Slope for range 2*/
+		float pH_Intercept_range_2;		/*<Intercept range 2*/
+		float pH_Solution_1_y1;			/*<Simulation solution*/
+		float pH_Solution_2_y2;			/*<Simulation solution*/
+		float pH_Solution_3_y3;			/*<Simulation solution*/
+		int pH_counts_1_x1;				/*<Corresponding ADC counts*/
+		int pH_counts_2_x2;				/*<Corresponding ADC counts*/
+		int pH_counts_3_x3;				/*<Corresponding ADC counts*/
+		float pH_Calculated_1_x1;		/*<Calculated pH value,(Display only)*/
+		float pH_Calculated_2_x2;		/*<Calculated pH value,(Display only)*/
+		float pH_Calculated_3_x3;		/*<Calculated pH value,(Display only)*/
+		uint16_t pH_1ptCalib_sample;	/*<NA*/
+		uint16_t pH_1ptCalib_count;		/*<NA*/
+		//Not stored in FRAM
+		uint16_t flag_sample_set;		/*<From HMI, for storing the simulation pH solution value*/
+		uint16_t flag_ADC_count_set;	/*<From HMI, for storing the pH solution corresponding ADC counts*/
+		uint16_t flag_display_count;	/*<From HMI, for displaying the current raw value of the pH*/
+		/*ADC counts*/
+		uint16_t pH_ADCCounts;
+	};
+}SensorCalibrationHande_t;
+SensorCalibrationHande_t pH_SensorCalibpoints_t;
+#else
 typedef union{
 	uint8_t byte[32];
 	struct{
@@ -1516,7 +1552,7 @@ typedef union{
 	};
 }SensorCalibrationHande_t;
 SensorCalibrationHande_t pH_SensorCalibpoints_t;
-
+#endif
 /*For AO output*/
 typedef union{
 	float value[4];
@@ -1655,6 +1691,12 @@ typedef enum{
 	START_ADDRESS_HIGH,
 	START_ADDRESS_LOW,
 }modbus_frame_t;
+
+typedef enum{
+	SINGLE_POINT = 1,
+	TWO_POINT,
+	THREE_POINT,
+}sensor_calibration_type_t;
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

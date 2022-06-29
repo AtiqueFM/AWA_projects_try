@@ -3193,7 +3193,8 @@ void ModbusSaveConfiguration(uint8_t data)
 		  if(AWADataStoreState.sensorpH)
 		  {
 			  //PH Sensor calibration store
-			  FRAM_OperationWrite(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,32);
+			  //FRAM_OperationWrite(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,32);
+			  FRAM_OperationWrite(FRAM_ADDRESS_PH_SENSOR_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,90);
 
 			  //Storing in Last calibration Space
 			  FRAM_OperationWrite(FRAM_ADDRESS_pHSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 576],124); //Storing COD factory calibration with overflow flag
