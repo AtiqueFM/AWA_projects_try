@@ -1522,6 +1522,7 @@ typedef union{
 		float pH_Calculated_3_x3;		/*<Calculated pH value,(Display only)*/
 		uint16_t pH_1ptCalib_sample;	/*<NA*/
 		uint16_t pH_1ptCalib_count;		/*<NA*/
+		float middle_value;
 		//Not stored in FRAM
 		uint16_t flag_sample_set;		/*<From HMI, for storing the simulation pH solution value*/
 		uint16_t flag_ADC_count_set;	/*<From HMI, for storing the pH solution corresponding ADC counts*/

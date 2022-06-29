@@ -56,6 +56,8 @@ extern volatile uint8_t uart_rcv_bytes;			/*< Flag will be set when the first by
 extern volatile uint16_t uart_rx_timeout_counter;
 extern volatile uint8_t uart_rx_process_query;		/*< This flag will be set when the slave ID is correct and the query needs to be processed.*/
 
+extern float middle_point;
+
 uint8_t cod_flash_operation;
 uint16_t dataptr1;
 uint16_t dataptr;
@@ -1220,11 +1222,38 @@ void CardAction(uint8_t CardID)
 				//if the volatge is +ve
 				else
 					adc = AdCounts_pH * pH_ElectronicCalibpoints_t.pH_Slope + pH_ElectronicCalibpoints_t.pH_Intercept;
-				//pH value with temperature compensation
-				ph_slope = pH_SensorCalibpoints_t.pH_Solpe * -0.05916f/100.0f;
-				ph_slope = 1 / ph_slope;
-				//pH = (adc * pH_SensorCalibpoints_t.pH_Solpe * (1.0 / (1.0 + 0.003351686 * (InputRegister_t.PV_info.temp_pH - 25))) + pH_SensorCalibpoints_t.pH_Intercept);
-				pH = (adc * ph_slope * (1.0 / (1.0 + 0.003351686 * (InputRegister_t.PV_info.temp_pH - 25))) + pH_SensorCalibpoints_t.pH_Intercept);
+				if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == THREE_POINT)
+				{
+					float calculated_pH = (-16.908f * adc) + 7.0f;
+
+					if(calculated_pH <= pH_SensorCalibpoints_t.middle_value)
+					{
+						//pH value with temperature compensation
+						ph_slope = pH_SensorCalibpoints_t.pH_Solpe * -0.05916f/100.0f;
+						ph_slope = 1 / ph_slope;
+						//pH = (adc * pH_SensorCalibpoints_t.pH_Solpe * (1.0 / (1.0 + 0.003351686 * (InputRegister_t.PV_info.temp_pH - 25))) + pH_SensorCalibpoints_t.pH_Intercept);
+						pH = (adc * ph_slope * (1.0 / (1.0 + 0.003351686 * (InputRegister_t.PV_info.temp_pH - 25))) + pH_SensorCalibpoints_t.pH_Intercept);
+					}else
+					{
+						//pH value with temperature compensation
+						ph_slope = pH_SensorCalibpoints_t.pH_slope_range_2 * -0.05916f/100.0f;
+						ph_slope = 1 / ph_slope;
+						//pH = (adc * pH_SensorCalibpoints_t.pH_Solpe * (1.0 / (1.0 + 0.003351686 * (InputRegister_t.PV_info.temp_pH - 25))) + pH_SensorCalibpoints_t.pH_Intercept);
+						pH = (adc * ph_slope * (1.0 / (1.0 + 0.003351686 * (InputRegister_t.PV_info.temp_pH - 25))) + pH_SensorCalibpoints_t.pH_Intercept_range_2);
+					}
+
+				}
+				//Two point of single point calibration
+				else
+				{
+					//pH value with temperature compensation
+					ph_slope = pH_SensorCalibpoints_t.pH_Solpe * -0.05916f/100.0f;
+					ph_slope = 1 / ph_slope;
+					//pH = (adc * pH_SensorCalibpoints_t.pH_Solpe * (1.0 / (1.0 + 0.003351686 * (InputRegister_t.PV_info.temp_pH - 25))) + pH_SensorCalibpoints_t.pH_Intercept);
+					pH = (adc * ph_slope * (1.0 / (1.0 + 0.003351686 * (InputRegister_t.PV_info.temp_pH - 25))) + pH_SensorCalibpoints_t.pH_Intercept);
+				}
+
+
 				if(pH < 0)
 					InputRegister_t.PV_info.pH_value = 0;
 				else if(pH > 14)
@@ -3281,7 +3310,8 @@ void ModbusReadConfiguration(void)
 	FRAM_OperationRead(FRAM_ADDRESS_pH_ELEC_CALIB, (uint8_t*)&pH_ElectronicCalibpoints_t.bytes[8], 8);
 
 	//Read the pH sensor calibration data
-	FRAM_OperationRead(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,32);
+	//FRAM_OperationRead(FRAM_ADDRESS_pH_SENS_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,32);
+	FRAM_OperationRead(FRAM_ADDRESS_PH_SENSOR_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,90);
 
 	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_value = pH_SensorCalibpoints_t.pH_Calculated_1_x1; //calculated pH values
 	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = pH_SensorCalibpoints_t.pH_Calculated_2_x2; //calculated pH values

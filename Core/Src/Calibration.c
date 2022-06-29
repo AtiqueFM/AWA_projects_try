@@ -24,6 +24,8 @@ typedef struct{
 	float pt[3];
 	float x[3];
 }three_pt;
+
+float middle_point = 0;
 /*External variable*/
 extern TIM_HandleTypeDef htim1;
 
@@ -167,7 +169,7 @@ void pHSensorCalibrationmV(void)
 		x3_count = temp_3_pt.x[2];
 
 		y1 = temp_3_pt.pt[0];
-		y2 = temp_3_pt.pt[1];
+		y2 = temp_3_pt.pt[1];middle_point = y2;pH_SensorCalibpoints_t.middle_value = middle_point;
 		y3 = temp_3_pt.pt[2];
 
 		//Voltage 1
@@ -228,9 +230,11 @@ void pHSensorCalibrationmV(void)
 				display_flag = 0;
 
 			}
+
 		}
 
-
+		HoldingRegister_t.SensorCalibration_t.pH_slope_range_2 = pH_SensorCalibpoints_t.pH_slope_range_2;
+		HoldingRegister_t.SensorCalibration_t.pH_intercept_range_2 = pH_SensorCalibpoints_t.pH_Intercept_range_2;
 	}
 	//Push to MODBUS
 	HoldingRegister_t.SensorCalibration_t.pH_slope = pH_SensorCalibpoints_t.pH_Solpe;
