@@ -33,4 +33,9 @@ void COD_SensorCalibration(void);
 void TSS_SensorCalibration(void);
 
 void gaussEliminationLS(double x[],double y[],int len,int degree,uint8_t type);
+
+#define PH_SLOPE_LOW_LIMIT			70.0f
+#define PH_SLOPE_HIGH_LIMIT			130.0f
+#define PH_INTERCEPT_LOW_LIMIT		6.0f
+#define PH_INTERCEPT_HIGH_LIMIT		8.0f
 #endif /* INC_CALIBRATION_H_ */

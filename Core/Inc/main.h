@@ -491,6 +491,7 @@ typedef struct{
 	uint16_t NextProcessTime_Hr;	/*<From HMI, Batch mode hour*/
 	uint16_t NextProcessTime_Min;	/*<From HMI, Batch mode min*/
 	uint16_t NextProcessTime_Sec;	/*<From HMI, Batch mode sec*/
+	uint16_t SPARE_1;					//NEW - To be checked in HMI programming
 	uint32_t LastBatchTime;			/*<Epoch time from HMI*/
 	uint32_t NextProcessTime;		/*<Epoch time for next process time*/
 	uint32_t pHElecMeaages;			/*1. p4141, 2. n414, 3. calibrated*/
@@ -499,6 +500,8 @@ typedef struct{
 	float pH_slope_range_2;
 	float pH_intercept_range_2;
 	float RES_1[10];
+	float pH_Cal_Point_3_value;
+	uint16_t pH_Cal_Point_3_count;
 	/*********************/
 }SensoralibrationHandle_t;
 
