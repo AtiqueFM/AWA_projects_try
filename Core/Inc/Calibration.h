@@ -38,4 +38,15 @@ void gaussEliminationLS(double x[],double y[],int len,int degree,uint8_t type);
 #define PH_SLOPE_HIGH_LIMIT			130.0f
 #define PH_INTERCEPT_LOW_LIMIT		6.0f
 #define PH_INTERCEPT_HIGH_LIMIT		8.0f
+
+typedef enum{
+	ENTER_BUFFER_SOL_1 = 1,		/*<Enter the 1st pH buffer solution*/
+	CAPTURE_STABLE_ADC_SOL_1,	/*<Before pressing the capture ADC button*/
+	ENTER_BUFFER_SOL_2,			/*<Enter the 1st pH buffer solution*/
+	CAPTURE_STABLE_ADC_SOL_2,	/*<Before pressing the capture ADC button*/
+	ENTER_BUFFER_SOL_3,			/*<Enter the 1st pH buffer solution*/
+	CAPTURE_STABLE_ADC_SOL_3,	/*<Before pressing the capture ADC button*/
+	CALIBRATION_SUCCESSFULL,	/*<Calibration successful*/
+	CALIBRATION_FAILED,			/*<Calibration failed*/
+}pHDisplayMessages;
 #endif /* INC_CALIBRATION_H_ */

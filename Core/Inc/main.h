@@ -494,7 +494,7 @@ typedef struct{
 	uint16_t SPARE_1;					//NEW - To be checked in HMI programming
 	uint32_t LastBatchTime;			/*<Epoch time from HMI*/
 	uint32_t NextProcessTime;		/*<Epoch time for next process time*/
-	uint32_t pHElecMeaages;			/*1. p4141, 2. n414, 3. calibrated*/
+	uint32_t pHSensMessages;		/*<NA*/
 	/*3-POINT CALIBRATION*/
 	float pH_Y3;
 	float pH_slope_range_2;

@@ -114,7 +114,7 @@ void HoldingRegisterdefaultData(void)
 
 	CoilStatusRegister_t.CoilStatus_t.NoProcess = SET;
 
-	HoldingRegister_t.SensorCalibration_t.pHElecMeaages = 1;//simulate 414mV
+	//HoldingRegister_t.SensorCalibration_t.pHElecMeaages = 1;//simulate 414mV
 }
 
 void DMA_UART6_RX_Init(void)

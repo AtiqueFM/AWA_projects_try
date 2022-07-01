@@ -207,6 +207,9 @@ void pHSensorCalibrationmV(void)
 			//2. TODO: Reset all the variables for the calibration process.
 			display_flag = 0;
 
+			//Display Messages
+			HoldingRegister_t.SensorCalibration_t.pHSensMessages = CALIBRATION_FAILED;
+
 		}
 		if(!calib_error)
 		{
@@ -229,12 +232,18 @@ void pHSensorCalibrationmV(void)
 				//2. TODO: Reset all the variables for the calibration process.
 				display_flag = 0;
 
+				//Display Messages
+				HoldingRegister_t.SensorCalibration_t.pHSensMessages = CALIBRATION_FAILED;
+
 			}
 
 		}
 
 		HoldingRegister_t.SensorCalibration_t.pH_slope_range_2 = pH_SensorCalibpoints_t.pH_slope_range_2;
 		HoldingRegister_t.SensorCalibration_t.pH_intercept_range_2 = pH_SensorCalibpoints_t.pH_Intercept_range_2;
+
+		//Display Messages
+		HoldingRegister_t.SensorCalibration_t.pHSensMessages = CALIBRATION_SUCCESSFULL;
 	}
 	//Push to MODBUS
 	HoldingRegister_t.SensorCalibration_t.pH_slope = pH_SensorCalibpoints_t.pH_Solpe;
@@ -526,6 +535,8 @@ void pH_SensorCalibrationGetValues(void)
 			display_flag = 1;//display x1
 			pH_SensorCalibpoints_t.pH_Solution_1_y1 = HoldingRegister_t.SensorCalibration_t.pH_PT.Y1;//used in calibration
 			HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command = 0;
+			//Display Messages
+			HoldingRegister_t.SensorCalibration_t.pHSensMessages = CAPTURE_STABLE_ADC_SOL_1;
 		}
 		if(HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command == 0x02)//grab y1
 		{
@@ -533,6 +544,8 @@ void pH_SensorCalibrationGetValues(void)
 			pH_SensorCalibpoints_t.pH_counts_1_x1 = pH_SensorCalibpoints_t.pH_ADCCounts;//used in calibration
 			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_count = pH_SensorCalibpoints_t.pH_counts_1_x1;
 			HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command = 0;
+			//Display Messages
+			//HoldingRegister_t.SensorCalibration_t.pHSensMessages = ENTER_BUFFER_SOL_2;
 		}
 		if(HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command == 0x03)//grab y1
 		{
@@ -562,6 +575,8 @@ void pH_SensorCalibrationGetValues(void)
 			display_flag = 2;//display x2
 			pH_SensorCalibpoints_t.pH_Solution_2_y2 = HoldingRegister_t.SensorCalibration_t.pH_PT.Y2;//used in calibration
 			HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command = 0;
+			//Display Messages
+			HoldingRegister_t.SensorCalibration_t.pHSensMessages = CAPTURE_STABLE_ADC_SOL_2;
 		}
 		if(HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command == 0x05)//grab y2
 		{
@@ -600,6 +615,8 @@ void pH_SensorCalibrationGetValues(void)
 			pH_SensorCalibpoints_t.pH_counts_3_x3 = pH_SensorCalibpoints_t.pH_ADCCounts;
 			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_3_count = pH_SensorCalibpoints_t.pH_counts_3_x3;
 			HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command = 0;
+			//Display Messages
+			HoldingRegister_t.SensorCalibration_t.pHSensMessages = CAPTURE_STABLE_ADC_SOL_3;
 		}
 		if(HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command == 0x09)//reset x2,y2
 		{
