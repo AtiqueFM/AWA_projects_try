@@ -38,7 +38,7 @@ extern "C" {
 #define HMI_VER_BUGFIX		0 /*<*/
 #define FW_VER_MAJOR		2 /*<*/
 #define FW_VER_MINOR		3 /*<Addition on multi-drop*/
-#define FW_VER_BUGFIX		6 /*<pH 2-point calibration reset commands*/
+#define FW_VER_BUGFIX		7 /*<pH last 10 calibration storage*/
 
 #define MODBUS_1000_BYTES					1
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1500
@@ -228,8 +228,15 @@ typedef struct{
 
 /*Generic handle for COD, TSS and pH sensor calibration*/
 typedef struct{
+#if 0
 	float intercept[10];
 	float slope[10];
+#else
+	float intercept[10];
+	float slope[10];
+	float intercept_range_2[10];
+	float slope_range_2[10];
+#endif
 	uint32_t epochtimestamp[10];
 	uint32_t overflowFlag;
 }LastCalibrationSensorHandle_t;

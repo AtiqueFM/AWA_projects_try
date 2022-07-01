@@ -68,7 +68,8 @@ uint16_t flash_limit_min;
 
 struct Sensornode *CODSensorhead = '\0'; 	/*<Head for COD Sensor Calibration*/
 struct Sensornode *TSSSensorhead = '\0'; 	/*<Head for TSS Sensor Calibration*/
-struct Sensornode *pHSensorhead = '\0'; 	/*<Head for pH Sensor Calibration*/
+//struct Sensornode *pHSensorhead = '\0'; 	/*<Head for pH Sensor Calibration*/
+struct Sensornode_3pt *pHSensorhead = '\0'; 	/*<Head for pH Sensor Calibration*/
 struct Factorynode *CODFactoryhead = '\0'; 	/*<Head for COD Factory Calibration*/
 struct Factorynode *TSSFactoryhead = '\0'; 	/*<Head for TSS Factory Calibration*/
 
@@ -3226,8 +3227,8 @@ void ModbusSaveConfiguration(uint8_t data)
 			  FRAM_OperationWrite(FRAM_ADDRESS_PH_SENSOR_CALIB,(uint8_t*)&pH_SensorCalibpoints_t.byte,90);
 
 			  //Storing in Last calibration Space
-			  FRAM_OperationWrite(FRAM_ADDRESS_pHSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 576],124); //Storing COD factory calibration with overflow flag
-
+			  //FRAM_OperationWrite(FRAM_ADDRESS_pHSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 576],124); //Storing COD factory calibration with overflow flag
+			  FRAM_OperationWrite(FRAM_ADDRESS_PHSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 576],204); //Storing COD factory calibration with overflow flag
 			  AWADataStoreState.sensorpH = RESET;
 		  }
 		  if(AWADataStoreState.factoryCOD)
@@ -3462,7 +3463,8 @@ void ModbusReadConfiguration(void)
 
 	/*For COD Sensor last Calibration reading from FRAM*/
 	//Storing in Last calibration Space
-	FRAM_OperationRead(FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 328],124); //Storing only COD factory calibration with overflow flag
+	//FRAM_OperationRead(FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 328],124); //Storing only COD factory calibration with overflow flag
+	FRAM_OperationRead(FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 328],204); //Storing only COD factory calibration with overflow flag
 
 	/*<TODO: Store the data from Input registers to Linked List*/
 	/*If the overflow flag is not set*/
@@ -3502,7 +3504,8 @@ void ModbusReadConfiguration(void)
 
 	/*For TSS Sensor last Calibration reading from FRAM*/
 	//Storing in Last calibration Space
-	FRAM_OperationRead(FRAM_ADDRESS_TSSSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 452],124); //Storing only COD factory calibration with overflow flag
+	//FRAM_OperationRead(FRAM_ADDRESS_TSSSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 452],124); //Storing only COD factory calibration with overflow flag
+	FRAM_OperationRead(FRAM_ADDRESS_TSSSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 532],204); //Storing only COD factory calibration with overflow flag
 
 	/*<TODO: Store the data from Input registers to Linked List*/
 	/*If the overflow flag is not set*/
@@ -3547,7 +3550,8 @@ void ModbusReadConfiguration(void)
 	index_count = 0;
 
 	//Storing in Last calibration Space
-	FRAM_OperationRead(FRAM_ADDRESS_pHSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 576],124); //Storing only COD factory calibration with overflow flag
+	//FRAM_OperationRead(FRAM_ADDRESS_pHSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 576],124); //Storing only COD factory calibration with overflow flag
+	FRAM_OperationRead(FRAM_ADDRESS_PHSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 736],204); //Storing only COD factory calibration with overflow flag
 
 	/*<TODO: Store the data from Input registers to Linked List*/
 	/*If the overflow flag is not set*/
@@ -3575,9 +3579,11 @@ void ModbusReadConfiguration(void)
 	for(int i = (index_count - 1);(InputRegister_t.pH_lastSensorCalibration.epochtimestamp[i] != 0) & (i >=0 );i--)
 	{
 		/*Create new node and insert at the end*/
-		sensor_insertNode(&pHSensorhead,
+		sensor_3pt_insertNode(&pHSensorhead,
 							InputRegister_t.pH_lastSensorCalibration.intercept[i],
 							InputRegister_t.pH_lastSensorCalibration.slope[i],
+							InputRegister_t.pH_lastSensorCalibration.intercept_range_2[i],
+							InputRegister_t.pH_lastSensorCalibration.slope_range_2[i],
 							InputRegister_t.pH_lastSensorCalibration.epochtimestamp[i]);
 	}
 	/*Read the overflow flag*/
@@ -3801,9 +3807,53 @@ void sensor_insertNode(struct Sensornode **head,float intercept,float slope ,uns
     }
 }
 
+void sensor_3pt_insertNode(struct Sensornode_3pt **head,float intercept,float slope ,float intercept_range_2,float slope_range_2,unsigned int timestamp)
+{
+	/*Create a new node and allocate the memory*/
+    struct Sensornode_3pt *t;
+    t = (struct Sensornode_3pt*)calloc(1,sizeof(struct Sensornode_3pt));
+
+    /*Store the intercept, slope and epoch time stamp*/
+    t->intercept = intercept;
+    t->slope = slope;
+    t->timestamp = timestamp;
+    /*Point to NULL address*/
+    t->next = NULL;
+
+    /*Check if the the linked list has no nodes*/
+    if(*head == NULL)
+    {
+    	/*If no nodes are affable then assign the new node address to the head.*/
+        *head = t;
+    }
+    /*If nodes are present*/
+    else{
+    	/*Make the copy of the linked list by assigning the head address to the temporary nodes*/
+        struct Sensornode_3pt *temp;
+        temp = *head;
+        /*Traverse until it reaches the last node*/
+        while(temp->next != NULL)
+        {
+            temp = temp->next;
+        }
+        /*Assign the address of the new node to the last node.*/
+        temp->next = t;
+    }
+}
+
+
 void sensor_deleteNode(struct Sensornode **head)
 {
     struct Sensornode *temp,*temp_next;
+    temp = *head;
+    temp_next = temp->next;
+    free(temp);
+    *head = temp_next;
+}
+
+void sensor_3pt_deleteNode(struct Sensornode_3pt **head)
+{
+    struct Sensornode_3pt *temp,*temp_next;
     temp = *head;
     temp_next = temp->next;
     free(temp);
@@ -3904,7 +3954,61 @@ void sensor_dataTransfer(struct Sensornode **head,LastCalibrationSensorHandle_t 
 	pLastCalibration_t->epochtimestamp[index] = temp->timestamp;
 }
 
+void sensor_3pt_dataTransfer(struct Sensornode_3pt **head,LastCalibrationSensorHandle_t *pLastCalibration_t,unsigned overflowFlag,uint8_t indexCount)
+{
+	struct Sensornode_3pt *temp;
+	temp = *head;
+	uint8_t index = 0;
+	if(overflowFlag)
+		index = 9;
+	else
+		index = indexCount - 1;
+	while(temp->next != NULL)
+	{
+		/*Insert the data from Linked list to the Last Calibration buffer*/
+		pLastCalibration_t->intercept[index] = temp->intercept;
+		pLastCalibration_t->slope[index] = temp->slope;
+		pLastCalibration_t->intercept_range_2[index] = temp->intercept_3pt;
+		pLastCalibration_t->slope_range_2[index] = temp->slope_3pt;
+		pLastCalibration_t->epochtimestamp[index] = temp->timestamp;
+		index -= 1; //Decrement the count
+		temp = temp->next;
+	}
+    /*Insert the data from Linked list to the Last Calibration buffer*/
+	pLastCalibration_t->intercept[index] = temp->intercept;
+	pLastCalibration_t->slope[index] = temp->slope;
+	pLastCalibration_t->intercept_range_2[index] = temp->intercept_3pt;
+	pLastCalibration_t->slope_range_2[index] = temp->slope_3pt;
+	pLastCalibration_t->epochtimestamp[index] = temp->timestamp;
+}
 
+//void sensor_3pt_dataTransfer(struct Sensornode_3pt **head,LastCalibrationSensorHandle_t *pLastCalibration_t,unsigned overflowFlag,uint8_t indexCount)
+//{
+//	struct Sensornode_3pt *temp;
+//	temp = *head;
+//	uint8_t index = 0;
+//	if(overflowFlag)
+//		index = 9;
+//	else
+//		index = indexCount - 1;
+//	while(temp->next != NULL)
+//	{
+//		/*Insert the data from Linked list to the Last Calibration buffer*/
+//		pLastCalibration_t->intercept[index] = temp->intercept;
+//		pLastCalibration_t->slope[index] = temp->slope;
+//		pLastCalibration_t->intercept_range_2[index] = temp->intercept_3pt;
+//		pLastCalibration_t->slope_range_2[index] = temp->slope_3pt;
+//		pLastCalibration_t->epochtimestamp[index] = temp->timestamp;
+//		index -= 1; //Decrement the count
+//		temp = temp->next;
+//	}
+//    /*Insert the data from Linked list to the Last Calibration buffer*/
+//	pLastCalibration_t->intercept[index] = temp->intercept;
+//	pLastCalibration_t->slope[index] = temp->slope;
+//	pLastCalibration_t->intercept_range_2[index] = temp->intercept_3pt;
+//	pLastCalibration_t->slope_range_2[index] = temp->slope_3pt;
+//	pLastCalibration_t->epochtimestamp[index] = temp->timestamp;
+//}
 #if 0
 void displayLinkedList(struct node **head)
 {
@@ -4115,19 +4219,31 @@ void Application_LastCaldataToModbus(void)
 		}
 
 		/*Create new node and insert at the end*/
-		sensor_insertNode(&pHSensorhead,
+//		sensor_insertNode(&pHSensorhead,
+//							pH_SensorCalibpoints_t.pH_Intercept,
+//							pH_SensorCalibpoints_t.pH_Solpe,
+//							timestamp);
+
+		sensor_3pt_insertNode(&pHSensorhead,
 							pH_SensorCalibpoints_t.pH_Intercept,
 							pH_SensorCalibpoints_t.pH_Solpe,
+							pH_SensorCalibpoints_t.pH_Intercept_range_2,
+							pH_SensorCalibpoints_t.pH_slope_range_2,
 							timestamp);
 
 		/*If the overflow flag is set then delete the first node from the liked list.*/
 		if(AWALastCalibrationCount.sensorpH_overflowflag)
 		{
-			sensor_deleteNode(&pHSensorhead);
+			sensor_3pt_deleteNode(&pHSensorhead);
 		}
 
 		/*Write the into MODBUS*/
-		sensor_dataTransfer(&pHSensorhead,
+//		sensor_dataTransfer(&pHSensorhead,
+//							&InputRegister_t.pH_lastSensorCalibration,
+//							AWALastCalibrationCount.sensorpH_overflowflag,
+//							AWALastCalibrationCount.sensorpH_count);
+
+		sensor_3pt_dataTransfer(&pHSensorhead,
 							&InputRegister_t.pH_lastSensorCalibration,
 							AWALastCalibrationCount.sensorpH_overflowflag,
 							AWALastCalibrationCount.sensorpH_count);

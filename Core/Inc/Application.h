@@ -19,6 +19,15 @@ struct Sensornode{
 	struct Sensornode *next;
 };
 
+struct Sensornode_3pt{
+	float intercept;
+	float slope;
+	float intercept_3pt;
+	float slope_3pt;
+	uint32_t timestamp;		/*<Epoch time stamp*/
+	struct Sensornode_3pt *next;
+};
+
 /*Node for factory calibration*/
 struct Factorynode{
 	float c0;
@@ -91,6 +100,7 @@ void Application_SetAsZero(uint8_t parameter);
 void Application_LastCaldataToModbus(void);
 
 void sensor_insertNode(struct Sensornode **head,float intercept,float slope, unsigned int timestamp);
+void sensor_3pt_insertNode(struct Sensornode_3pt **head,float intercept,float slope ,float intercept_range_2,float slope_range_2,unsigned int timestamp);
 /*
  * Function name :- factory_insertNode
  * Arguments :-
