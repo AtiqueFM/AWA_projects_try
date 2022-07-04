@@ -829,7 +829,36 @@ void TSS_SensorCalibration(void)
 	//3-point calibration
 	else if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == 0x04)
 	{
-		//Logic yet to be defined
+		float x1 = HoldingRegister_t.SensorCalibration_t.TSS_X1;
+		float y1 = HoldingRegister_t.SensorCalibration_t.TSS_Y1;//COD_SensorCalibration_t.y1;
+		float x2 = HoldingRegister_t.SensorCalibration_t.TSS_X2;TSS_SensorCalibration_t.middle_value = x2;//Middle value //COD_SensorCalibration_t.x2;
+		float y2 = HoldingRegister_t.SensorCalibration_t.TSS_Y2;//COD_SensorCalibration_t.y2;
+		float x3 = HoldingRegister_t.SensorCalibration_t.TSS_X3;//COD_SensorCalibration_t.x2;
+		float y3 = HoldingRegister_t.SensorCalibration_t.TSS_Y3;//COD_SensorCalibration_t.y2;
+
+		//sorting the points in ascending order
+		three_pt tss_pts = sort_ph_values(y1,y2,y3,x1,x2,x3);
+		/*
+		 * Error margin is not defined.
+		 */
+		float slope_range_1 = (tss_pts.x[1] - tss_pts.x[0])/((tss_pts.pt[1] - tss_pts.pt[0]));
+		float intercept_range_1 = tss_pts.x[0] - slope_range_1*tss_pts.pt[0];
+		float slope_range_2 = (tss_pts.x[2] - tss_pts.x[1])/((tss_pts.pt[2] - tss_pts.pt[1]));
+		float intercept_range_2 = tss_pts.x[1] - slope_range_2*tss_pts.pt[1];
+
+		TSS_SensorCalibration_t.slope = slope_range_1;
+		TSS_SensorCalibration_t.intercept = intercept_range_1;
+		TSS_SensorCalibration_t.slope_range_2 = slope_range_1;
+		TSS_SensorCalibration_t.intercept_range_2 = intercept_range_1;
+		//Publish to the MODBUS
+		HoldingRegister_t.SensorCalibration_t.TSS_CF = slope_range_1;
+		HoldingRegister_t.SensorCalibration_t.TSS_Intercept = intercept_range_1;
+		HoldingRegister_t.SensorCalibration_t.TSS_CF_RANGE_2 = slope_range_2;
+		HoldingRegister_t.SensorCalibration_t.TSS_Intercept_RANGE_2 = intercept_range_2;
+
+		//Reset the Common command Flag
+		HoldingRegister_t.ModeCommand_t.CommonCommand = 0x00;
+		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 	}
 
 

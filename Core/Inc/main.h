@@ -38,7 +38,7 @@ extern "C" {
 #define HMI_VER_BUGFIX		0 /*<*/
 #define FW_VER_MAJOR		2 /*<*/
 #define FW_VER_MINOR		3 /*<Addition on multi-drop*/
-#define FW_VER_BUGFIX		8 /*<COD - 3pt calibration and data storage(Last 10)*/
+#define FW_VER_BUGFIX		9 /*<TSS - 3pt calibration*/
 
 #define MODBUS_1000_BYTES					1
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1500
@@ -514,6 +514,11 @@ typedef struct{
 	//COD
 	float COD_CF_RANGE_2;
 	float COD_Intercept_RANGE_2;
+	//TSS 3-pt
+	float TSS_X3;
+	float TSS_Y3;
+	float TSS_CF_RANGE_2;
+	float TSS_Intercept_RANGE_2;
 	/*********************/
 }SensoralibrationHandle_t;
 

@@ -67,7 +67,7 @@ uint16_t flash_limit_max;
 uint16_t flash_limit_min;
 
 struct Sensornode_3pt *CODSensorhead = '\0'; 	/*<Head for COD Sensor Calibration*/
-struct Sensornode *TSSSensorhead = '\0'; 	/*<Head for TSS Sensor Calibration*/
+struct Sensornode_3pt *TSSSensorhead = '\0'; 	/*<Head for TSS Sensor Calibration*/
 //struct Sensornode *pHSensorhead = '\0'; 	/*<Head for pH Sensor Calibration*/
 struct Sensornode_3pt *pHSensorhead = '\0'; 	/*<Head for pH Sensor Calibration*/
 struct Factorynode *CODFactoryhead = '\0'; 	/*<Head for COD Factory Calibration*/
@@ -491,7 +491,7 @@ void ProcessModesCommands(void)
 					COD_SensorCalib_ypoint(5);
 				//Measure sample 2
 				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt3)
-					COD_SensorCalib_ypoint(3);
+					COD_SensorCalib_ypoint(6);
 
 				/*Stop sampling pump, if MIL state is RESET*/
 				else if((HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt1
@@ -2622,6 +2622,8 @@ uint8_t CODADCCapture_Sensor(uint8_t command,uint8_t sens_calib_point)
 					HoldingRegister_t.SensorCalibration_t.TSS_Y1 = factory_tss_value;
 				else if(sens_calib_point == 5)
 					HoldingRegister_t.SensorCalibration_t.TSS_Y2 = factory_tss_value;
+				else if(sens_calib_point == 6)
+					HoldingRegister_t.SensorCalibration_t.TSS_Y3 = factory_tss_value;
 			}
 
 			//RSD
@@ -3225,7 +3227,8 @@ void ModbusSaveConfiguration(uint8_t data)
 		  if(AWADataStoreState.sensorTSS)
 		  {
 			  //TSS Sensor calibration data store
-			  FRAM_OperationWrite(FRAM_ADDRESS_TSS_SENS_CALIB,(uint8_t*)&TSS_SensorCalibration_t.byte,8);
+			  //FRAM_OperationWrite(FRAM_ADDRESS_TSS_SENS_CALIB,(uint8_t*)&TSS_SensorCalibration_t.byte,8);
+			  FRAM_OperationWrite(FRAM_ADDRESS_TSS_SENSOR_CALIB,(uint8_t*)&TSS_SensorCalibration_t.byte,48);
 
 			  //Storing in Last calibration Space
 			  FRAM_OperationWrite(FRAM_ADDRESS_TSSSENSORLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 452],204); //Storing COD factory calibration with overflow flag
@@ -3389,10 +3392,14 @@ void ModbusReadConfiguration(void)
 	InputRegister_t.PV_info.TSS_PD2_0 = framdata.fData[0];
 
 	//Read the TSS Sensor Calibration Data
-	FRAM_OperationRead(FRAM_ADDRESS_TSS_SENS_CALIB,(uint8_t*)&TSS_SensorCalibration_t.byte,8);
+	//FRAM_OperationRead(FRAM_ADDRESS_TSS_SENS_CALIB,(uint8_t*)&TSS_SensorCalibration_t.byte,8);
+	FRAM_OperationRead(FRAM_ADDRESS_TSS_SENSOR_CALIB,(uint8_t*)&TSS_SensorCalibration_t.byte,48);
+
 	//Publish to modbus
 	HoldingRegister_t.SensorCalibration_t.TSS_CF = TSS_SensorCalibration_t.slope;
 	HoldingRegister_t.SensorCalibration_t.TSS_Intercept = TSS_SensorCalibration_t.intercept;
+	HoldingRegister_t.SensorCalibration_t.TSS_CF_RANGE_2 = TSS_SensorCalibration_t.slope_range_2;
+	HoldingRegister_t.SensorCalibration_t.TSS_Intercept_RANGE_2 = TSS_SensorCalibration_t.intercept_range_2;
 
 	//Storing in Last calibration Space
 	FRAM_OperationRead(FRAM_ADDRESS_LASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t)],164); //Storing only COD factory calibration with overflow flag
@@ -3548,9 +3555,11 @@ void ModbusReadConfiguration(void)
 	for(int i = (index_count - 1);(InputRegister_t.TSS_lastSensorCalibration.epochtimestamp[i] != 0) & (i >=0 );i--)
 	{
 		/*Create new node and insert at the end*/
-		sensor_insertNode(&TSSSensorhead,
+		sensor_3pt_insertNode(&TSSSensorhead,
 							InputRegister_t.TSS_lastSensorCalibration.intercept[i],
 							InputRegister_t.TSS_lastSensorCalibration.slope[i],
+							InputRegister_t.TSS_lastSensorCalibration.intercept_range_2[i],
+							InputRegister_t.TSS_lastSensorCalibration.slope_range_2[i],
 							InputRegister_t.TSS_lastSensorCalibration.epochtimestamp[i]);
 	}
 	/*Read the overflow flag*/
@@ -4204,19 +4213,21 @@ void Application_LastCaldataToModbus(void)
 		}
 
 		/*Create new node and insert at the end*/
-		sensor_insertNode(&TSSSensorhead,
+		sensor_3pt_insertNode(&TSSSensorhead,
 							TSS_SensorCalibration_t.intercept,
 							TSS_SensorCalibration_t.slope,
+							TSS_SensorCalibration_t.intercept_range_2,
+							TSS_SensorCalibration_t.slope_range_2,
 							timestamp);/*<TODO: Fetch the time stamp from Holding register*/
 
 		/*If the overflow flag is set then delete the first node from the liked list.*/
 		if(AWALastCalibrationCount.sensorTSS_overflowflag)
 		{
-			sensor_deleteNode(&TSSSensorhead);
+			sensor_3pt_deleteNode(&TSSSensorhead);
 		}
 
 		/*Write the into MODBUS*/
-		sensor_dataTransfer(&TSSSensorhead,
+		sensor_3pt_dataTransfer(&TSSSensorhead,
 							&InputRegister_t.TSS_lastSensorCalibration,
 							AWALastCalibrationCount.sensorTSS_overflowflag,
 							AWALastCalibrationCount.sensorTSS_count);
