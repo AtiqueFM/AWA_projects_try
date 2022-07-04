@@ -3217,7 +3217,8 @@ void ModbusSaveConfiguration(uint8_t data)
 		  if(AWADataStoreState.sensorCOD)
 		  {
 			  //COD Sensor calibration data store
-			  FRAM_OperationWrite(FRAM_ADDRESS_COD_SENS_CALIB,(uint8_t*)&COD_SensorCalibration_t.byte,8);
+			  //FRAM_OperationWrite(FRAM_ADDRESS_COD_SENS_CALIB,(uint8_t*)&COD_SensorCalibration_t.byte,8);
+			  FRAM_OperationWrite(FRAM_ADDRESS_COD_SENSOR_CALIB,(uint8_t*)&COD_SensorCalibration_t.byte,48);
 
 			  //Storing in Last calibration Space
 			  FRAM_OperationWrite(FRAM_ADDRESS_CODSENSORLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 328],204); //Storing COD factory calibration with overflow flag
@@ -3349,6 +3350,8 @@ void ModbusReadConfiguration(void)
 	//Publish to modbus
 	HoldingRegister_t.SensorCalibration_t.COD_CF = COD_SensorCalibration_t.slope;
 	HoldingRegister_t.SensorCalibration_t.COD_Intercept = COD_SensorCalibration_t.intercept;
+	HoldingRegister_t.SensorCalibration_t.COD_CF_RANGE_2 = COD_SensorCalibration_t.slope_range_2;
+	HoldingRegister_t.SensorCalibration_t.COD_Intercept_RANGE_2 = COD_SensorCalibration_t.intercept_range_2;
 
 	//Read the COD Factory 10-pt Calibration Data
 	FRAM_OperationRead(FRAM_ADDRESS_COD_FACTORY_CALIB,(uint8_t*)&COD_10ptFactoryCalibrationHandle_t.bytes,96);

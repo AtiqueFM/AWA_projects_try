@@ -778,10 +778,10 @@ void COD_SensorCalibration(void)
 		float slope_range_2 = (cod_pts.x[2] - cod_pts.x[1])/((cod_pts.pt[2] - cod_pts.pt[1]));
 		float intercept_range_2 = cod_pts.x[1] - slope_range_2*cod_pts.pt[1];
 
-//		COD_SensorCalibration_t.slope = slope_range_1;
-//		COD_SensorCalibration_t.intercept = intercept_range_1;
-//		COD_SensorCalibration_t.slope = slope_range_1;
-//		COD_SensorCalibration_t.intercept = intercept_range_1;
+		COD_SensorCalibration_t.slope = slope_range_1;
+		COD_SensorCalibration_t.intercept = intercept_range_1;
+		COD_SensorCalibration_t.slope_range_2 = slope_range_1;
+		COD_SensorCalibration_t.intercept_range_2 = intercept_range_1;
 		//Publish to the MODBUS
 		HoldingRegister_t.SensorCalibration_t.COD_CF = slope_range_1;
 		HoldingRegister_t.SensorCalibration_t.COD_Intercept = intercept_range_1;
