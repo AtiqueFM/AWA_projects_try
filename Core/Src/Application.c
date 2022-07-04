@@ -3843,6 +3843,8 @@ void sensor_3pt_insertNode(struct Sensornode_3pt **head,float intercept,float sl
     /*Store the intercept, slope and epoch time stamp*/
     t->intercept = intercept;
     t->slope = slope;
+    t->intercept_3pt = intercept_range_2;
+    t->slope_3pt = slope_range_2;
     t->timestamp = timestamp;
     /*Point to NULL address*/
     t->next = NULL;
