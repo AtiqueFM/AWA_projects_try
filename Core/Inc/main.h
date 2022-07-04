@@ -38,7 +38,7 @@ extern "C" {
 #define HMI_VER_BUGFIX		0 /*<*/
 #define FW_VER_MAJOR		2 /*<*/
 #define FW_VER_MINOR		3 /*<Addition on multi-drop*/
-#define FW_VER_BUGFIX		7 /*<pH last 10 calibration storage*/
+#define FW_VER_BUGFIX		8 /*<COD - 3pt calibration and data storage(Last 10)*/
 
 #define MODBUS_1000_BYTES					1
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1500
@@ -502,6 +502,8 @@ typedef struct{
 	uint32_t LastBatchTime;			/*<Epoch time from HMI*/
 	uint32_t NextProcessTime;		/*<Epoch time for next process time*/
 	uint32_t pHSensMessages;		/*<NA*/
+	uint32_t pHElectronicCalibMessages;
+	uint32_t TempElectronicCalibMessages;
 	/*3-POINT CALIBRATION*/
 	float pH_Y3;
 	float pH_slope_range_2;

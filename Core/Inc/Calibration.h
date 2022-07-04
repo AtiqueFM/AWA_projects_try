@@ -48,5 +48,17 @@ typedef enum{
 	CAPTURE_STABLE_ADC_SOL_3,	/*<Before pressing the capture ADC button*/
 	CALIBRATION_SUCCESSFULL,	/*<Calibration successful*/
 	CALIBRATION_FAILED,			/*<Calibration failed*/
-}pHDisplayMessages;
+
+	/*pH Electronic calibration*/
+	SIMULATE_POS_414_mV,		//9
+	SIMULATE_NEG_414_mV,
+
+	/*PT-100 Temperature Electronic calibration*/
+	SIMULATE_100_OHMS,			//11
+	SIMULATE_150_OHMS,
+
+	/*PT-1000 Temperature Electronic calibration*/
+	SIMULATE_1000_OHMS,			//13
+	SIMULATE_1500_OHMS,
+}AWAMessages;
 #endif /* INC_CALIBRATION_H_ */
