@@ -2211,9 +2211,20 @@ uint8_t CODADCCapture(uint8_t command)
 				//Get the sensor calibration factor from modus
 				COD_SensorCalibration_t.slope = HoldingRegister_t.SensorCalibration_t.COD_CF;
 				COD_SensorCalibration_t.intercept = HoldingRegister_t.SensorCalibration_t.COD_Intercept;
+				COD_SensorCalibration_t.slope_range_2 = HoldingRegister_t.SensorCalibration_t.COD_CF_RANGE_2;
+				COD_SensorCalibration_t.intercept_range_2 = HoldingRegister_t.SensorCalibration_t.COD_Intercept_RANGE_2;
 
 				//COD actual value
+#if 1
+				if(factory_cod_value <= COD_SensorCalibration_t.middle_value)
+				{
+					COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope + COD_SensorCalibration_t.intercept;
+				}else{
+					COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope_range_2 + COD_SensorCalibration_t.intercept_range_2;
+				}
+#else
 				COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope + COD_SensorCalibration_t.intercept;
+#endif
 
 				//COD value with Factory Calibration not sensor
 				//COD_MeasurementValues_t.Cal_Value = factory_cod_value;
@@ -3329,7 +3340,9 @@ void ModbusReadConfiguration(void)
 	FRAM_OperationRead(FRAM_ADDRESS_PT_ELEC_CALIB,(uint8_t*)&PT_ElectronicCalibration_t.bytes,16);
 
 	//Read the COD Electronic Calibration Data
-	FRAM_OperationRead(FRAM_ADDRESS_COD_SENS_CALIB,(uint8_t*)&COD_SensorCalibration_t.byte,8);
+	//FRAM_OperationRead(FRAM_ADDRESS_COD_SENS_CALIB,(uint8_t*)&COD_SensorCalibration_t.byte,8);
+	FRAM_OperationRead(FRAM_ADDRESS_COD_SENSOR_CALIB,(uint8_t*)&COD_SensorCalibration_t.byte,48);//Yet to make changes according to 3-pt calibration
+
 	//Publish to modbus
 	HoldingRegister_t.SensorCalibration_t.COD_CF = COD_SensorCalibration_t.slope;
 	HoldingRegister_t.SensorCalibration_t.COD_Intercept = COD_SensorCalibration_t.intercept;

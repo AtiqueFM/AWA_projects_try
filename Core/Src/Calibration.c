@@ -759,7 +759,46 @@ void COD_SensorCalibration(void)
 	//3-point calibration
 	else if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == 0x04)
 	{
-		//Logic yet to be defined
+		float x1 = HoldingRegister_t.SensorCalibration_t.COD_X1;
+		float y1 = HoldingRegister_t.SensorCalibration_t.COD_Y1;//COD_SensorCalibration_t.y1;
+		float x2 = HoldingRegister_t.SensorCalibration_t.COD_X2;COD_SensorCalibration_t.middle_value = x2;//Middle value //COD_SensorCalibration_t.x2;
+		float y2 = HoldingRegister_t.SensorCalibration_t.COD_Y2;//COD_SensorCalibration_t.y2;
+		float x3 = HoldingRegister_t.SensorCalibration_t.COD_X3;//COD_SensorCalibration_t.x2;
+		float y3 = HoldingRegister_t.SensorCalibration_t.COD_Y3;//COD_SensorCalibration_t.y2;
+
+		//sorting the points in ascending order
+		three_pt cod_pts = sort_ph_values(y1,y2,y3,x1,x2,x3);
+
+#if 1
+		/*
+		 * Error margin is not defined.
+		 */
+		float slope_range_1 = (cod_pts.x[1] - cod_pts.x[0])/((cod_pts.pt[1] - cod_pts.pt[0]));
+		float intercept_range_1 = cod_pts.x[0] - slope_range_1*cod_pts.pt[0];
+		float slope_range_2 = (cod_pts.x[2] - cod_pts.x[1])/((cod_pts.pt[2] - cod_pts.pt[1]));
+		float intercept_range_2 = cod_pts.x[1] - slope_range_2*cod_pts.pt[1];
+
+//		COD_SensorCalibration_t.slope = slope_range_1;
+//		COD_SensorCalibration_t.intercept = intercept_range_1;
+//		COD_SensorCalibration_t.slope = slope_range_1;
+//		COD_SensorCalibration_t.intercept = intercept_range_1;
+		//Publish to the MODBUS
+		HoldingRegister_t.SensorCalibration_t.COD_CF = slope_range_1;
+		HoldingRegister_t.SensorCalibration_t.COD_Intercept = intercept_range_1;
+		HoldingRegister_t.SensorCalibration_t.COD_CF_RANGE_2 = slope_range_2;
+		HoldingRegister_t.SensorCalibration_t.COD_Intercept_RANGE_2 = intercept_range_2;
+#else
+		float slope = (x2-x1)/(y2-y1);
+		float intercept = (x2 - slope * y2);
+		COD_SensorCalibration_t.slope = slope;
+		COD_SensorCalibration_t.intercept = intercept;
+		//Publish to the MODBUS
+		HoldingRegister_t.SensorCalibration_t.COD_CF = slope;
+		HoldingRegister_t.SensorCalibration_t.COD_Intercept = intercept;
+#endif
+		//Reset the Common command Flag
+		HoldingRegister_t.ModeCommand_t.CommonCommand = 0x00;
+		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 	}
 
 

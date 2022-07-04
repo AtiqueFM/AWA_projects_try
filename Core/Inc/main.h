@@ -509,6 +509,9 @@ typedef struct{
 	float RES_1[10];
 	float pH_Cal_Point_3_value;
 	uint16_t pH_Cal_Point_3_count;
+	//COD
+	float COD_CF_RANGE_2;
+	float COD_Intercept_RANGE_2;
 	/*********************/
 }SensoralibrationHandle_t;
 
@@ -1600,6 +1603,21 @@ ElectronicCalibration_PT_Handle_t PT_ElectronicCalibration_t;
 typedef union{
 	float byte[2];
 	struct{
+#if 1
+		float slope;
+		float intercept;
+		float slope_range_2;
+		float intercept_range_2;
+		float zero_value; /*For the "set as zero" storage variable*/
+		float x1;
+		float y1;
+		float x2;
+		float y2;
+		float x3;
+		float y3;
+		float middle_value;
+		uint8_t point_flag;
+#else
 		float slope;
 		float intercept;
 		float zero_value; /*For the "set as zero" storage variable*/
@@ -1608,6 +1626,7 @@ typedef union{
 		float x2;
 		float y2;
 		uint8_t point_flag;
+#endif
 	};
 }COD_SensorCalibrationHandle_t;
 COD_SensorCalibrationHandle_t COD_SensorCalibration_t;

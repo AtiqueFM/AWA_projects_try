@@ -62,9 +62,9 @@
 //pH sensor calibration
 #define FRAM_ADDRESS_PH_SENSOR_CALIB		FRAM_ADDRESS_CHECKSCREENVALUES + 50//in use 50 bytes + 40 bytes reserved (10 float values)
 //COD sensor calibration
-#define FRAM_ADDRESS_COD_SENSOR_CALIB		FRAM_ADDRESS_PH_SENSOR_CALIB + 90 //Used 30 bytes
+#define FRAM_ADDRESS_COD_SENSOR_CALIB		FRAM_ADDRESS_PH_SENSOR_CALIB + 90 //Used 48 bytes (90 bytes)
 //pH Last 10 calibration
-#define FRAM_ADDRESS_PHSENSLASTCALIB_HISTORY	FRAM_ADDRESS_COD_SENSOR_CALIB + 30 //take 204 bytes //DEPRICATED
+#define FRAM_ADDRESS_PHSENSLASTCALIB_HISTORY	FRAM_ADDRESS_COD_SENSOR_CALIB + 90 //take 204 bytes
 
 void FRAM_OperationWrite(uint16_t u16_address,uint8_t *u8_pData,uint16_t u16_noByte);
 void FRAM_OperationRead(uint16_t u16_address,uint8_t *u8_pData,uint16_t u16_noByte);
