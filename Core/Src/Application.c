@@ -66,7 +66,7 @@ uint16_t noOfFlashes;
 uint16_t flash_limit_max;
 uint16_t flash_limit_min;
 
-struct Sensornode *CODSensorhead = '\0'; 	/*<Head for COD Sensor Calibration*/
+struct Sensornode_3pt *CODSensorhead = '\0'; 	/*<Head for COD Sensor Calibration*/
 struct Sensornode *TSSSensorhead = '\0'; 	/*<Head for TSS Sensor Calibration*/
 //struct Sensornode *pHSensorhead = '\0'; 	/*<Head for pH Sensor Calibration*/
 struct Sensornode_3pt *pHSensorhead = '\0'; 	/*<Head for pH Sensor Calibration*/
@@ -3218,7 +3218,7 @@ void ModbusSaveConfiguration(uint8_t data)
 			  FRAM_OperationWrite(FRAM_ADDRESS_COD_SENS_CALIB,(uint8_t*)&COD_SensorCalibration_t.byte,8);
 
 			  //Storing in Last calibration Space
-			  FRAM_OperationWrite(FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 328],124); //Storing COD factory calibration with overflow flag
+			  FRAM_OperationWrite(FRAM_ADDRESS_CODSENSORLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 328],204); //Storing COD factory calibration with overflow flag
 
 			  AWADataStoreState.sensorCOD = RESET;
 		  }
@@ -3228,7 +3228,7 @@ void ModbusSaveConfiguration(uint8_t data)
 			  FRAM_OperationWrite(FRAM_ADDRESS_TSS_SENS_CALIB,(uint8_t*)&TSS_SensorCalibration_t.byte,8);
 
 			  //Storing in Last calibration Space
-			  FRAM_OperationWrite(FRAM_ADDRESS_TSSSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 452],124); //Storing COD factory calibration with overflow flag
+			  FRAM_OperationWrite(FRAM_ADDRESS_TSSSENSORLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 452],204); //Storing COD factory calibration with overflow flag
 			  AWADataStoreState.sensorTSS = RESET;
 		  }
 		  if(AWADataStoreState.sensorpH)
@@ -3477,7 +3477,7 @@ void ModbusReadConfiguration(void)
 	/*For COD Sensor last Calibration reading from FRAM*/
 	//Storing in Last calibration Space
 	//FRAM_OperationRead(FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 328],124); //Storing only COD factory calibration with overflow flag
-	FRAM_OperationRead(FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 328],204); //Storing only COD factory calibration with overflow flag
+	FRAM_OperationRead(FRAM_ADDRESS_CODSENSORLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 328],204); //Storing only COD factory calibration with overflow flag
 
 	/*<TODO: Store the data from Input registers to Linked List*/
 	/*If the overflow flag is not set*/
@@ -3505,9 +3505,11 @@ void ModbusReadConfiguration(void)
 	for(int i = (index_count - 1);(InputRegister_t.COD_lastSensorCalibration.epochtimestamp[i] != 0) & (i >=0 );i--)
 	{
 		/*Create new node and insert at the end*/
-		sensor_insertNode(&CODSensorhead,
+		sensor_3pt_insertNode(&CODSensorhead,
 							InputRegister_t.COD_lastSensorCalibration.intercept[i],
 							InputRegister_t.COD_lastSensorCalibration.slope[i],
+							InputRegister_t.COD_lastSensorCalibration.intercept_range_2[i],
+							InputRegister_t.COD_lastSensorCalibration.slope_range_2[i],
 							InputRegister_t.COD_lastSensorCalibration.epochtimestamp[i]);
 	}
 	/*Read the overflow flag*/
@@ -4168,19 +4170,21 @@ void Application_LastCaldataToModbus(void)
 		}
 
 		/*Create new node and insert at the end*/
-		sensor_insertNode(&CODSensorhead,
+		sensor_3pt_insertNode(&CODSensorhead,
 							COD_SensorCalibration_t.intercept,
 							COD_SensorCalibration_t.slope,
+							COD_SensorCalibration_t.intercept_range_2,
+							COD_SensorCalibration_t.slope_range_2,
 							timestamp);/*<TODO: Fetch the time stamp from Holding register*/
 
 		/*If the overflow flag is set then delete the first node from the liked list.*/
 		if(AWALastCalibrationCount.sensorCOD_overflowflag)
 		{
-			sensor_deleteNode(&CODSensorhead);
+			sensor_3pt_deleteNode(&CODSensorhead);
 		}
 
 		/*Write the into MODBUS*/
-		sensor_dataTransfer(&CODSensorhead,
+		sensor_3pt_dataTransfer(&CODSensorhead,
 							&InputRegister_t.COD_lastSensorCalibration,
 							AWALastCalibrationCount.sensorCOD_overflowflag,
 							AWALastCalibrationCount.sensorCOD_count);

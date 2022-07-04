@@ -43,11 +43,11 @@
 #define FRAM_ADDRESS_LASTCALIB_HISTORY		FRAM_ADDRESS_AI2_SENS_CALIB + 8 //takes 164 bytes (c- 0:2 and time stamp)
 //TSS factory Last Calibration data
 #define FRAM_ADDRESS_TSSLASTCALIB_HISTORY	FRAM_ADDRESS_LASTCALIB_HISTORY + 164 //takes 164 bytes (c- 0:2 and time stamp)
-//COD sensor calibration data
+//COD sensor calibration data (DEPRICATED)
 #define FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY	FRAM_ADDRESS_TSSLASTCALIB_HISTORY + 164 //take 124 bytes
-//TSS sensor calibration data
+//TSS sensor calibration data (DEPRICATED)
 #define FRAM_ADDRESS_TSSSENSLASTCALIB_HISTORY	FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY + 124 //take 124 bytes
-//TSS sensor calibration data
+//TSS sensor calibration data (DEPRICATED)
 #define FRAM_ADDRESS_pHSENSLASTCALIB_HISTORY	FRAM_ADDRESS_TSSSENSLASTCALIB_HISTORY + 124 //take 124 bytes //DEPRICATED
 //Range select flag
 #define FRAM_ADDRESS_RANGESELECT_FLAG			FRAM_ADDRESS_pHSENSLASTCALIB_HISTORY + 124 //takes 1 byte
@@ -64,7 +64,11 @@
 //COD sensor calibration
 #define FRAM_ADDRESS_COD_SENSOR_CALIB		FRAM_ADDRESS_PH_SENSOR_CALIB + 90 //Used 48 bytes (90 bytes)
 //pH Last 10 calibration
-#define FRAM_ADDRESS_PHSENSLASTCALIB_HISTORY	FRAM_ADDRESS_COD_SENSOR_CALIB + 90 //take 204 bytes
+#define FRAM_ADDRESS_PHSENSLASTCALIB_HISTORY	FRAM_ADDRESS_COD_SENSOR_CALIB + 90 //take 204 bytes (210 BYTES)
+//COD last calibration
+#define FRAM_ADDRESS_CODSENSORLASTCALIB_HISTORY	FRAM_ADDRESS_PHSENSLASTCALIB_HISTORY + 210 //take 124 bytes
+//TSS last calibration
+#define FRAM_ADDRESS_TSSSENSORLASTCALIB_HISTORY	FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY + 210 //takes 164 bytes (c- 0:2 and time stamp)
 
 void FRAM_OperationWrite(uint16_t u16_address,uint8_t *u8_pData,uint16_t u16_noByte);
 void FRAM_OperationRead(uint16_t u16_address,uint8_t *u8_pData,uint16_t u16_noByte);
