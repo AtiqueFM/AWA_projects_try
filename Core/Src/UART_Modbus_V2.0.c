@@ -32,20 +32,27 @@ volatile uint8_t RxCRCDataPacketLength = 0;/*<For extracting the data from RxBUf
 //For RTU MODBUS
 volatile uint8_t MOD2_Rxbuff[310];
 volatile uint8_t MOD2_Txbuff[310];
+volatile uint8_t MOD3_Rxbuff[310];
+volatile uint8_t MOD3_Txbuff[310];
 volatile uint16_t MOD2_Rxptr = 0, MOD2_Txptr = 0, MOD2_RxBytes = 0, MOD2_TxBytes = 0;
+volatile uint16_t MOD3_Rxptr = 0, MOD3_Txptr = 0, MOD3_RxBytes = 0, MOD3_TxBytes = 0;
 volatile uint16_t DMA_Transaction_no_Tx_uart6 = 0;//RTU
 volatile uint16_t DMA_Transaction_no_Tx_uart1 = 0;//HMI
+volatile uint16_t DMA_Transaction_no_Tx_uart3 = 0;//HMI
 uint16_t uart6_tx_length = 0;
 uint16_t uart1_tx_length = 0;
+uint16_t uart3_tx_length = 0;
 
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart6;
 extern TIM_HandleTypeDef htim7;
 extern TIM_HandleTypeDef htim5;
+extern TIM_HandleTypeDef htim12;
 uint16_t crc_calc(char* input_str, int len);
 void ProcessModbusQuery(void);
 void ProcessMOD2_ModbusQuery_DMA(void);
+void ProcessModbusQuery_ISR_3(void);
 
 /*External function from Initialization*/
 extern void DMA_UART6_RX_Init(void);
@@ -61,9 +68,14 @@ extern volatile uint8_t uart_rx_process_query;		/*< This flag will be set when t
 extern uint8_t rx_byte_count;						/*<Count of bytes received from UART 6*/
 extern uint8_t tx_byte_count_uart1;
 extern uint8_t rx_byte_count_uart1;
+extern uint8_t tx_byte_count_uart3;
+extern uint8_t rx_byte_count_uart3;
 extern volatile uint16_t uart_rx_timeout_counter_uart1;
 extern uint8_t uart_rx_buffer_uart1;
 extern volatile uint8_t uart_rx_bytes_uart1;
+extern volatile uint16_t uart_rx_timeout_counter_uart3;
+extern uint8_t uart_rx_buffer_uart3;
+extern volatile uint8_t uart_rx_bytes_uart3;
 //void MX_USART3_UART_Init(void);
 
 /**
@@ -2245,6 +2257,803 @@ void ProcessModbusQuery_ISR(void)
 		  ADM_2_CLTR_LOW();
 		  //re-start the uart reception interrupt
 		  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+
+		  //ADM_2_CLTR_LOW();
+	}
+
+
+
+
+}
+
+void ProcessModbusQuery_ISR_3(void)
+{
+	uint16_t Temp1 = 0, Temp2 = 0, startadd = 0, length = 0, Temp = 0;
+	uint16_t u16RxCRCDataPacketLength = 0;
+
+	memset((uint16_t*)MOD3_Txbuff,'\0',620);
+
+	//huart3.Instance->CR1 |= UART_IT_TXE;
+	if(MOD3_Rxbuff[0] == 3)//SlaveID) // check slave ID
+	{
+		rx_byte_count_uart3 -= 1;
+		u16RxCRCDataPacketLength = RxCRCIndex;
+		Temp1 = MOD3_Rxbuff[rx_byte_count_uart3] << 8;
+		Temp1 |= MOD3_Rxbuff[--rx_byte_count_uart3];
+		// calculate CRC of received packet
+		Temp2 = crc_calc((char*)MOD3_Rxbuff, rx_byte_count_uart3);
+		if(Temp2 == Temp1) // verify CRC
+		{
+			MOD3_TxBytes = 0;
+			MOD3_Txbuff[MOD3_TxBytes++] = MOD3_Rxbuff[0]; // slave ID
+			MOD3_Txbuff[MOD3_TxBytes++] = MOD3_Rxbuff[1]; // Function code
+			if(MOD3_Rxbuff[1] == 0x10)
+			{
+				MOD3_Rxbuff[1] = 0x10;
+			}
+			startadd = MOD3_Rxbuff[2] << 8;
+			startadd |= MOD3_Rxbuff[3];
+			switch(MOD3_Rxbuff[1])
+			{
+				case 0x01: // read coil status
+				{
+					length = Rxbuff[4] << 8;
+					length |= Rxbuff[5]; // number of coils to read
+					if((startadd + length) < 45)//26)
+					{
+						if(((length >> 3) << 3) == length)
+							Temp1 = length >> 3; // even byte count;
+						else
+							Temp1 = (length >> 3) + 1; // odd byte count;
+						Txbuff[TxBytes++] = Temp1;
+						DMA_Transaction_no_Tx_uart1 = Temp1 + 5;//CRC + other components
+						length = length + startadd;
+						for(Temp2 = 0; Temp2 < Temp1; Temp2 ++) //  byte count
+						{
+							Txbuff[TxBytes] = 0;
+							Temp = 0;
+							while((startadd < length) && (Temp < 8))
+							{
+								Txbuff[TxBytes] |= (CoilStatusRegister_t.bytes[startadd++] << Temp);
+								Temp++;
+							}
+
+							TxBytes++;
+						}
+						Temp2 = crc_calc((char*)Txbuff, TxBytes);
+						Txbuff[TxBytes++] = Temp2;
+						Txbuff[TxBytes++] = Temp2 >> 8;
+					}
+#if 0
+					if((startadd + length) < 17)
+					{
+						if(((length >> 3) << 3) == length)
+							Temp1 = length >> 3; // even byte count;
+						else
+							Temp1 = (length >> 3) + 1; // odd byte count;
+						Txbuff[TxBytes++] = Temp1;
+
+						length = length + startadd;
+						for(Temp2 = 0; Temp2 < Temp1; Temp2 ++) //  byte count
+						{
+							Txbuff[TxBytes] = 0;
+							Temp = 0;
+							while((startadd < length) && (Temp < 8))
+							{
+								Txbuff[TxBytes] |= (UCoil.ByteArr[startadd++] << Temp);
+								Temp++;
+							}
+
+							TxBytes++;
+						}
+						Temp2 = crc_calc((char*)Txbuff, TxBytes);
+						Txbuff[TxBytes++] = Temp2;
+						Txbuff[TxBytes++] = Temp2 >> 8;
+					}
+#endif
+					else
+					{
+						// error
+						Txbuff[1] |= 0x80;
+						Txbuff[2] = 0x02;
+						//for(Temp1 = 2; Temp1 < RxBytes - 2; Temp1++) // echo response
+						//Txbuff[TxBytes++] = Rxbuff[Temp1];
+
+						Temp2 = crc_calc((char*)Txbuff, 3);
+						Txbuff[3] = Temp2;
+						Txbuff[4] = Temp2 >> 8;
+						TxBytes = 5;
+					}
+
+				  break;
+				}
+				case 0x02://Input status
+				{
+					length = Rxbuff[4] << 8;
+					length |= Rxbuff[5]; // number of coils to read
+					if((startadd + length) < 45)//26)
+					{
+						if(((length >> 3) << 3) == length)
+							Temp1 = length >> 3; // even byte count;
+						else
+							Temp1 = (length >> 3) + 1; // odd byte count;
+						Txbuff[TxBytes++] = Temp1;
+						DMA_Transaction_no_Tx_uart1 = Temp1 + 5;//CRC + other components
+						length = length + startadd;
+						for(Temp2 = 0; Temp2 < Temp1; Temp2 ++) //  byte count
+						{
+							Txbuff[TxBytes] = 0;
+							Temp = 0;
+							while((startadd < length) && (Temp < 8))
+							{
+								Txbuff[TxBytes] |= (CoilInputRegister_t.bytes[startadd++] << Temp);
+								Temp++;
+							}
+
+							TxBytes++;
+						}
+						Temp2 = crc_calc((char*)Txbuff, TxBytes);
+						Txbuff[TxBytes++] = Temp2;
+						Txbuff[TxBytes++] = Temp2 >> 8;
+					}else
+					{
+						// error
+						Txbuff[1] |= 0x80;
+						Txbuff[2] = 0x02;
+						//for(Temp1 = 2; Temp1 < RxBytes - 2; Temp1++) // echo response
+						//Txbuff[TxBytes++] = Rxbuff[Temp1];
+
+						Temp2 = crc_calc((char*)Txbuff, 3);
+						Txbuff[3] = Temp2;
+						Txbuff[4] = Temp2 >> 8;
+						TxBytes = 5;
+					}
+					break;
+				}
+				case 0x03:// read holding register
+				{
+					length = MOD3_Rxbuff[4] << 8;
+					length |= MOD3_Rxbuff[5];
+					//startadd = startadd - 40000;
+					uint16_t index = 0;
+					if(startadd < 5000)
+					{
+						if(startadd < 1000)
+						{
+							index = 0;
+						}else if(startadd >= 1000 && startadd < 2000)
+						{
+							index = HOLDING_REGISTER_ADDRESS_41000;
+							startadd -= 1000;
+						}else if(startadd >= 2000 && startadd < 3000)
+						{
+							index = HOLDING_REGISTER_ADDRESS_42000;
+							startadd -= 2000;
+						}else if(startadd >= 3000 && startadd < 4000)
+						{
+							index = HOLDING_REGISTER_ADDRESS_43000;
+							startadd -= 3000;
+						}else if(startadd >= 4000 && startadd < 5000)
+						{
+							index = HOLDING_REGISTER_ADDRESS_44000;
+							startadd -= 4000;
+						}
+							startadd = startadd * 2;
+							Temp1 = length * 2;
+							DMA_Transaction_no_Tx_uart3 = Temp1 + 5;//Data and other components
+							MOD3_Txbuff[MOD3_TxBytes++] = Temp1; // byte count
+
+							for(Temp2 = 0; Temp2 < length; Temp2++)
+							{
+								MOD3_Txbuff[MOD3_TxBytes++] = HoldingRegister_t.bytes[index + startadd + 1];//UHoldReg.ByteArr[startadd + 1]; // High byte
+								MOD3_Txbuff[MOD3_TxBytes++] = HoldingRegister_t.bytes[index + startadd];//UHoldReg.ByteArr[startadd]; // low byte
+								startadd += 2;
+							}
+
+							Temp2 = crc_calc((char*)MOD3_Txbuff, MOD3_TxBytes);
+							MOD3_Txbuff[MOD3_TxBytes++] = Temp2;
+							MOD3_Txbuff[MOD3_TxBytes++] = Temp2 >> 8;
+					}
+#if 0
+					if((startadd + length) < 6)
+					{
+						startadd = startadd * 2;
+						Temp1 = length * 2;
+						Txbuff[TxBytes++] = Temp1; // byte count
+
+						for(Temp2 = 0; Temp2 < length; Temp2++)
+						{
+							Txbuff[TxBytes++] = UHoldReg.ByteArr[startadd + 1]; // High byte
+							Txbuff[TxBytes++] = UHoldReg.ByteArr[startadd]; // low byte
+							startadd += 2;
+						}
+
+						Temp2 = crc_calc((char*)Txbuff, TxBytes);
+						Txbuff[TxBytes++] = Temp2;
+						Txbuff[TxBytes++] = Temp2 >> 8;
+					}
+#endif
+					else
+					{
+						// error
+						Txbuff[1] |= 0x80;
+						Txbuff[2] = 0x02;
+						//for(Temp1 = 2; Temp1 < RxBytes - 2; Temp1++) // echo response
+						//Txbuff[TxBytes++] = Rxbuff[Temp1];
+
+						Temp2 = crc_calc((char*)Txbuff, 3);
+						Txbuff[3] = Temp2;
+						Txbuff[4] = Temp2 >> 8;
+						TxBytes = 5;
+					}
+
+				  break;
+				}
+				case 0x04:// read input register
+				{
+					length = Rxbuff[4] << 8;
+					length |= Rxbuff[5];
+					//startadd = startadd - 30000;
+					uint16_t index = 0;
+					if(startadd < 4000)
+					{
+						if(startadd < 1000)
+						{
+							index = 0;
+						}else if(startadd >= 1000 && startadd < 2000)
+						{
+							index = INPUT_REGISTER_ADDRESS_31000;
+							startadd -= 1000;
+						}else if(startadd >= 2000 && startadd < 3000)
+						{
+							index = INPUT_REGISTER_ADDRESS_32000;
+							startadd -= 2000;
+						}
+						startadd = startadd * 2;
+						Temp1 = length * 2;
+						DMA_Transaction_no_Tx_uart1 = Temp1 + 5;//Data and other compenents
+						Txbuff[TxBytes++] = Temp1; // byte count
+//						if((startadd + length) >= 500)
+//						{
+//							UInputReg.SInputReg.TemperatureCh5 = ReadADC(CH5);
+//							UInputReg.SInputReg.WDetectCh6 = ReadADC(CH6);
+//							UInputReg.SInputReg.TestCh7 = ReadADC(CH7);
+//						}
+						for(Temp2 = 0; Temp2 < length; Temp2++)
+						{
+							Txbuff[TxBytes++] = InputRegister_t.bytes[index + startadd + 1];//UInputReg.ByteArr[index + startadd + 1]; // High byte
+							Txbuff[TxBytes++] = InputRegister_t.bytes[index + startadd];//UInputReg.ByteArr[index + startadd]; // low byte
+							startadd += 2;
+						}
+
+						Temp2 = crc_calc((char*)Txbuff, TxBytes);
+						Txbuff[TxBytes++] = Temp2;
+						Txbuff[TxBytes++] = Temp2 >> 8;
+					}
+#if 0
+					if((startadd + length) < 504)
+					{
+						startadd = startadd * 2;
+						Temp1 = length * 2;
+						Txbuff[TxBytes++] = Temp1; // byte count
+						if((startadd + length) >= 500)
+						{
+							UInputReg.SInputReg.TemperatureCh5 = ReadADC(CH5);
+							UInputReg.SInputReg.WDetectCh6 = ReadADC(CH6);
+							UInputReg.SInputReg.TestCh7 = ReadADC(CH7);
+						}
+						for(Temp2 = 0; Temp2 < length; Temp2++)
+						{
+							Txbuff[TxBytes++] = UInputReg.ByteArr[startadd + 1]; // High byte
+							Txbuff[TxBytes++] = UInputReg.ByteArr[startadd]; // low byte
+							startadd += 2;
+						}
+
+						Temp2 = crc_calc((char*)Txbuff, TxBytes);
+						Txbuff[TxBytes++] = Temp2;
+						Txbuff[TxBytes++] = Temp2 >> 8;
+
+					}
+#endif
+					else
+					{
+						// error
+						Txbuff[1] |= 0x80;
+						Txbuff[2] = 0x02;
+						//for(Temp1 = 2; Temp1 < RxBytes - 2; Temp1++) // echo response
+						//Txbuff[TxBytes++] = Rxbuff[Temp1];
+
+						Temp2 = crc_calc((char*)Txbuff, 3);
+						Txbuff[3] = Temp2;
+						Txbuff[4] = Temp2 >> 8;
+						TxBytes = 5;
+					}
+
+
+				  break;
+				}
+				case 0x05:// Force single coil
+				{
+					if(startadd < 16)
+					{
+						DMA_Transaction_no_Tx_uart1 = 8;//Data  + other components
+						CoilStatusRegister_t.bytes[startadd] = Rxbuff[4] & 0x01;
+						for(Temp1 = 2; Temp1 < 8; Temp1++) // echo response
+							Txbuff[TxBytes++] = Rxbuff[Temp1];
+					}
+#if 0
+					if(startadd < 16)
+					{
+						UCoil.ByteArr[startadd] = Rxbuff[4] & 0x01;
+						for(Temp1 = 2; Temp1 < RxBytes; Temp1++) // echo response
+							Txbuff[TxBytes++] = Rxbuff[Temp1];
+					}
+#endif
+					else
+					{
+						// error response
+						Txbuff[1] |= 0x80;
+						for(Temp1 = 2; Temp1 < RxBytes - 2; Temp1++) // echo response
+						Txbuff[TxBytes++] = Rxbuff[Temp1];
+
+						Temp2 = crc_calc((char*)Txbuff, TxBytes);
+						Txbuff[TxBytes++] = Temp2;
+						Txbuff[TxBytes++] = Temp2 >> 8;
+					}
+
+				  break;
+				}
+				case 0x06:// Preset single register(holding)
+				{
+					//startadd = startadd - 40000;
+					uint16_t index = 0;
+					if(startadd < 5000)
+					{
+						if(startadd < 1000)
+						{
+							index = 0;
+						}else if(startadd >= 1000 && startadd < 2000)
+						{
+							index = HOLDING_REGISTER_ADDRESS_41000;
+							startadd -= 1000;
+						}else if(startadd >= 2000 && startadd < 3000)
+						{
+							index = HOLDING_REGISTER_ADDRESS_42000;
+							startadd -= 2000;
+						}else if(startadd >= 3000 && startadd < 4000)
+						{
+							index = HOLDING_REGISTER_ADDRESS_43000;
+							startadd -= 3000;
+						}else if(startadd >= 4000 && startadd < 5000)
+						{
+							index = HOLDING_REGISTER_ADDRESS_44000;
+							startadd -= 4000;
+						}
+
+						startadd = startadd << 1;
+						HoldingRegister_t.bytes[index + startadd++] = Rxbuff[5];
+						HoldingRegister_t.bytes[index + startadd] = Rxbuff[4];
+						DMA_Transaction_no_Tx_uart1 = 8;//Data  + other components
+						for(Temp1 = 2; Temp1 < 8; Temp1++) // echo response
+							Txbuff[TxBytes++] = Rxbuff[Temp1];
+						if(UHoldReg.SHoldReg.ADCReadStart == 0x01)
+						{
+							if(CycleStart == 0)
+							{
+								TimerStart = 0x01;
+							}
+						}
+
+					}
+#if 0
+					if(startadd < 5)
+					{
+						startadd = startadd << 1;
+						UHoldReg.ByteArr[startadd++] = Rxbuff[5];
+						UHoldReg.ByteArr[startadd] = Rxbuff[4];
+						for(Temp1 = 2; Temp1 < RxBytes; Temp1++) // echo response
+							Txbuff[TxBytes++] = Rxbuff[Temp1];
+						if(UHoldReg.SHoldReg.ADCReadStart == 0x01)
+						{
+							if(CycleStart == 0)
+							{
+								TimerStart = 0x01;
+							}
+						}
+							//TimerStart = 0x01;
+					}
+#endif
+					else
+					{
+						// error
+						Txbuff[1] |= 0x80;
+						Txbuff[2] = 0x02;
+						//for(Temp1 = 2; Temp1 < RxBytes - 2; Temp1++) // echo response
+						//Txbuff[TxBytes++] = Rxbuff[Temp1];
+
+						Temp2 = crc_calc((char*)Txbuff, 3);
+						Txbuff[3] = Temp2;
+						Txbuff[4] = Temp2 >> 8;
+						TxBytes = 5;
+					}
+
+				  break;
+				}
+				case 0x0F:// Force multiple coils
+				{
+					Temp = 6;
+					length = Rxbuff[4] << 8;
+					length |= Rxbuff[5];
+					if((startadd + length) < 45)//17) //number of coils
+					{
+						for(Temp1 = 0; Temp1 < Rxbuff[6]; Temp1++) // byte count
+						{
+							Temp2 = 0;
+							Temp++;
+#if 0
+							while(Temp2 < 8)
+							{
+								UCoil.ByteArr[startadd++] = (Rxbuff[Temp] >> Temp2) & 0x01;
+								Temp2++;
+							}
+#endif
+							while(Temp2 < 8)
+							{
+								CoilStatusRegister_t.bytes[startadd++] = (Rxbuff[Temp] >> Temp2) & 0x01;
+								Temp2++;
+							}
+						}
+						for(Temp1 = 2; Temp1 < 6; Temp1++) // response
+						Txbuff[TxBytes++] = Rxbuff[Temp1];
+						Temp2 = crc_calc((char*)Txbuff, TxBytes);
+						Txbuff[TxBytes++] = Temp2;
+						Txbuff[TxBytes++] = Temp2 >> 8;
+						DMA_Transaction_no_Tx_uart1 = 8;//Quantity of coils + other components
+#if 0
+						//Test code start 04.03.2021 Sagar
+							if(UCoil.ByteArr[0] == 1) 	//P5
+							{
+								HAL_GPIO_WritePin(GPIOD, GPIO_PIN_0, GPIO_PIN_SET);
+								HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, GPIO_PIN_SET);
+							}else
+							{
+								HAL_GPIO_WritePin(GPIOD, GPIO_PIN_0, GPIO_PIN_RESET);
+								HAL_GPIO_WritePin(GPIOD, GPIO_PIN_1, GPIO_PIN_SET);
+							}
+
+							if(UCoil.ByteArr[1] == 1)	//P6
+							{
+								HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, GPIO_PIN_SET);
+								HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, GPIO_PIN_SET);
+							}else
+							{
+								HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, GPIO_PIN_RESET);//HAL_GPIO_WritePin(GPIOD, GPIO_PIN_2, GPIO_PIN_SET);
+								HAL_GPIO_WritePin(GPIOD, GPIO_PIN_3, GPIO_PIN_SET);
+							}
+
+							if(UCoil.ByteArr[2] == 1)	//P7
+							{
+								HAL_GPIO_WritePin(GPIOF, GPIO_PIN_9, GPIO_PIN_SET);
+							}else
+							{
+								HAL_GPIO_WritePin(GPIOF, GPIO_PIN_9, GPIO_PIN_RESET);
+							}
+
+							if(UCoil.ByteArr[3] == 1)	//P8
+							{
+								HAL_GPIO_WritePin(GPIOF, GPIO_PIN_10, GPIO_PIN_SET);
+							}else
+							{
+								HAL_GPIO_WritePin(GPIOF, GPIO_PIN_10, GPIO_PIN_RESET);
+							}
+
+
+							if(UCoil.ByteArr[4] == 1)	//P9   if(UCoil.ByteArr[1] == 1)	//P6   //temperer //
+							{
+								HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_SET);
+							}else
+							{
+								HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_RESET);
+							}
+							if(UCoil.ByteArr[5] == 1)	//P10
+							{
+								HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_SET);
+							}else
+							{
+								HAL_GPIO_WritePin(GPIOC, GPIO_PIN_1, GPIO_PIN_RESET);
+							}
+							if(UCoil.ByteArr[6] == 1)	//P11
+							{
+								HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_SET);
+							}else
+							{
+								HAL_GPIO_WritePin(GPIOC, GPIO_PIN_3, GPIO_PIN_RESET);
+							}
+							if(UCoil.ByteArr[7] == 1)	//P12
+							{
+								HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_SET);
+							}else
+							{
+								HAL_GPIO_WritePin(GPIOC, GPIO_PIN_2, GPIO_PIN_RESET);
+							}
+
+
+
+							if(UCoil.ByteArr[8] == 1)	//RLY1 (P31)
+							{
+								HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
+							}else
+							{
+								HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
+							}
+							if(UCoil.ByteArr[9] == 1)	//RLY2 (P32)
+							{
+								HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_SET);
+							}else
+							{
+								HAL_GPIO_WritePin(GPIOA, GPIO_PIN_1, GPIO_PIN_RESET);
+							}
+							if(UCoil.ByteArr[10] == 1)	//RLY3 (P33)
+							{
+								HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_SET);
+							}else
+							{
+								HAL_GPIO_WritePin(GPIOA, GPIO_PIN_2, GPIO_PIN_RESET);
+							}
+							if(UCoil.ByteArr[11] == 1)	//RLY4 (P34)
+							{
+								HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_SET);
+							}else
+							{
+								HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+							}
+							if(UCoil.ByteArr[12] == 1)	//RLY5 (P35)
+							{
+								HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_SET);
+							}else
+							{
+								HAL_GPIO_WritePin(GPIOE, GPIO_PIN_10, GPIO_PIN_RESET);
+							}
+							if(UCoil.ByteArr[13] == 1)	//RLY6 (P36)
+							{
+								HAL_GPIO_WritePin(GPIOE, GPIO_PIN_12, GPIO_PIN_SET);
+							}else
+							{
+								HAL_GPIO_WritePin(GPIOE, GPIO_PIN_12, GPIO_PIN_RESET);
+							}
+							if(UCoil.ByteArr[14] == 1)	//RLY7 (P29)
+							{
+								HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_SET);
+							}else
+							{
+								HAL_GPIO_WritePin(GPIOB, GPIO_PIN_10, GPIO_PIN_RESET);
+							}
+							if(UCoil.ByteArr[15] == 1)	//RLY8 (P30)
+							{
+								HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_SET);
+							}else
+							{
+								HAL_GPIO_WritePin(GPIOB, GPIO_PIN_11, GPIO_PIN_RESET);
+							}
+#endif
+							Temp1 = 0;
+						//Test code end 04.03.2021 Sagar
+					}
+					else
+					{
+						// error
+						Txbuff[1] |= 0x80;
+						Txbuff[2] = 0x02;
+						//for(Temp1 = 2; Temp1 < RxBytes - 2; Temp1++) // echo response
+						//Txbuff[TxBytes++] = Rxbuff[Temp1];
+
+						Temp2 = crc_calc((char*)Txbuff, 3);
+						Txbuff[3] = Temp2;
+						Txbuff[4] = Temp2 >> 8;
+						TxBytes = 5;
+					}
+				  break;
+				}
+				case 0x10:// Preset multiple registers
+				{
+					//startadd = startadd - 40000;
+					length = Rxbuff[4] << 8;
+					length |= Rxbuff[5];
+
+					uint16_t index = 0;
+					if(startadd < 5000)
+					{
+						if(startadd < 1000)
+						{
+							index = 0;
+						}else if(startadd >= 1000 && startadd < 2000)
+						{
+							index = HOLDING_REGISTER_ADDRESS_41000;
+							startadd -= 1000;
+						}else if(startadd >= 2000 && startadd < 3000)
+						{
+							index = HOLDING_REGISTER_ADDRESS_42000;
+							startadd -= 2000;
+						}else if(startadd >= 3000 && startadd < 4000)
+						{
+							index = HOLDING_REGISTER_ADDRESS_43000;
+							startadd -= 3000;
+						}else if(startadd >= 4000 && startadd < 5000)
+						{
+							index = HOLDING_REGISTER_ADDRESS_44000;
+							startadd -= 4000;
+						}
+
+						startadd = startadd << 1;
+						Temp2 = Rxbuff[6] + 7;
+						Temp1 = 7;
+						while( Temp1 < Temp2 ) // byte count
+						{
+							HoldingRegister_t.bytes[index + startadd++] = Rxbuff[Temp1 + 1]; // low byte
+							HoldingRegister_t.bytes[index + startadd++] = Rxbuff[Temp1]; // high byte
+							Temp1 += 2;
+						}
+
+						for(Temp1 = 2; Temp1 < 6; Temp1++)
+							Txbuff[TxBytes++] = Rxbuff[Temp1];
+						Temp2 = crc_calc((char*)Txbuff, TxBytes);
+						Txbuff[TxBytes++] = Temp2;
+						Txbuff[TxBytes++] = Temp2 >> 8;
+
+						if(UHoldReg.SHoldReg.ADCReadStart == 0x01)
+						{
+							if(CycleStart == 0)
+							{
+								TimerStart = 0x01;
+							}
+						}
+							//TimerStart = 0x01;
+					}
+
+
+
+#if 0
+					if((startadd + length) < 6)
+					{
+						startadd = startadd << 1;
+						Temp2 = Rxbuff[6] + 7;
+						Temp1 = 7;
+						while( Temp1 < Temp2 ) // byte count
+						{
+							UHoldReg.ByteArr[startadd++] = Rxbuff[Temp1 + 1]; // low byte
+							UHoldReg.ByteArr[startadd++] = Rxbuff[Temp1]; // high byte
+							Temp1 += 2;
+						}
+
+						for(Temp1 = 2; Temp1 < 6; Temp1++)
+							Txbuff[TxBytes++] = Rxbuff[Temp1];
+						Temp2 = crc_calc((char*)Txbuff, TxBytes);
+						Txbuff[TxBytes++] = Temp2;
+						Txbuff[TxBytes++] = Temp2 >> 8;
+
+						if(UHoldReg.SHoldReg.ADCReadStart == 0x01)
+						{
+							if(CycleStart == 0)
+							{
+								TimerStart = 0x01;
+							}
+						}
+							//TimerStart = 0x01;
+					}
+#endif
+					else
+					{
+						// error
+						Txbuff[1] |= 0x80;
+						Txbuff[2] = 0x02;
+						//for(Temp1 = 2; Temp1 < RxBytes - 2; Temp1++) // echo response
+						//Txbuff[TxBytes++] = Rxbuff[Temp1];
+
+						Temp2 = crc_calc((char*)Txbuff, 3);
+						Txbuff[3] = Temp2;
+						Txbuff[4] = Temp2 >> 8;
+						TxBytes = 5;
+					}
+
+				  break;
+				}
+				default:
+					break;
+			}
+
+			for(Temp1 = 0; Temp1 < 310; Temp1++)
+				MOD3_Rxbuff[Temp1] = 0;
+			MOD3_Txptr = 0;
+//			huart3.Instance->CR1 |= UART_MODE_TX;// Tx mode enable
+//			huart3.Instance->CR1 |= UART_IT_TXE; // tx empty interrupt enable
+
+			//huart1.Instance->CR1 |= UART_MODE_TX;// Tx mode enable
+			//huart1.Instance->CR1 |= UART_IT_TXE; // tx empty interrupt enable
+			//Enable UART 6 DMAT
+//			huart1.Instance->CR3 &= !USART_CR3_DMAR;
+//			huart1.Instance->CR3 |= USART_CR3_DMAT;
+//			//Disable the interrupt for UART RX
+//			//DMA_IRQITConfig(IRQ_NO_DMA2_Stream2,DISABLE);
+//
+//			/*Configure the DMA 2 Stream 6 and enable the IRQ*/
+//			DMA_UART1_TX_Init();
+//
+//			/*Enable the DMA2 Stream 7*/
+//			DMAPeripheralEnable(DMA2_Stream7, ENABLE);
+			/*Direction pin to HIGH for Tx*/
+			ADM_3_CLTR_HIGH();
+			uart3_tx_length = DMA_Transaction_no_Tx_uart3;// + 5;
+			HAL_UART_Transmit_IT(&huart3, (uint8_t*)MOD3_Txbuff,uart3_tx_length);
+
+			/*Send the response using DMA*/
+			//HAL_UART_Transmit_DMA(&huart6, (uint8_t*)Txbuff, uart6_tx_length);
+
+			/*Direction pin to HIGH for Tx*/
+			//ADM_2_CLTR_HIGH();
+
+		}
+		else
+		{
+//#if QUERRY_RX_INIT_LEN_6
+//			DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),DMA_FIRST_TRANSACTION_NO); /*< Initialize the DMA2 Stream 5 with DMA_FIRST_TRANSACTION_NO*/
+//#else
+//			DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),8); /*< Initialize the DMA2 Stream 5 with DMA_FIRST_TRANSACTION_NO*/
+//#endif
+//
+//			/*Enable the DMAR*/
+//			huart1.Instance->CR3 |= USART_CR3_DMAR;
+//			//TODO: Increment the MODBUS_DMA_querry_count to 1.
+//			DMAPeripheralEnable(DMA2_Stream5,ENABLE);
+
+			  HAL_TIM_Base_Stop_IT(&htim12);
+			  //Abort the UART Rx interupt
+			  HAL_UART_AbortReceive_IT(&huart3);
+			  //Reset the timer 7 timeout counter
+			  uart_rx_timeout_counter_uart3 = 0;
+			  //HAL_TIM_Base_Stop_IT(&htim7);
+			  /*3. if the Slave ID is not correct the flush the RX buffer*/
+			  memset((uint16_t*)Rxbuff,'\0',sizeof(Rxbuff));
+			  //Reset the rx byte counter
+			  uart_rx_bytes_uart3 = 0;
+			  //Reset the query processing flag.
+			  uart_rx_process_query = RESET;
+
+			  ADM_3_CLTR_LOW();
+			  //re-start the uart reception interrupt
+			  HAL_UART_Receive_IT(&huart3, &uart_rx_buffer_uart3, 1);
+
+			  //ADM_2_CLTR_LOW();
+
+		}
+	}
+	else // invalid slave ID
+	{
+//#if QUERRY_RX_INIT_LEN_6
+//		DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),DMA_FIRST_TRANSACTION_NO); /*< Initialize the DMA2 Stream 5 with DMA_FIRST_TRANSACTION_NO*/
+//#else
+//		DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),8); /*< Initialize the DMA2 Stream 5 with DMA_FIRST_TRANSACTION_NO*/
+//#endif
+//		/*Enable the DMAR*/
+//		huart1.Instance->CR3 |= USART_CR3_DMAR;
+//		//TODO: Increment the MODBUS_DMA_querry_count to 1.
+//		DMAPeripheralEnable(DMA2_Stream5,ENABLE);
+
+		  HAL_TIM_Base_Stop_IT(&htim12);
+		  //Abort the UART Rx interupt
+		  HAL_UART_AbortReceive_IT(&huart3);
+		  //Reset the timer 7 timeout counter
+		  uart_rx_timeout_counter_uart3 = 0;
+		  //HAL_TIM_Base_Stop_IT(&htim7);
+		  /*3. if the Slave ID is not correct the flush the RX buffer*/
+		  memset((uint16_t*)Rxbuff,'\0',sizeof(Rxbuff));
+		  //Reset the rx byte counter
+		  uart_rx_bytes_uart3 = 0;
+		  //Reset the query processing flag.
+		  uart_rx_process_query = RESET;
+
+		  ADM_3_CLTR_LOW();
+		  //re-start the uart reception interrupt
+		  HAL_UART_Receive_IT(&huart3, &uart_rx_buffer_uart3, 1);
 
 		  //ADM_2_CLTR_LOW();
 	}

@@ -69,6 +69,7 @@ TIM_HandleTypeDef htim4;
 TIM_HandleTypeDef htim5;
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
+TIM_HandleTypeDef htim12;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart3;
@@ -78,6 +79,7 @@ DMA_HandleTypeDef hdma_usart6_tx;
 /* USER CODE BEGIN PV */
 extern uint8_t uart_rx_buffer;			/*< Will receive single byte from UART and will transfer it to the RX buffer array.*/
 extern uint8_t uart_rx_buffer_uart1;	/*< Will receive single byte from UART and will transfer it to the RX buffer array.*/
+extern uint8_t uart_rx_buffer_uart3;	/*< Will receive single byte from UART and will transfer it to the RX buffer array.*/
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,6 +99,7 @@ static void MX_ADC1_Init(void);
 static void MX_DMA_Init(void);
 static void MX_TIM7_Init(void);
 static void MX_TIM5_Init(void);
+static void MX_TIM12_Init(void);
 /* USER CODE BEGIN PFP */
 
 void ProcessCommandCommands(void);
@@ -208,6 +211,7 @@ int main(void)
   MX_DMA_Init();
   MX_TIM7_Init();
   MX_TIM5_Init();
+  MX_TIM12_Init();
   /* USER CODE BEGIN 2 */
   ITM_Port32(31) = 2;
 
@@ -222,6 +226,9 @@ int main(void)
 
   //Start the reception in UART6 using interrupt
   HAL_UART_Receive_IT(&huart1, &uart_rx_buffer_uart1, 1);
+
+  //Start UART3 on interrupt
+  HAL_UART_Receive_IT(&huart3, &uart_rx_buffer_uart3, 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -229,6 +236,8 @@ int main(void)
   ADM_CLTR_LOW();
 
   ADM_2_CLTR_LOW();
+
+  ADM_3_CLTR_LOW();
   //test
 //  HoldingRegisterdefaultData();
   ModbusReadConfiguration();
@@ -819,6 +828,44 @@ static void MX_TIM7_Init(void)
 }
 
 /**
+  * @brief TIM12 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM12_Init(void)
+{
+
+  /* USER CODE BEGIN TIM12_Init 0 */
+
+  /* USER CODE END TIM12_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+
+  /* USER CODE BEGIN TIM12_Init 1 */
+
+  /* USER CODE END TIM12_Init 1 */
+  htim12.Instance = TIM12;
+  htim12.Init.Prescaler = 2499;
+  htim12.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim12.Init.Period = 1;
+  htim12.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim12.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim12) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim12, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM12_Init 2 */
+
+  /* USER CODE END TIM12_Init 2 */
+
+}
+
+/**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
@@ -979,7 +1026,7 @@ static void MX_GPIO_Init(void)
                           |CARD_8_SPI_SS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, CARD_2_SPI_SS_Pin|CARD_3_PWR_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOD, ADM_3_CLTR_Pin|CARD_2_SPI_SS_Pin|CARD_3_PWR_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOG, CARD_2_PWR_Pin|CARD_2_SEL1_Pin|CARD_2_SEL2_Pin|CARD_3_SEL1_Pin, GPIO_PIN_RESET);
@@ -1063,17 +1110,17 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : ADM_3_CLTR_Pin CARD_2_SPI_SS_Pin CARD_3_PWR_Pin */
+  GPIO_InitStruct.Pin = ADM_3_CLTR_Pin|CARD_2_SPI_SS_Pin|CARD_3_PWR_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
   /*Configure GPIO pins : RESERVE_PD11_Pin RESERVE_PD12_Pin RESERVE_PD13_Pin RESERVE_PD14_Pin */
   GPIO_InitStruct.Pin = RESERVE_PD11_Pin|RESERVE_PD12_Pin|RESERVE_PD13_Pin|RESERVE_PD14_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : CARD_2_SPI_SS_Pin CARD_3_PWR_Pin */
-  GPIO_InitStruct.Pin = CARD_2_SPI_SS_Pin|CARD_3_PWR_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /*Configure GPIO pins : CARD_2_PWR_Pin CARD_2_SEL1_Pin CARD_2_SEL2_Pin CARD_3_SEL1_Pin */

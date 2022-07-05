@@ -4744,7 +4744,7 @@ void Application_MODBUSParseQuery(void)
 	  {
 		  RxFlag = 0;
 //		  ProcessModbusQuery();
-		  ProcessMOD2_ModbusQuery_DMA();
+		  ProcessMOD2_ModbusQuery_DMA();//RTU
 	  }
 
 	  //Comparing current command and new command
@@ -4759,7 +4759,12 @@ void Application_MODBUSParseQuery(void)
 		  //ProcessMOD2_ModbusQuery();
 //		  ProcessMOD2_ModbusQuery_DMA();
 
-		  ProcessModbusQuery_ISR();
+		  ProcessModbusQuery_ISR();//HMI
+	  }
+	  if(MOD3_RxFlag)
+	  {
+		  MOD3_RxFlag = RESET;
+		  ProcessModbusQuery_ISR_3();//CPCB
 	  }
 }
 uint32_t adjust_time_zone_to_epoch(int tz, uint32_t epoch){

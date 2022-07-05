@@ -38,7 +38,7 @@ extern "C" {
 #define HMI_VER_BUGFIX		0 /*<*/
 #define FW_VER_MAJOR		2 /*<*/
 #define FW_VER_MINOR		3 /*<Addition on multi-drop*/
-#define FW_VER_BUGFIX		9 /*<TSS - 3pt calibration*/
+#define FW_VER_BUGFIX		10 /*<UART 3 MODBUS-Multi-drop*/
 
 #define MODBUS_1000_BYTES					1
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1500
@@ -85,6 +85,7 @@ extern void ADCInit(void);
 extern void ProcessModbusQuery(void);
 extern void ProcessMOD2_ModbusQuery(void);
 extern void ProcessMOD2_ModbusQuery_DMA(void);
+extern void ProcessModbusQuery_ISR_3(void);
 //extern void MX_SPI3_Init(void);
 //extern void MX_USART3_UART_Init(void);
 /* USER CODE END ET */
@@ -660,7 +661,7 @@ extern volatile uint16_t MOD2_Rxptr, MOD2_Txptr, MOD2_RxBytes, MOD2_TxBytes;
 extern volatile uint16_t DMA_Transaction_no_Tx_uart6;
 extern volatile uint16_t DMA_Transaction_no_Tx_uart1;//HMI
 
-
+extern volatile uint8_t MOD3_RxFlag;
 //extern uint16_t ADCbuff[100], dataptr;
 extern uint16_t crc_calc(char* input_str, int len );
 
@@ -849,6 +850,8 @@ void Error_Handler(void);
 #define RELAY_1_GPIO_Port GPIOB
 #define RELAY_2_Pin GPIO_PIN_11
 #define RELAY_2_GPIO_Port GPIOB
+#define ADM_3_CLTR_Pin GPIO_PIN_10
+#define ADM_3_CLTR_GPIO_Port GPIOD
 #define RESERVE_PD11_Pin GPIO_PIN_11
 #define RESERVE_PD11_GPIO_Port GPIOD
 #define RESERVE_PD12_Pin GPIO_PIN_12
@@ -1122,6 +1125,8 @@ void Error_Handler(void);
 #define ADM_CLTR_HIGH()					HAL_GPIO_WritePin(ADM_CLTR_GPIO_Port, ADM_CLTR_Pin, GPIO_PIN_SET)
 #define ADM_2_CLTR_LOW()				HAL_GPIO_WritePin(ADM_2_CLTR_GPIO_Port, ADM_2_CLTR_Pin, GPIO_PIN_RESET)
 #define ADM_2_CLTR_HIGH()				HAL_GPIO_WritePin(ADM_2_CLTR_GPIO_Port, ADM_2_CLTR_Pin, GPIO_PIN_SET)
+#define ADM_3_CLTR_LOW()				HAL_GPIO_WritePin(ADM_3_CLTR_GPIO_Port, ADM_3_CLTR_Pin, GPIO_PIN_RESET)
+#define ADM_3_CLTR_HIGH()				HAL_GPIO_WritePin(ADM_3_CLTR_GPIO_Port, ADM_3_CLTR_Pin, GPIO_PIN_SET)
 
 
 //pH Card
