@@ -1728,7 +1728,7 @@ uint8_t CheckScreen_CODADCCapture(uint8_t command)
 			//store the Signal ADC reading into the array
 			TempDet2Signal_Ch2[ArrayPtr] = TempDetSignal;
 
-			huart3.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
+			//huart3.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
 
 			ArrayPtr++;
 
@@ -1929,8 +1929,8 @@ uint8_t CheckScreen_CODADCCapture(uint8_t command)
 			dataptr = 0;
 
 			//Turn of the modbus receive query
-			huart3.Instance->CR1 |= UART_MODE_RX; // Rx enable
-			huart3.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
+			//huart3.Instance->CR1 |= UART_MODE_RX; // Rx enable
+			//huart3.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
 
 			//reset the common command flag
 			HoldingRegister_t.ModeCommand_t.CommonCommand = 0x00;
@@ -2062,7 +2062,7 @@ uint8_t CODADCCapture(uint8_t command)
 			//store the Signal ADC reading into the array
 			TempDet2Signal_Ch2[ArrayPtr] = TempDetSignal;
 
-			huart3.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
+			//huart3.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
 
 			ArrayPtr++;
 
@@ -2349,8 +2349,8 @@ uint8_t CODADCCapture(uint8_t command)
 			dataptr = 0;
 
 			//Turn of the modbus receive query
-			huart3.Instance->CR1 |= UART_MODE_RX; // Rx enable
-			huart3.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
+			//huart3.Instance->CR1 |= UART_MODE_RX; // Rx enable
+			//huart3.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
 
 			//reset the common command flag
 			HoldingRegister_t.ModeCommand_t.CommonCommand = 0x00;
