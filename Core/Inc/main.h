@@ -520,6 +520,9 @@ typedef struct{
 	float TSS_Y3;
 	float TSS_CF_RANGE_2;
 	float TSS_Intercept_RANGE_2;
+	//COD and TSS messages
+	uint16_t COD_Messages;	/*<7 : Calibration successful, 8 : Calibration Failed*/
+	uint16_t TSS_Messages;	/*<7 : Calibration successful, 8 : Calibration Failed*/
 	/*********************/
 }SensoralibrationHandle_t;
 
@@ -1545,6 +1548,7 @@ typedef union{
 		uint16_t pH_1ptCalib_sample;	/*<NA*/
 		uint16_t pH_1ptCalib_count;		/*<NA*/
 		float middle_value;
+		float measurement_Type;			/*<Three point calibration or 2 point calibration.*/
 		//Not stored in FRAM
 		uint16_t flag_sample_set;		/*<From HMI, for storing the simulation pH solution value*/
 		uint16_t flag_ADC_count_set;	/*<From HMI, for storing the pH solution corresponding ADC counts*/
@@ -1628,6 +1632,7 @@ typedef union{
 		float x3;
 		float y3;
 		float middle_value;
+		uint8_t measurementType;
 		uint8_t point_flag;
 #else
 		float slope;

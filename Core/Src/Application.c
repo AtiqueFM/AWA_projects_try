@@ -68,7 +68,6 @@ uint16_t flash_limit_min;
 
 struct Sensornode_3pt *CODSensorhead = '\0'; 	/*<Head for COD Sensor Calibration*/
 struct Sensornode_3pt *TSSSensorhead = '\0'; 	/*<Head for TSS Sensor Calibration*/
-//struct Sensornode *pHSensorhead = '\0'; 	/*<Head for pH Sensor Calibration*/
 struct Sensornode_3pt *pHSensorhead = '\0'; 	/*<Head for pH Sensor Calibration*/
 struct Factorynode *CODFactoryhead = '\0'; 	/*<Head for COD Factory Calibration*/
 struct Factorynode *TSSFactoryhead = '\0'; 	/*<Head for TSS Factory Calibration*/
@@ -1223,7 +1222,8 @@ void CardAction(uint8_t CardID)
 				//if the volatge is +ve
 				else
 					adc = AdCounts_pH * pH_ElectronicCalibpoints_t.pH_Slope + pH_ElectronicCalibpoints_t.pH_Intercept;
-				if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == THREE_POINT)
+				//if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == THREE_POINT)
+				if(pH_SensorCalibpoints_t.measurement_Type == THREE_POINT)
 				{
 					float calculated_pH = (-16.908f * adc) + 7.0f;
 
@@ -2215,17 +2215,22 @@ uint8_t CODADCCapture(uint8_t command)
 				COD_SensorCalibration_t.intercept_range_2 = HoldingRegister_t.SensorCalibration_t.COD_Intercept_RANGE_2;
 
 				//COD actual value
-#if 1
-				if(factory_cod_value <= COD_SensorCalibration_t.middle_value)
+				if(COD_SensorCalibration_t.measurementType == 0x04)
 				{
-					COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope + COD_SensorCalibration_t.intercept;
-				}else{
-					COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope_range_2 + COD_SensorCalibration_t.intercept_range_2;
-				}
+#if 1
+					if(factory_cod_value <= COD_SensorCalibration_t.middle_value)
+					{
+						COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope + COD_SensorCalibration_t.intercept;
+					}else{
+						COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope_range_2 + COD_SensorCalibration_t.intercept_range_2;
+					}
 #else
 				COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope + COD_SensorCalibration_t.intercept;
 #endif
-
+				}else
+				{
+					COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope + COD_SensorCalibration_t.intercept;
+				}
 				//COD value with Factory Calibration not sensor
 				//COD_MeasurementValues_t.Cal_Value = factory_cod_value;
 
@@ -3331,12 +3336,18 @@ void ModbusReadConfiguration(void)
 
 	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_value = pH_SensorCalibpoints_t.pH_Calculated_1_x1; //calculated pH values
 	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = pH_SensorCalibpoints_t.pH_Calculated_2_x2; //calculated pH values
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_3_value = pH_SensorCalibpoints_t.pH_Calculated_3_x3; //calculated pH values
 	HoldingRegister_t.SensorCalibration_t.pH_PT.Y1 = pH_SensorCalibpoints_t.pH_Solution_1_y1;				//Simulation solution
 	HoldingRegister_t.SensorCalibration_t.pH_PT.Y2 = pH_SensorCalibpoints_t.pH_Solution_2_y2;				//Simulation solution
+	HoldingRegister_t.SensorCalibration_t.pH_Y3 = pH_SensorCalibpoints_t.pH_Solution_3_y3;				//Simulation solution
 	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_count = pH_SensorCalibpoints_t.pH_counts_1_x1;		//ADC counts
 	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count = pH_SensorCalibpoints_t.pH_counts_2_x2;		//ADC counts
+	HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_3_count = pH_SensorCalibpoints_t.pH_counts_3_x3;		//ADC counts
 	HoldingRegister_t.SensorCalibration_t.pH_slope = pH_SensorCalibpoints_t.pH_Solpe;
 	HoldingRegister_t.SensorCalibration_t.pH_intercept = pH_SensorCalibpoints_t.pH_Intercept;
+	HoldingRegister_t.SensorCalibration_t.pH_slope_range_2 = pH_SensorCalibpoints_t.pH_slope_range_2;
+	HoldingRegister_t.SensorCalibration_t.pH_intercept_range_2 = pH_SensorCalibpoints_t.pH_Intercept_range_2;
+	//HoldingRegister_t.SensorCalibration_t.Calibration_Type = pH_SensorCalibpoints_t.measurement_Type;
 	//HoldingRegister_t.SensorCalibration_t.pH_1pt_calib_point1 = pH_SensorCalibpoints_t.pH_Solution_1_y1;	//Simulation solution 1
 	//HoldingRegister_t.SensorCalibration_t.pH_1pt_Cal_point_1_value = pH_SensorCalibpoints_t.
 
@@ -3345,7 +3356,7 @@ void ModbusReadConfiguration(void)
 
 	//Read the COD Electronic Calibration Data
 	//FRAM_OperationRead(FRAM_ADDRESS_COD_SENS_CALIB,(uint8_t*)&COD_SensorCalibration_t.byte,8);
-	FRAM_OperationRead(FRAM_ADDRESS_COD_SENSOR_CALIB,(uint8_t*)&COD_SensorCalibration_t.byte,48);//Yet to make changes according to 3-pt calibration
+	FRAM_OperationRead(FRAM_ADDRESS_COD_SENSOR_CALIB,(uint8_t*)&COD_SensorCalibration_t.byte,90);//Yet to make changes according to 3-pt calibration
 
 	//Publish to modbus
 	HoldingRegister_t.SensorCalibration_t.COD_CF = COD_SensorCalibration_t.slope;

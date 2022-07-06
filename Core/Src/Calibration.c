@@ -82,6 +82,10 @@ void pHSensorCalibrationmV(void)
 {
 
 	uint8_t calib_error = RESET;
+	float slope;
+	float intercept;
+	float slope_2;
+	float intercept_2;
 
 	if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == TWO_POINT)
 	{
@@ -110,6 +114,7 @@ void pHSensorCalibrationmV(void)
 		pH_SensorCalibpoints_t.pH_Solpe = (inv/-0.05916f)*100.0f;
 		//if(pH_SensorCalibpoints_t.pH_Solpe < 0)
 			//pH_SensorCalibpoints_t.pH_Solpe *= -1;
+		pH_SensorCalibpoints_t.measurement_Type = TWO_POINT;
 
 	}
 	else if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == SINGLE_POINT)
@@ -137,18 +142,25 @@ void pHSensorCalibrationmV(void)
 		pH_SensorCalibpoints_t.pH_Solpe = (inv/-0.05916f)*100.0f;
 		//if(pH_SensorCalibpoints_t.pH_Solpe < 0)
 			//pH_SensorCalibpoints_t.pH_Solpe *= -1;
+		pH_SensorCalibpoints_t.measurement_Type = SINGLE_POINT;
 	}
 	else if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == THREE_POINT)
 	{
 		float x1_count = 0;
 		float x2_count = 0;
 		float x3_count = 0;
+#if 0
+		float y1 = HoldingRegister_t.SensorCalibration_t.pH_PT.Y1;
+		float y2 = HoldingRegister_t.SensorCalibration_t.pH_PT.Y2;
+		float y3 = HoldingRegister_t.SensorCalibration_t.pH_Y3;
+#else
 		pH_SensorCalibpoints_t.pH_Solution_1_y1 = HoldingRegister_t.SensorCalibration_t.pH_PT.Y1;
 		pH_SensorCalibpoints_t.pH_Solution_2_y2 =  HoldingRegister_t.SensorCalibration_t.pH_PT.Y2;
 		pH_SensorCalibpoints_t.pH_Solution_3_y3 =  HoldingRegister_t.SensorCalibration_t.pH_Y3;
 		float y1 = pH_SensorCalibpoints_t.pH_Solution_1_y1;
 		float y2 = pH_SensorCalibpoints_t.pH_Solution_2_y2;
 		float y3 = pH_SensorCalibpoints_t.pH_Solution_3_y3;
+#endif
 
 		if(pH_SensorCalibpoints_t.pH_counts_1_x1 > 0x7fff)
 			x1_count = (float)pH_SensorCalibpoints_t.pH_counts_1_x1 - 65535.0f;
@@ -180,12 +192,19 @@ void pHSensorCalibrationmV(void)
 		float x3 = pH_ElectronicCalibpoints_t.pH_Slope * x3_count + pH_ElectronicCalibpoints_t.pH_Intercept;
 
 
-
+#if 1
+		slope = (y2-y1)/(x2-x1);
+		intercept = y1 - slope * x1;
+		//Calculating percentage
+		float inv = 1/slope;
+		slope = (inv/-0.05916f)*100.0f;
+#else
 		pH_SensorCalibpoints_t.pH_Solpe = (y2-y1)/(x2-x1);
 		pH_SensorCalibpoints_t.pH_Intercept = y1 - pH_SensorCalibpoints_t.pH_Solpe * x1;
 		//Calculating percentage
 		float inv = 1/pH_SensorCalibpoints_t.pH_Solpe;
 		pH_SensorCalibpoints_t.pH_Solpe = (inv/-0.05916f)*100.0f;
+#endif
 		/*
 		 * Procedure to follow
 		 * 1. reset complete calibration process.
@@ -194,8 +213,13 @@ void pHSensorCalibrationmV(void)
 		 */
 
 		//Checking if the intercept and slope is with in +- 2pH width.
+#if 1
+		if((slope < PH_SLOPE_LOW_LIMIT || slope > PH_SLOPE_HIGH_LIMIT) ||
+						(intercept < PH_INTERCEPT_LOW_LIMIT || intercept > PH_INTERCEPT_HIGH_LIMIT) )
+#else
 		if((pH_SensorCalibpoints_t.pH_Solpe < PH_SLOPE_LOW_LIMIT || pH_SensorCalibpoints_t.pH_Solpe > PH_SLOPE_HIGH_LIMIT) ||
 				(pH_SensorCalibpoints_t.pH_Intercept < PH_INTERCEPT_LOW_LIMIT || pH_SensorCalibpoints_t.pH_Intercept < PH_INTERCEPT_LOW_LIMIT > PH_INTERCEPT_HIGH_LIMIT) )
+#endif
 		{
 			/*
 			 * pH slope not within limits.
@@ -209,18 +233,33 @@ void pHSensorCalibrationmV(void)
 
 			//Display Messages
 			HoldingRegister_t.SensorCalibration_t.pHSensMessages = CALIBRATION_FAILED;
+			return;
 
 		}
 		if(!calib_error)
 		{
+#if 1
+			slope_2 = (y3-y2)/(x3-x2);
+			intercept_2 = y2 - slope_2 * x2;
+			//Calculating percentage
+			inv = 1/slope_2;
+			slope_2 = (inv/-0.05916f)*100.0f;
+#else
 			pH_SensorCalibpoints_t.pH_slope_range_2 = (y3-y2)/(x3-x2);
 			pH_SensorCalibpoints_t.pH_Intercept_range_2 = y2 - pH_SensorCalibpoints_t.pH_slope_range_2 * x2;
 			//Calculating percentage
 			inv = 1/pH_SensorCalibpoints_t.pH_slope_range_2;
 			pH_SensorCalibpoints_t.pH_slope_range_2 = (inv/-0.05916f)*100.0f;
+#endif
+
 			//Checking if the intercept and slope is with in +- 2pH width.
+#if 1
+			if((slope_2 < PH_SLOPE_LOW_LIMIT || slope_2 > PH_SLOPE_HIGH_LIMIT) ||
+								(intercept_2 < PH_INTERCEPT_LOW_LIMIT || intercept_2 > PH_INTERCEPT_HIGH_LIMIT) )
+#else
 			if((pH_SensorCalibpoints_t.pH_slope_range_2 < PH_SLOPE_LOW_LIMIT || pH_SensorCalibpoints_t.pH_slope_range_2 > PH_SLOPE_HIGH_LIMIT) ||
 					(pH_SensorCalibpoints_t.pH_Intercept_range_2 < PH_INTERCEPT_LOW_LIMIT || pH_SensorCalibpoints_t.pH_Intercept_range_2 < PH_INTERCEPT_LOW_LIMIT > PH_INTERCEPT_HIGH_LIMIT) )
+#endif
 			{
 				/*
 				 * pH slope not within limits.
@@ -234,16 +273,26 @@ void pHSensorCalibrationmV(void)
 
 				//Display Messages
 				HoldingRegister_t.SensorCalibration_t.pHSensMessages = CALIBRATION_FAILED;
+				return;
 
 			}
 
 		}
+		/*Calibration is successful*/
+		pH_SensorCalibpoints_t.pH_Solpe = slope;
+		pH_SensorCalibpoints_t.pH_Intercept = intercept;
+		pH_SensorCalibpoints_t.pH_slope_range_2 = slope_2;
+		pH_SensorCalibpoints_t.pH_Intercept_range_2 = intercept_2;
 
+		HoldingRegister_t.SensorCalibration_t.pH_slope = pH_SensorCalibpoints_t.pH_Solpe;
+		HoldingRegister_t.SensorCalibration_t.pH_intercept = pH_SensorCalibpoints_t.pH_Intercept;
 		HoldingRegister_t.SensorCalibration_t.pH_slope_range_2 = pH_SensorCalibpoints_t.pH_slope_range_2;
 		HoldingRegister_t.SensorCalibration_t.pH_intercept_range_2 = pH_SensorCalibpoints_t.pH_Intercept_range_2;
 
 		//Display Messages
 		HoldingRegister_t.SensorCalibration_t.pHSensMessages = CALIBRATION_SUCCESSFULL;
+
+		pH_SensorCalibpoints_t.measurement_Type = THREE_POINT;
 	}
 	//Push to MODBUS
 	HoldingRegister_t.SensorCalibration_t.pH_slope = pH_SensorCalibpoints_t.pH_Solpe;
@@ -646,10 +695,10 @@ void pH_SensorCalibrationGetValues(void)
 			pH_SensorCalibpoints_t.pH_Calculated_1_x1 = pH_calculated;
 			//Read by HMI
 			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_value = pH_calculated;
-			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = 0;
+			//HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = 0;
 
 			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_count = pH_SensorCalibpoints_t.pH_ADCCounts;
-			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count = 0;
+			//HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count = 0;
 		}else if(display_flag == 2)
 		{
 			//convert the mV to Calculated pH
@@ -752,6 +801,9 @@ void COD_SensorCalibration(void)
 		//Publish to the MODBUS
 		HoldingRegister_t.SensorCalibration_t.COD_CF = slope;
 		HoldingRegister_t.SensorCalibration_t.COD_Intercept = intercept;
+
+		HoldingRegister_t.SensorCalibration_t.COD_Messages = CALIBRATION_SUCCESSFULL;
+		COD_SensorCalibration_t.measurementType = 0x03;
 		//Reset the Common command Flag
 		HoldingRegister_t.ModeCommand_t.CommonCommand = 0x00;
 		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
@@ -796,6 +848,10 @@ void COD_SensorCalibration(void)
 		HoldingRegister_t.SensorCalibration_t.COD_CF = slope;
 		HoldingRegister_t.SensorCalibration_t.COD_Intercept = intercept;
 #endif
+
+		HoldingRegister_t.SensorCalibration_t.COD_Messages = CALIBRATION_SUCCESSFULL;
+		COD_SensorCalibration_t.measurementType = 0x04;
+
 		//Reset the Common command Flag
 		HoldingRegister_t.ModeCommand_t.CommonCommand = 0x00;
 		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
@@ -837,14 +893,14 @@ void TSS_SensorCalibration(void)
 		float y3 = HoldingRegister_t.SensorCalibration_t.TSS_Y3;//COD_SensorCalibration_t.y2;
 
 		//sorting the points in ascending order
-		three_pt tss_pts = sort_ph_values(y1,y2,y3,x1,x2,x3);
+		three_pt tss_pts = sort_ph_values(x1,x2,x3,y1,y2,y3);
 		/*
 		 * Error margin is not defined.
 		 */
-		float slope_range_1 = (tss_pts.x[1] - tss_pts.x[0])/((tss_pts.pt[1] - tss_pts.pt[0]));
-		float intercept_range_1 = tss_pts.x[0] - slope_range_1*tss_pts.pt[0];
-		float slope_range_2 = (tss_pts.x[2] - tss_pts.x[1])/((tss_pts.pt[2] - tss_pts.pt[1]));
-		float intercept_range_2 = tss_pts.x[1] - slope_range_2*tss_pts.pt[1];
+		float slope_range_1 = (tss_pts.pt[1] - tss_pts.pt[0])/((tss_pts.x[1] - tss_pts.x[0]));
+		float intercept_range_1 = tss_pts.pt[0] - slope_range_1*tss_pts.x[0];
+		float slope_range_2 = (tss_pts.pt[2] - tss_pts.pt[1])/((tss_pts.x[2] - tss_pts.x[1]));
+		float intercept_range_2 = tss_pts.pt[1] - slope_range_2*tss_pts.x[1];
 
 		TSS_SensorCalibration_t.slope = slope_range_1;
 		TSS_SensorCalibration_t.intercept = intercept_range_1;
@@ -856,6 +912,7 @@ void TSS_SensorCalibration(void)
 		HoldingRegister_t.SensorCalibration_t.TSS_CF_RANGE_2 = slope_range_2;
 		HoldingRegister_t.SensorCalibration_t.TSS_Intercept_RANGE_2 = intercept_range_2;
 
+		HoldingRegister_t.SensorCalibration_t.TSS_Messages = CALIBRATION_SUCCESSFULL;
 		//Reset the Common command Flag
 		HoldingRegister_t.ModeCommand_t.CommonCommand = 0x00;
 		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
