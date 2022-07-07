@@ -174,4 +174,6 @@ void epoch_to_date_time(date_time_t* date_time, uint32_t epoch);
 
 void calculate_Next_ProcessTime(void);
 
+void startupMessages(void);
+
 #endif /* INC_APPLICATION_H_ */

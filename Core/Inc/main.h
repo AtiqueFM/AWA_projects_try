@@ -523,6 +523,8 @@ typedef struct{
 	//COD and TSS messages
 	uint16_t COD_Messages;	/*<7 : Calibration successful, 8 : Calibration Failed*/
 	uint16_t TSS_Messages;	/*<7 : Calibration successful, 8 : Calibration Failed*/
+	uint16_t COD_Factory_Messages;	/*<7 : Calibration successful, 8 : Calibration Failed*/
+	uint16_t TSS_Factory_Messages;	/*<7 : Calibration successful, 8 : Calibration Failed*/
 	/*********************/
 }SensoralibrationHandle_t;
 

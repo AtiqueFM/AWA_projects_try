@@ -88,6 +88,9 @@ void ProcessModesCommands(void)
 			//Will change the commands, this just for testing
 			case Batch:
 			{
+				/*RESET MESSAGES*/
+				HoldingRegister_t.SensorCalibration_t.pHElectronicCalibMessages = RESET;
+				/**/
 				AWAOperationStatus_t.ElectronicCal_AO = 0;
 				AWAOperationStatus_t.CalibrationMode = 0;
 				AWAOperationStatus_t.FactoryMode = 0;
@@ -854,6 +857,9 @@ void ProcessModesCommands(void)
 
 					gaussEliminationLS(x_mat,y_mat,10,3,1);
 
+					//Display messages
+					HoldingRegister_t.SensorCalibration_t.COD_Factory_Messages = CALIBRATION_SUCCESSFULL;
+
 					/*<TODO: Push the Coefficients to Last Calibration Input register*/
 					//Set the state of which data to store
 					AWADataStoreState.factoryCOD = SET;
@@ -865,7 +871,14 @@ void ProcessModesCommands(void)
 
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
-
+				/*Display messages*/
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION
+						|| HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION
+						||HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure )
+				{
+					HoldingRegister_t.SensorCalibration_t.COD_Factory_Messages = RESET;
+				}
+				/**/
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
 				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
 				{
@@ -972,6 +985,9 @@ void ProcessModesCommands(void)
 
 					gaussEliminationLS(x_mat,y_mat,10,2,2);
 
+					//Display messages
+					HoldingRegister_t.SensorCalibration_t.TSS_Factory_Messages = CALIBRATION_SUCCESSFULL;
+
 					/*<TODO: Push the Coefficients to Last Calibration Input register*/
 					//Set the state of which data to store
 					AWADataStoreState.factoryTSS = SET;
@@ -984,7 +1000,14 @@ void ProcessModesCommands(void)
 
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
-
+				/*Display messages*/
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION
+						|| HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION
+						||HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_Measure )
+				{
+					HoldingRegister_t.SensorCalibration_t.TSS_Factory_Messages = RESET;
+				}
+				/**/
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_Measure && !PUMPControlHandle_t.u8Flag_measurement)
 				{
@@ -1002,9 +1025,11 @@ void ProcessModesCommands(void)
 				{
 					//operate the sample pump
 					PumpOperation(0x02);
+					//HoldingRegister_t.SensorCalibration_t.TSS_Factory_Messages = SAMPLING_PUMP_STOPPED;
 				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION && AWAOperationStatus_t.MILSwitchState == RESET)
 				{
 					pumpOperationStop();
+					//HoldingRegister_t.SensorCalibration_t.TSS_Factory_Messages = CLEANING_PUMP_STOPPED;
 				}
 				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == TSS_FACTORY_SETASZERO
 						&& AWAOperationStatus_t.CleaningTankEmpty == RESET)
@@ -3665,6 +3690,8 @@ void ModbusReadConfiguration(void)
 
 static inline void COD_SensorCalib_ypoint(uint8_t pt)
 {
+
+	HoldingRegister_t.SensorCalibration_t.COD_Messages = RESET;
 	if(pt == 1 || pt == 4)
 	{
 		HMIInterlockingFlag(HMI_INTERLOCK_SENSOR_READACID, SET);
@@ -4850,4 +4877,11 @@ void calculate_Next_ProcessTime(void)
 	epoch += (next_batch_hr + next_batch_min + next_batch_sec);
 
 	HoldingRegister_t.SensorCalibration_t.NextProcessTime = epoch;
+}
+
+void startupMessages(void)
+{
+	HoldingRegister_t.SensorCalibration_t.pHSensMessages = SIMULATE_POS_414_mV;
+	HoldingRegister_t.SensorCalibration_t.COD_Messages = ENTER_BUFFER_SOL_1;
+	HoldingRegister_t.SensorCalibration_t.TSS_Messages = ENTER_BUFFER_SOL_1;
 }

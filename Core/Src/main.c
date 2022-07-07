@@ -242,6 +242,7 @@ int main(void)
 //  HoldingRegisterdefaultData();
   ModbusReadConfiguration();
   HoldingRegisterdefaultData();
+  startupMessages();
   /**************************/
 
   PWM_setup();

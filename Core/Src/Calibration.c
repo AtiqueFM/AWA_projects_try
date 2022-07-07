@@ -41,6 +41,7 @@ void pHElectronicCalibrationmV(void)
 	float x2 = (float)pH_ElectronicCalibpoints_t.pH_ElectronicCalib_n414V_count;
 	pH_ElectronicCalibpoints_t.pH_Slope = (y2-y1)/(x2-x1);
 	pH_ElectronicCalibpoints_t.pH_Intercept = y1 - pH_ElectronicCalibpoints_t.pH_Slope*x1;
+	HoldingRegister_t.SensorCalibration_t.pHElectronicCalibMessages = CALIBRATION_SUCCESSFULL;
 }
 
 three_pt sort_ph_values(float y1,float y2, float y3,float x1,float x2, float x3)
@@ -737,6 +738,7 @@ void pH_ElectronicCalibrationGetValues(void)
 			HoldingRegister_t.IOUTCalibandTest_t.pH_ADC_Counts_p414mA = pH_ElectronicCalibpoints_t.pH_ElectronicCalib_p414V_count;
 			pH_ElectronicCalibpoints_t.flag_p414 = 1;
 //			HoldingRegister_t.SensorCalibration_t.pHElecMeaages = 2;//simulate -414mV
+			HoldingRegister_t.SensorCalibration_t.pHElectronicCalibMessages = SIMULATE_NEG_414_mV;
 			HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command = 0;
 		}
 		else if(pH_ElectronicCalibpoints_t.flag_p414)
@@ -745,8 +747,24 @@ void pH_ElectronicCalibrationGetValues(void)
 			HoldingRegister_t.IOUTCalibandTest_t.pH_ADC_Counts_n414mA = pH_ElectronicCalibpoints_t.pH_ElectronicCalib_n414V_count;
 			pH_ElectronicCalibpoints_t.flag_p414 = 0;
 //			HoldingRegister_t.SensorCalibration_t.pHElecMeaages = 3;//Press calibrate
+			HoldingRegister_t.SensorCalibration_t.pHElectronicCalibMessages = PRESS_CALIBRATE;
 			HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command = 0;
 		}
+	}else if(HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command == 11)
+	{
+		pH_ElectronicCalibpoints_t.flag_p414 = RESET;
+
+		/*Reset buffers*/
+		pH_ElectronicCalibpoints_t.pH_ElectronicCalib_p414V_count = 0;
+		HoldingRegister_t.IOUTCalibandTest_t.pH_ADC_Counts_p414mA = 0;
+
+		pH_ElectronicCalibpoints_t.pH_ElectronicCalib_n414V_count = 0;
+		HoldingRegister_t.IOUTCalibandTest_t.pH_ADC_Counts_n414mA = 0;
+
+		/*Simulate +414 mV messages*/
+		HoldingRegister_t.SensorCalibration_t.pHElectronicCalibMessages = SIMULATE_POS_414_mV;
+
+		HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command = 0;
 	}
 }
 
@@ -784,6 +802,35 @@ void PT_ElectronicCalibrationGetValues(void)
 			}
 		}
 		HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command = 0;
+	}else if(HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command == 12)
+	{
+		PT_ElectronicCalibration_t.flag_15 = RESET;
+
+		/*Reset buffers*/
+		if(HoldingRegister_t.IOUTCalibandTest_t.CalibrationType == TEMP_TYPE_PT100)
+		{
+			PT_ElectronicCalibration_t.PT_100_Counts = 0;
+			HoldingRegister_t.IOUTCalibandTest_t.PT100_ADC_Counts_100  = 0;
+
+			PT_ElectronicCalibration_t.PT_150_Counts = 0;
+			HoldingRegister_t.IOUTCalibandTest_t.PT100_ADC_Counts_150  = 0;
+
+			//Simulate 100 ohm
+			HoldingRegister_t.SensorCalibration_t.TempElectronicCalibMessages = SIMULATE_100_OHMS;
+
+		}
+		else{
+			PT_ElectronicCalibration_t.PT_100_Counts = 0;
+			HoldingRegister_t.IOUTCalibandTest_t.PT100_ADC_Counts_100  = 0;
+
+			PT_ElectronicCalibration_t.PT_150_Counts = 0;
+			HoldingRegister_t.IOUTCalibandTest_t.PT100_ADC_Counts_150  = 0;
+
+			//Simulate 1000 ohm
+			HoldingRegister_t.SensorCalibration_t.TempElectronicCalibMessages = SIMULATE_1000_OHMS;
+		}
+		HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command = 0;
+
 	}
 }
 
