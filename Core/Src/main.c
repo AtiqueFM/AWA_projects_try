@@ -277,6 +277,83 @@ int main(void)
 
   while (1)
   {
+
+	  if(UHolding_Modbus_3.baudrate == 9600 && UHolding_Modbus_3.confirm == SET)
+	  {
+
+		  UHolding_Modbus_3.confirm = RESET;
+
+		  HAL_UART_Abort_IT(&huart3);
+		  HAL_TIM_Base_Stop_IT(&htim12);
+		  UHolding_Modbus_3.baudrate = 9610;
+
+		  HAL_UART_DeInit(&huart3);
+		  HAL_UART_IRQHandler(&huart3);
+
+		  huart3.Instance = USART3;
+		  huart3.Init.BaudRate = 9600;
+		  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+		  huart3.Init.StopBits = UART_STOPBITS_1;
+		  huart3.Init.Parity = UART_PARITY_NONE;
+		  huart3.Init.Mode = UART_MODE_TX_RX;
+		  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+		  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+
+		  baudrate_uart3 = 9600;
+
+		  if (HAL_UART_Init(&huart3) != HAL_OK)
+		  {
+		    Error_Handler();
+		  }
+		  uart_rx_timeout_counter_uart3 = 0;
+		  //Reset the rx byte counter
+		  uart_rx_bytes_uart3 = 0;
+		  MOD3_RxFlag = RESET;
+		  ADM_3_CLTR_LOW();
+		  HAL_TIM_Base_Start_IT(&htim12);
+	  }
+	  if(UHolding_Modbus_3.baudrate == 19200 && UHolding_Modbus_3.confirm == SET)
+	  {
+
+		  UHolding_Modbus_3.confirm = RESET;
+
+		  HAL_UART_Abort_IT(&huart3);
+		  HAL_TIM_Base_Stop_IT(&htim12);
+		  UHolding_Modbus_3.baudrate = 19210;
+
+		  HAL_UART_DeInit(&huart3);
+		  HAL_UART_IRQHandler(&huart3);
+
+		  huart3.Instance = USART3;
+		  huart3.Init.BaudRate = 19200;
+		  huart3.Init.WordLength = UART_WORDLENGTH_8B;
+		  huart3.Init.StopBits = UART_STOPBITS_1;
+		  huart3.Init.Parity = UART_PARITY_NONE;
+		  huart3.Init.Mode = UART_MODE_TX_RX;
+		  huart3.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+		  huart3.Init.OverSampling = UART_OVERSAMPLING_16;
+
+		  baudrate_uart3 = 19200;
+
+		  if (HAL_UART_Init(&huart3) != HAL_OK)
+		  {
+		    Error_Handler();
+		  }
+		  //Reset the timer 7 timeout counter
+		  uart_rx_timeout_counter_uart3 = 0;
+		  //Reset the rx byte counter
+		  uart_rx_bytes_uart3 = 0;
+		  MOD3_RxFlag = RESET;
+		  ADM_3_CLTR_LOW();
+
+		  HAL_TIM_Base_Start_IT(&htim12);
+
+	  }
+	  if(UHolding_Modbus_3.confirm_ID == SET)
+	  {
+		  UHolding_Modbus_3.confirm_ID = RESET;
+		  UART3_ID = UHolding_Modbus_3.slaveID;
+	  }
 	  //Process the commands from the HMI
 	  ProcessModesCommands();
 

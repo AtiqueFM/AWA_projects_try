@@ -38,7 +38,7 @@ extern "C" {
 #define HMI_VER_BUGFIX		0 /*<*/
 #define FW_VER_MAJOR		2 /*<*/
 #define FW_VER_MINOR		3 /*<Addition on multi-drop*/
-#define FW_VER_BUGFIX		11 /*<UART 3 MODBUS-Multi-drop*/
+#define FW_VER_BUGFIX		12 /*<UART 3 Configuartion change (TESTED)*/
 
 #define MODBUS_1000_BYTES					1
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1500
@@ -649,6 +649,17 @@ typedef union{
 	};
 }UHolding_Modbus_2_t;
 UHolding_Modbus_2_t UHolding_Modbus_2;
+
+typedef union{
+	uint8_t bytes[100];
+	struct{
+		uint16_t slaveID;
+		uint16_t baudrate;
+		uint16_t confirm;
+		uint16_t confirm_ID;
+	};
+}UHolding_Modbus_3_t;
+UHolding_Modbus_3_t UHolding_Modbus_3;
 /*****************/
 extern UART_HandleTypeDef huart3;
 extern volatile uint8_t Rxbuff[310], RxFlag;
@@ -663,8 +674,17 @@ extern volatile uint8_t MOD2_RxFlag;
 extern volatile uint8_t MOD2_Rxbuff[310];
 extern volatile uint8_t MOD2_Txbuff[310];
 extern volatile uint16_t MOD2_Rxptr, MOD2_Txptr, MOD2_RxBytes, MOD2_TxBytes;
+extern volatile uint8_t MOD3_RxFlag;
+extern volatile uint8_t MOD3_Rxbuff[310];
+extern volatile uint8_t MOD3_Txbuff[310];
+extern volatile uint16_t MOD3_Rxptr, MOD3_Txptr, MOD3_RxBytes, MOD3_TxBytes;
+extern volatile uint16_t uart_rx_timeout_counter_uart3;
+extern volatile uint8_t uart_rx_bytes_uart3; 		/*< Will contain the received byte count.*/
+extern uint32_t baudrate_uart3;		/*<For testing, lateron will be replaced by the moodbus register.*/
+extern uint8_t UART3_ID;
 extern volatile uint16_t DMA_Transaction_no_Tx_uart6;
 extern volatile uint16_t DMA_Transaction_no_Tx_uart1;//HMI
+extern volatile uint16_t DMA_Transaction_no_Tx_uart3;//HMI
 
 extern volatile uint8_t MOD3_RxFlag;
 //extern uint16_t ADCbuff[100], dataptr;

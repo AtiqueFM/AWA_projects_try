@@ -42,6 +42,7 @@ volatile uint16_t DMA_Transaction_no_Tx_uart3 = 0;//HMI
 uint16_t uart6_tx_length = 0;
 uint16_t uart1_tx_length = 0;
 uint16_t uart3_tx_length = 0;
+uint8_t UART3_ID = 3;
 
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart1;
@@ -2274,7 +2275,7 @@ void ProcessModbusQuery_ISR_3(void)
 	memset((uint16_t*)MOD3_Txbuff,'\0',620);
 
 	//huart3.Instance->CR1 |= UART_IT_TXE;
-	if(MOD3_Rxbuff[0] == 3)//SlaveID) // check slave ID
+	if(MOD3_Rxbuff[0] == UART3_ID)//SlaveID) // check slave ID
 	{
 		rx_byte_count_uart3 -= 1;
 		u16RxCRCDataPacketLength = RxCRCIndex;
@@ -2445,8 +2446,8 @@ void ProcessModbusQuery_ISR_3(void)
 
 							for(Temp2 = 0; Temp2 < length; Temp2++)
 							{
-								MOD3_Txbuff[MOD3_TxBytes++] = HoldingRegister_t.bytes[index + startadd + 1];//UHoldReg.ByteArr[startadd + 1]; // High byte
-								MOD3_Txbuff[MOD3_TxBytes++] = HoldingRegister_t.bytes[index + startadd];//UHoldReg.ByteArr[startadd]; // low byte
+								MOD3_Txbuff[MOD3_TxBytes++] = UHolding_Modbus_3.bytes[index + startadd + 1];//UHoldReg.ByteArr[startadd + 1]; // High byte
+								MOD3_Txbuff[MOD3_TxBytes++] = UHolding_Modbus_3.bytes[index + startadd];//UHoldReg.ByteArr[startadd]; // low byte
 								startadd += 2;
 							}
 
@@ -2631,11 +2632,11 @@ void ProcessModbusQuery_ISR_3(void)
 						}
 
 						startadd = startadd << 1;
-						HoldingRegister_t.bytes[index + startadd++] = Rxbuff[5];
-						HoldingRegister_t.bytes[index + startadd] = Rxbuff[4];
-						DMA_Transaction_no_Tx_uart1 = 8;//Data  + other components
+						UHolding_Modbus_3.bytes[index + startadd++] = MOD3_Rxbuff[5];
+						UHolding_Modbus_3.bytes[index + startadd] = MOD3_Rxbuff[4];
+						DMA_Transaction_no_Tx_uart3 = 8;//Data  + other components
 						for(Temp1 = 2; Temp1 < 8; Temp1++) // echo response
-							Txbuff[TxBytes++] = Rxbuff[Temp1];
+							MOD3_Txbuff[MOD3_TxBytes++] = MOD3_Rxbuff[Temp1];
 						if(UHoldReg.SHoldReg.ADCReadStart == 0x01)
 						{
 							if(CycleStart == 0)
@@ -2666,15 +2667,15 @@ void ProcessModbusQuery_ISR_3(void)
 					else
 					{
 						// error
-						Txbuff[1] |= 0x80;
-						Txbuff[2] = 0x02;
+						MOD3_Txbuff[1] |= 0x80;
+						MOD3_Txbuff[2] = 0x02;
 						//for(Temp1 = 2; Temp1 < RxBytes - 2; Temp1++) // echo response
 						//Txbuff[TxBytes++] = Rxbuff[Temp1];
 
-						Temp2 = crc_calc((char*)Txbuff, 3);
-						Txbuff[3] = Temp2;
-						Txbuff[4] = Temp2 >> 8;
-						TxBytes = 5;
+						Temp2 = crc_calc((char*)MOD3_Txbuff, 3);
+						MOD3_Txbuff[3] = Temp2;
+						MOD3_Txbuff[4] = Temp2 >> 8;
+						MOD3_TxBytes = 5;
 					}
 
 				  break;
