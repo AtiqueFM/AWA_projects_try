@@ -38,7 +38,7 @@ extern "C" {
 #define HMI_VER_BUGFIX		0 /*<*/
 #define FW_VER_MAJOR		2 /*<*/
 #define FW_VER_MINOR		3 /*<Addition on multi-drop*/
-#define FW_VER_BUGFIX		10 /*<UART 3 MODBUS-Multi-drop*/
+#define FW_VER_BUGFIX		11 /*<UART 3 MODBUS-Multi-drop*/
 
 #define MODBUS_1000_BYTES					1
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1500

@@ -2211,26 +2211,28 @@ uint8_t CODADCCapture(uint8_t command)
 				//Get the sensor calibration factor from modus
 				COD_SensorCalibration_t.slope = HoldingRegister_t.SensorCalibration_t.COD_CF;
 				COD_SensorCalibration_t.intercept = HoldingRegister_t.SensorCalibration_t.COD_Intercept;
-				COD_SensorCalibration_t.slope_range_2 = HoldingRegister_t.SensorCalibration_t.COD_CF_RANGE_2;
-				COD_SensorCalibration_t.intercept_range_2 = HoldingRegister_t.SensorCalibration_t.COD_Intercept_RANGE_2;
+//				COD_SensorCalibration_t.slope_range_2 = HoldingRegister_t.SensorCalibration_t.COD_CF_RANGE_2;
+//				COD_SensorCalibration_t.intercept_range_2 = HoldingRegister_t.SensorCalibration_t.COD_Intercept_RANGE_2;
+
 
 				//COD actual value
-				if(COD_SensorCalibration_t.measurementType == 0x04)
-				{
-#if 1
-					if(factory_cod_value <= COD_SensorCalibration_t.middle_value)
-					{
-						COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope + COD_SensorCalibration_t.intercept;
-					}else{
-						COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope_range_2 + COD_SensorCalibration_t.intercept_range_2;
-					}
-#else
+//				if(COD_SensorCalibration_t.measurementType == 0x04)
+//				{
+//#if 1
+//					if(factory_cod_value <= COD_SensorCalibration_t.middle_value)
+//					{
+//						COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope + COD_SensorCalibration_t.intercept;
+//					}else{
+//						COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope_range_2 + COD_SensorCalibration_t.intercept_range_2;
+//					}
+//#else
+//				COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope + COD_SensorCalibration_t.intercept;
+//#endif
+//				}else
+//				{
+//					COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope + COD_SensorCalibration_t.intercept;
+//				}
 				COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope + COD_SensorCalibration_t.intercept;
-#endif
-				}else
-				{
-					COD_MeasurementValues_t.Cal_Value = factory_cod_value * COD_SensorCalibration_t.slope + COD_SensorCalibration_t.intercept;
-				}
 				//COD value with Factory Calibration not sensor
 				//COD_MeasurementValues_t.Cal_Value = factory_cod_value;
 

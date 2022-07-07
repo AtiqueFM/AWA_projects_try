@@ -26,6 +26,10 @@ typedef struct{
 }three_pt;
 
 float middle_point = 0;
+
+//test
+float COD_3_ptcal[2];
+float TSS_3_ptcal[2];
 /*External variable*/
 extern TIM_HandleTypeDef htim1;
 
@@ -811,17 +815,45 @@ void COD_SensorCalibration(void)
 	//3-point calibration
 	else if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == 0x04)
 	{
-		float x1 = HoldingRegister_t.SensorCalibration_t.COD_X1;
-		float y1 = HoldingRegister_t.SensorCalibration_t.COD_Y1;//COD_SensorCalibration_t.y1;
-		float x2 = HoldingRegister_t.SensorCalibration_t.COD_X2;COD_SensorCalibration_t.middle_value = x2;//Middle value //COD_SensorCalibration_t.x2;
-		float y2 = HoldingRegister_t.SensorCalibration_t.COD_Y2;//COD_SensorCalibration_t.y2;
-		float x3 = HoldingRegister_t.SensorCalibration_t.COD_X3;//COD_SensorCalibration_t.x2;
-		float y3 = HoldingRegister_t.SensorCalibration_t.COD_Y3;//COD_SensorCalibration_t.y2;
+//		float x1 = HoldingRegister_t.SensorCalibration_t.COD_X1;
+//		float y1 = HoldingRegister_t.SensorCalibration_t.COD_Y1;//COD_SensorCalibration_t.y1;
+//		float x2 = HoldingRegister_t.SensorCalibration_t.COD_X2;COD_SensorCalibration_t.middle_value = x2;//Middle value //COD_SensorCalibration_t.x2;
+//		float y2 = HoldingRegister_t.SensorCalibration_t.COD_Y2;//COD_SensorCalibration_t.y2;
+//		float x3 = HoldingRegister_t.SensorCalibration_t.COD_X3;//COD_SensorCalibration_t.x2;
+//		float y3 = HoldingRegister_t.SensorCalibration_t.COD_Y3;//COD_SensorCalibration_t.y2;
+
+		double  x[3],y[3];
+		int degree = 1;
+		int no_of_points = 3;
+		int data_transfer_type = 3;
+
+		x[0] = HoldingRegister_t.SensorCalibration_t.COD_X1;
+		y[0] = HoldingRegister_t.SensorCalibration_t.COD_Y1;//COD_SensorCalibration_t.y1;
+		x[1] = HoldingRegister_t.SensorCalibration_t.COD_X2;//COD_SensorCalibration_t.x2;
+		y[1] = HoldingRegister_t.SensorCalibration_t.COD_Y2;//COD_SensorCalibration_t.y2;
+		x[2] = HoldingRegister_t.SensorCalibration_t.COD_X3;//COD_SensorCalibration_t.x2;
+		y[2] = HoldingRegister_t.SensorCalibration_t.COD_Y3;//COD_SensorCalibration_t.y2;
+
+		//test
+//		x[1-1] = 98;//HoldingRegister_t.SensorCalibration_t.COD_X1;
+//		y[1-1] = 100;//HoldingRegister_t.SensorCalibration_t.COD_Y1;//COD_SensorCalibration_t.y1;
+//		x[2-1] = 255;//HoldingRegister_t.SensorCalibration_t.COD_X2;//COD_SensorCalibration_t.x2;
+//		y[2-1] = 270;//HoldingRegister_t.SensorCalibration_t.COD_Y2;//COD_SensorCalibration_t.y2;
+//		x[3-1] = 306;//HoldingRegister_t.SensorCalibration_t.COD_X3;//COD_SensorCalibration_t.x2;
+//		y[3-1] = 300;//HoldingRegister_t.SensorCalibration_t.COD_Y3;//COD_SensorCalibration_t.y2;
 
 		//sorting the points in ascending order
-		three_pt cod_pts = sort_ph_values(y1,y2,y3,x1,x2,x3);
+		//three_pt cod_pts = sort_ph_values(y1,y2,y3,x1,x2,x3);
 
 #if 1
+		gaussEliminationLS(y, x, no_of_points, degree, data_transfer_type);
+
+		COD_SensorCalibration_t.slope = COD_3_ptcal[1];
+		COD_SensorCalibration_t.intercept = COD_3_ptcal[0];
+		HoldingRegister_t.SensorCalibration_t.COD_CF = COD_SensorCalibration_t.slope;
+		HoldingRegister_t.SensorCalibration_t.COD_Intercept = COD_SensorCalibration_t.intercept;
+
+#else
 		/*
 		 * Error margin is not defined.
 		 */
@@ -839,7 +871,7 @@ void COD_SensorCalibration(void)
 		HoldingRegister_t.SensorCalibration_t.COD_Intercept = intercept_range_1;
 		HoldingRegister_t.SensorCalibration_t.COD_CF_RANGE_2 = slope_range_2;
 		HoldingRegister_t.SensorCalibration_t.COD_Intercept_RANGE_2 = intercept_range_2;
-#else
+
 		float slope = (x2-x1)/(y2-y1);
 		float intercept = (x2 - slope * y2);
 		COD_SensorCalibration_t.slope = slope;
@@ -885,13 +917,33 @@ void TSS_SensorCalibration(void)
 	//3-point calibration
 	else if(HoldingRegister_t.SensorCalibration_t.Calibration_Type == 0x04)
 	{
-		float x1 = HoldingRegister_t.SensorCalibration_t.TSS_X1;
-		float y1 = HoldingRegister_t.SensorCalibration_t.TSS_Y1;//COD_SensorCalibration_t.y1;
-		float x2 = HoldingRegister_t.SensorCalibration_t.TSS_X2;TSS_SensorCalibration_t.middle_value = x2;//Middle value //COD_SensorCalibration_t.x2;
-		float y2 = HoldingRegister_t.SensorCalibration_t.TSS_Y2;//COD_SensorCalibration_t.y2;
-		float x3 = HoldingRegister_t.SensorCalibration_t.TSS_X3;//COD_SensorCalibration_t.x2;
-		float y3 = HoldingRegister_t.SensorCalibration_t.TSS_Y3;//COD_SensorCalibration_t.y2;
+//		float x1 = HoldingRegister_t.SensorCalibration_t.TSS_X1;
+//		float y1 = HoldingRegister_t.SensorCalibration_t.TSS_Y1;//COD_SensorCalibration_t.y1;
+//		float x2 = HoldingRegister_t.SensorCalibration_t.TSS_X2;TSS_SensorCalibration_t.middle_value = x2;//Middle value //COD_SensorCalibration_t.x2;
+//		float y2 = HoldingRegister_t.SensorCalibration_t.TSS_Y2;//COD_SensorCalibration_t.y2;
+//		float x3 = HoldingRegister_t.SensorCalibration_t.TSS_X3;//COD_SensorCalibration_t.x2;
+//		float y3 = HoldingRegister_t.SensorCalibration_t.TSS_Y3;//COD_SensorCalibration_t.y2;
 
+		double  x[3],y[3];
+		int degree = 1;
+		int no_of_points = 3;
+		int data_transfer_type = 4;
+
+		x[0] = HoldingRegister_t.SensorCalibration_t.TSS_X1;
+		y[0] = HoldingRegister_t.SensorCalibration_t.TSS_Y1;//COD_SensorCalibration_t.y1;
+		x[1] = HoldingRegister_t.SensorCalibration_t.TSS_X2;//COD_SensorCalibration_t.x2;
+		y[1] = HoldingRegister_t.SensorCalibration_t.TSS_Y2;//COD_SensorCalibration_t.y2;
+		x[2] = HoldingRegister_t.SensorCalibration_t.TSS_X3;//COD_SensorCalibration_t.x2;
+		y[2] = HoldingRegister_t.SensorCalibration_t.TSS_Y3;//COD_SensorCalibration_t.y2;
+
+
+		gaussEliminationLS(y, x, no_of_points, degree, data_transfer_type);
+
+		TSS_SensorCalibration_t.slope = TSS_3_ptcal[1];
+		TSS_SensorCalibration_t.intercept = TSS_3_ptcal[0];
+		HoldingRegister_t.SensorCalibration_t.TSS_CF = TSS_SensorCalibration_t.slope;
+		HoldingRegister_t.SensorCalibration_t.TSS_Intercept = TSS_SensorCalibration_t.intercept;
+#if 0
 		//sorting the points in ascending order
 		three_pt tss_pts = sort_ph_values(x1,x2,x3,y1,y2,y3);
 		/*
@@ -911,7 +963,7 @@ void TSS_SensorCalibration(void)
 		HoldingRegister_t.SensorCalibration_t.TSS_Intercept = intercept_range_1;
 		HoldingRegister_t.SensorCalibration_t.TSS_CF_RANGE_2 = slope_range_2;
 		HoldingRegister_t.SensorCalibration_t.TSS_Intercept_RANGE_2 = intercept_range_2;
-
+#endif
 		HoldingRegister_t.SensorCalibration_t.TSS_Messages = CALIBRATION_SUCCESSFULL;
 		//Reset the Common command Flag
 		HoldingRegister_t.ModeCommand_t.CommonCommand = 0x00;
@@ -1004,6 +1056,24 @@ void gaussEliminationLS(double x[],double y[],int len,int degree,uint8_t type){
 		{
 			HoldingRegister_t.ModeCommand_t.TSS_K[i] = A[i];
 			TSS_10ptFactoryCalibrationHandle_t.c[i] = A[i];
+		}
+    }
+    /*COD 3-point calibration*/
+    else if(type == 3)
+    {
+    	for(int i = 0;i<2;i++)
+		{
+    		COD_3_ptcal[i] = A[i];
+			//TSS_10ptFactoryCalibrationHandle_t.c[i] = A[i];
+		}
+    }
+    /*TSS 3-point calibration*/
+    else if(type == 4)
+    {
+    	for(int i = 0;i<2;i++)
+		{
+    		TSS_3_ptcal[i] = A[i];
+			//TSS_10ptFactoryCalibrationHandle_t.c[i] = A[i];
 		}
     }
 
