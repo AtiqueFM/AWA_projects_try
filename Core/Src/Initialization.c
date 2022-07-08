@@ -20,6 +20,9 @@ TIM_OC_InitTypeDef sConfigOC_PWM4 = {0};//moved
 extern TIM_HandleTypeDef htim1;
 extern ADC_HandleTypeDef hadc1;
 extern float COD_UpperLimit,BOD_UpperLimit,TSS_UpperLimit;
+extern MODBUS_config_t PORT_1;
+extern MODBUS_config_t PORT_2;
+extern MODBUS_config_t PORT_3;
 
 DMA_Handle_t DMA_UART6_RX_handle_t;
 DMA_Handle_t DMA_UART6_TX_handle_t;
@@ -656,6 +659,9 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 
 		//Load into live buffers
 		setPDZeroDefaults();
+
+		//Initialize MODBUS
+		MODBUS_Port_Initialization();
 		break;
 	/*
 	 * Range	:
@@ -771,6 +777,9 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 
 		//Load into live buffers
 		setPDZeroDefaults();
+
+		//Initialize modbus
+		MODBUS_Port_Initialization();
 		break;
 	}
 }
@@ -819,4 +828,21 @@ void setRTUData(void)
 	  UHolding_Modbus_2.read_sample = CoilStatusRegister_t.CoilStatus_t.read_sample;
 	  UHolding_Modbus_2.NoProcess = CoilStatusRegister_t.CoilStatus_t.NoProcess;
 
+}
+
+void MODBUS_Port_Initialization()
+{
+	PORT_2.baudrate = 9600;
+	PORT_2.data_length = 1;
+	PORT_2.parity_bit = 0;
+	PORT_2.slave_ID = 2;
+	PORT_2.stop_bits = 1;
+
+	PORT_3.baudrate = 9600;
+	PORT_3.data_length = 1;
+	PORT_3.parity_bit = 0;
+	PORT_3.slave_ID = 3;
+	PORT_3.stop_bits = 1;
+
+	MODBUSInit();
 }

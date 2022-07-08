@@ -893,7 +893,8 @@ void ProcessMOD2_ModbusQuery_DMA(void)
 	memset(Txbuff,'\0',sizeof(Txbuff));
 
 	//huart3.Instance->CR1 |= UART_IT_TXE;
-	if(MOD2_Rxbuff[0] == MOD2_SlaveID) // check slave ID
+	//if(MOD2_Rxbuff[0] == MOD2_SlaveID) // check slave ID
+	if(MOD2_Rxbuff[0] == PORT_2.slave_ID) // check slave ID
 	{
 		rx_byte_count_uart1 -= 1;
 		Temp1 = MOD2_Rxbuff[rx_byte_count_uart1] << 8;

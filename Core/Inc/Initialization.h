@@ -10,6 +10,7 @@
 
 #include <stdlib.h>
 #include <stdint.h>
+#include "Application.h"
 
 #define DMA_FIRST_TRANSACTION_NO						( ( uint16_t ) 6 )
 #define DMA_SECOND_HOLDINGREAD_TRANSACTION_NO			( ( uint16_t ) 2 )
@@ -64,4 +65,7 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange);
 
 /*RTU Data*/
 void setRTUData(void);
+
+/*Initialization on MODBUS port*/
+void MODBUS_Port_Initialization(void);
 #endif /* INC_INITIALIZATION_H_ */

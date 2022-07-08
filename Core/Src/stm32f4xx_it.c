@@ -599,7 +599,10 @@ void TIM8_BRK_TIM12_IRQHandler(void)
   case 115200:
 	  //300us timeout
 	  if(uart_rx_timeout_counter_uart3 >= 3)
+	  {
 		  flag = SET;
+		  HAL_TIM_Base_Stop_IT(&htim12);
+	  }
 	  else{}
 	  break;
   }
@@ -661,7 +664,8 @@ void TIM5_IRQHandler(void)
   /* USER CODE BEGIN TIM5_IRQn 1 */
   uart_rx_timeout_counter_uart1 += 1;
 
-  switch(baudrate_uart1)/*TODO: this variable will be changed to a modbus register (USER SELECTABLE)*/
+  //switch(baudrate_uart1)/*TODO: this variable will be changed to a modbus register (USER SELECTABLE)*/
+  switch(PORT_2.baudrate)
   {
   case 9600:
 	  //3.7ms timeout
@@ -706,7 +710,7 @@ void TIM5_IRQHandler(void)
 	  flag = RESET;
 	  /*1. Check for the slave ID*/
 	  //if(MOD2_Rxbuff[SLAVE_ID] == 2)
-      if(MOD2_Rxbuff[SLAVE_ID] == 2)
+      if(MOD2_Rxbuff[SLAVE_ID] == PORT_2.slave_ID)
 	  {
 		  /*2. If slave ID is correct, set the flag for processing the query, this flag will be served in the super / while loop.*/
 		  //uart_rx_process_query = SET;

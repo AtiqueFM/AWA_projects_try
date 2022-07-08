@@ -38,11 +38,12 @@ struct Factorynode{
 };
 
 typedef struct{
-	uint16_t baudrate;
+	uint32_t baudrate;
 	uint16_t parity_bit;
 	uint16_t stop_bits;
 	uint16_t data_length;
 	uint16_t slave_ID;
+	uint16_t baudrate_selection;
 }MODBUS_config_t;
 
 void ProcessModesCommands(void);
@@ -192,4 +193,8 @@ void resetMODBUSComm(UART_HandleTypeDef *huart, TIM_HandleTypeDef *htim);
 void beginMODBUS(void);
 void beginMODBUSComm(TIM_HandleTypeDef *htim,volatile uint16_t *timeour_counter,volatile uint8_t *rx_bytes,volatile uint8_t *querry_process,int dir_line);
 
+
+void baudrateSelection(MODBUS_config_t *PORT);
+
+void MODBUSInit(void);
 #endif /* INC_APPLICATION_H_ */

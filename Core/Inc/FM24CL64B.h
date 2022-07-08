@@ -72,6 +72,8 @@
 #define FRAM_ADDRESS_CODSENSORLASTCALIB_HISTORY	FRAM_ADDRESS_PHSENSLASTCALIB_HISTORY + 210 //take 124 bytes
 //TSS last calibration
 #define FRAM_ADDRESS_TSSSENSORLASTCALIB_HISTORY	FRAM_ADDRESS_CODSENSLASTCALIB_HISTORY + 210 //takes 164 bytes (c- 0:2 and time stamp)
+//MODBUS configuration
+#define FRAM_ADDRESS_MODBUSCONFIGURATION	FRAM_ADDRESS_TSSSENSORLASTCALIB_HISTORY + 210 //100 bytes
 
 void FRAM_OperationWrite(uint16_t u16_address,uint8_t *u8_pData,uint16_t u16_noByte);
 void FRAM_OperationRead(uint16_t u16_address,uint8_t *u8_pData,uint16_t u16_noByte);

@@ -43,6 +43,7 @@ float adc;
 /*External variables*/
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim6;
+extern TIM_HandleTypeDef htim5;
 extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart3;
 extern UART_HandleTypeDef huart6;
@@ -62,6 +63,8 @@ extern uint32_t budrate_9600;//19200;//9600;		/*<For testing, lateron will be re
 extern uint32_t baudrate_uart1;		/*<For testing, lateron will be replaced by the moodbus register.*/
 extern uint32_t baudrate_uart3;		/*<For testing, lateron will be replaced by the moodbus register.*/
 extern float middle_point;
+extern volatile uint8_t uart_rx_bytes_uart1; 		/*< Will contain the received byte count.*/
+extern volatile uint16_t uart_rx_timeout_counter_uart1;
 
 uint8_t cod_flash_operation;
 uint16_t dataptr1;
@@ -561,13 +564,30 @@ void ProcessModesCommands(void)
 				//RTU
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == configure_mosbus_port2)
 				{
-					MODBUS_config_t temp_config;
-					temp_config.baudrate = HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.baudrate;
-					temp_config.data_length = HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.data_length;
-					temp_config.parity_bit = HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.parity_bit;
-					temp_config.stop_bits = HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.stop_bits;
-					temp_config.slave_ID = HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.slave_ID;
-					MODBUSConfiguration(&huart1, temp_config);
+					//Copy the data from Holding register to live buffer
+					memcpy(&PORT_2,&HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2,sizeof(HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2));
+
+					//Select the baudrate according to the selection
+					baudrateSelection(&PORT_2);
+
+					//Publish the selected baudrate value on the MODBUS
+					HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.baudrate = PORT_2.baudrate;
+
+					//Reset the common command
+					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
+
+					//Stop the MODBUS communication
+					resetMODBUSComm(&huart1, &htim5);
+
+					//Configure the new MODBUS configuration
+					MODBUSConfiguration(&huart1, PORT_2);
+
+					//Start the MODBUS communication
+					beginMODBUSComm(&htim5, &uart_rx_timeout_counter_uart1, &uart_rx_bytes_uart1, &RxFlag,2);
+
+					AWADataStoreState.modbusConfigport2 = SET;
+
+					AWAOperationStatus_t.AWADataSave_Calibration = SET;
 				}
 				//CPCB
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == configure_mosbus_port3)
@@ -575,6 +595,12 @@ void ProcessModesCommands(void)
 
 					//Copy the data from Holding register to live buffer
 					memcpy(&PORT_3,&HoldingRegister_t.MODBUS_PORTConfig_t.PORT_3,sizeof(HoldingRegister_t.MODBUS_PORTConfig_t.PORT_3));
+
+					//Select the baudrate according to the selection
+					baudrateSelection(&PORT_3);
+
+					//Publish the selected baudrate value on the MODBUS
+					HoldingRegister_t.MODBUS_PORTConfig_t.PORT_3.baudrate = PORT_3.baudrate;
 
 					//Reset the common command
 					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
@@ -587,6 +613,10 @@ void ProcessModesCommands(void)
 
 					//Start the MODBUS communication
 					beginMODBUSComm(&htim12, &uart_rx_timeout_counter_uart3, &uart_rx_bytes_uart3, &MOD3_RxFlag,3);
+
+					AWADataStoreState.modbusConfigport3 = SET;
+
+					AWAOperationStatus_t.AWADataSave_Calibration = SET;
 				}
 			}
 #if 0
@@ -3391,16 +3421,71 @@ void ModbusSaveConfiguration(uint8_t data)
 
 			  HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 		  }
+		  if(AWADataStoreState.modbusConfigport1)
+		  {
+
+			  FRAM_OperationWrite(FRAM_ADDRESS_MODBUSCONFIGURATION,(uint8_t*)&PORT_1,sizeof(PORT_1));
+			  AWADataStoreState.modbusConfigport1 = RESET;
+			  HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+		  }
+		  if(AWADataStoreState.modbusConfigport2)
+		  {
+
+			  FRAM_OperationWrite(FRAM_ADDRESS_MODBUSCONFIGURATION + sizeof(PORT_1),(uint8_t*)&PORT_2,sizeof(PORT_1));
+			  AWADataStoreState.modbusConfigport2 = RESET;
+			  HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+		  }
+		  if(AWADataStoreState.modbusConfigport3)
+		  {
+
+			  FRAM_OperationWrite(FRAM_ADDRESS_MODBUSCONFIGURATION + (2 * sizeof(PORT_1)),(uint8_t*)&PORT_3,sizeof(PORT_1));
+			  AWADataStoreState.modbusConfigport3 = RESET;
+			  HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+		  }
 
 	  }
 
 
 }
 
+void MODBUSInit(void)
+{
+	memcpy(&HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2,&PORT_2,sizeof(PORT_2));
+	memcpy(&HoldingRegister_t.MODBUS_PORTConfig_t.PORT_3,&PORT_3,sizeof(PORT_3));
+
+	//Select the baudrate according to the selection
+	baudrateSelection(&PORT_2);
+	baudrateSelection(&PORT_3);
+
+	//Publish the selected baudrate value on the MODBUS
+	HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.baudrate = PORT_2.baudrate;
+	HoldingRegister_t.MODBUS_PORTConfig_t.PORT_3.baudrate = PORT_3.baudrate;
+
+	//Reset the common command
+	HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
+
+	//Stop the MODBUS communication
+	resetMODBUSComm(&huart1, &htim5);
+	resetMODBUSComm(&huart3, &htim12);
+
+	//Configure the new MODBUS configuration
+	MODBUSConfiguration(&huart1, PORT_2);
+	MODBUSConfiguration(&huart3, PORT_3);
+
+	//Start the MODBUS communication
+	beginMODBUSComm(&htim12, &uart_rx_timeout_counter_uart3, &uart_rx_bytes_uart3, &MOD3_RxFlag,3);
+	beginMODBUSComm(&htim5, &uart_rx_timeout_counter_uart1, &uart_rx_bytes_uart1, &RxFlag,2);
+}
 void ModbusReadConfiguration(void)
 {
 	//Index count for last calibration data
 	uint8_t index_count = 0;
+
+	//Read modbus configuration
+	FRAM_OperationRead(FRAM_ADDRESS_MODBUSCONFIGURATION + (1 * sizeof(PORT_1)),(uint8_t*)&PORT_2,sizeof(PORT_1));
+	FRAM_OperationRead(FRAM_ADDRESS_MODBUSCONFIGURATION + (2 * sizeof(PORT_1)),(uint8_t*)&PORT_3,sizeof(PORT_1));
+	MODBUSInit();
+
 	//Read the complete MODBUS configuration from FRAM
 	FRAM_OperationRead(FRAM_ADDRESS_MIN, (uint8_t*)&HoldingRegister_t.bytes, sizeof(HoldingRegister_t.bytes));
 
@@ -4982,6 +5067,8 @@ void beginMODBUSComm(TIM_HandleTypeDef *htim,volatile uint16_t *timeour_counter,
 	//ADM_3_CLTR_LOW();
 	if(dir_line == 3)
 		ADM_3_CLTR_LOW();
+	if(dir_line == 2)
+		ADM_CLTR_LOW();
 	//Start the MODBUS timer
 	HAL_TIM_Base_Start_IT(htim);
 }
@@ -4990,6 +5077,8 @@ void MODBUSConfiguration(UART_HandleTypeDef *huart,MODBUS_config_t pConfig)
 	/*
 	 * UART configuration
 	 */
+
+
 	  huart->Init.BaudRate = pConfig.baudrate;
 	  huart->Init.WordLength = ( pConfig.data_length == 1 ) ? UART_WORDLENGTH_8B : UART_WORDLENGTH_9B;
 	  huart->Init.StopBits = ( pConfig.stop_bits == 1 ) ? UART_STOPBITS_1 : UART_STOPBITS_2;
@@ -4999,4 +5088,12 @@ void MODBUSConfiguration(UART_HandleTypeDef *huart,MODBUS_config_t pConfig)
 	  {
 	    Error_Handler();
 	  }
+}
+
+void baudrateSelection(MODBUS_config_t *PORT)
+{
+	(PORT->baudrate_selection == 1)?PORT->baudrate = 9600:
+			(PORT->baudrate_selection == 2)?PORT->baudrate = 19200:
+					(PORT->baudrate_selection == 3)?PORT->baudrate = 38400:
+							(PORT->baudrate_selection == 4)?PORT->baudrate = 115200:0;
 }

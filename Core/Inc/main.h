@@ -529,11 +529,12 @@ typedef struct{
 }SensoralibrationHandle_t;
 
 typedef struct{
-	uint16_t baudrate;
-	uint16_t parity_bit;
-	uint16_t stop_bits;
-	uint16_t data_length;
-	uint16_t slave_ID;
+	uint32_t baudrate;	//14
+	uint16_t parity_bit;//15
+	uint16_t stop_bits;//10
+	uint16_t data_length;//11
+	uint16_t slave_ID;//12
+	uint16_t baudrate_selection;//13
 }MODBUS_Config_handle_t;
 
 typedef struct{
@@ -1533,6 +1534,9 @@ typedef struct{
 	unsigned factoryTSS_setzero	: 1;	/*<SET after setting zero and RESET after storing in FRAM*/
 	unsigned analyzerRangeSelect: 1;	/*<SEt after selecting the analyzer range from the factory menu, will be reset for the first time.*/
 	unsigned analyzerPocessvalue: 1;	/*<Set after calculating new process values ; COD,BOD,TSS,TOC*/
+	unsigned modbusConfigport1	: 1;	/*<Set after MODBUS configuration in changed*/
+	unsigned modbusConfigport2	: 1;	/*<Set after MODBUS configuration in changed*/
+	unsigned modbusConfigport3	: 1;	/*<Set after MODBUS configuration in changed*/
 }AWADataStoreState_t;
 AWADataStoreState_t	AWADataStoreState;
 
