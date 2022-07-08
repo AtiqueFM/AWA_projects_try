@@ -8,6 +8,7 @@
 #include "main.h"
 #include "stm32f4xx_dma.h"
 #include "Initialization.h"
+#include "Application.h"
 #include <string.h>
 
 
@@ -43,6 +44,10 @@ uint16_t uart6_tx_length = 0;
 uint16_t uart1_tx_length = 0;
 uint16_t uart3_tx_length = 0;
 uint8_t UART3_ID = 3;
+
+extern MODBUS_config_t PORT_1;
+extern MODBUS_config_t PORT_2;
+extern MODBUS_config_t PORT_3;
 
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart1;
@@ -1620,7 +1625,7 @@ void ProcessModbusQuery_ISR(void)
 					length |= Rxbuff[5];
 					//startadd = startadd - 40000;
 					uint16_t index = 0;
-					if(startadd < 5000)
+					if(startadd < 6000)
 					{
 						if(startadd < 1000)
 						{
@@ -1641,6 +1646,10 @@ void ProcessModbusQuery_ISR(void)
 						{
 							index = HOLDING_REGISTER_ADDRESS_44000;
 							startadd -= 4000;
+						}else if(startadd >= 5000 && startadd < 6000)
+						{
+							index = HOLDING_REGISTER_ADDRESS_45000;
+							startadd -= 5000;
 						}
 							startadd = startadd * 2;
 							Temp1 = length * 2;
@@ -1811,7 +1820,7 @@ void ProcessModbusQuery_ISR(void)
 				{
 					//startadd = startadd - 40000;
 					uint16_t index = 0;
-					if(startadd < 5000)
+					if(startadd < 6000)
 					{
 						if(startadd < 1000)
 						{
@@ -1832,6 +1841,10 @@ void ProcessModbusQuery_ISR(void)
 						{
 							index = HOLDING_REGISTER_ADDRESS_44000;
 							startadd -= 4000;
+						}else if(startadd >= 5000 && startadd < 6000)
+						{
+							index = HOLDING_REGISTER_ADDRESS_45000;
+							startadd -= 5000;
 						}
 
 						startadd = startadd << 1;
@@ -2065,7 +2078,7 @@ void ProcessModbusQuery_ISR(void)
 					length |= Rxbuff[5];
 
 					uint16_t index = 0;
-					if(startadd < 5000)
+					if(startadd < 6000)
 					{
 						if(startadd < 1000)
 						{
@@ -2086,6 +2099,10 @@ void ProcessModbusQuery_ISR(void)
 						{
 							index = HOLDING_REGISTER_ADDRESS_44000;
 							startadd -= 4000;
+						}else if(startadd >= 5000 && startadd < 6000)
+						{
+							index = HOLDING_REGISTER_ADDRESS_45000;
+							startadd -= 5000;
 						}
 
 						startadd = startadd << 1;
@@ -2275,7 +2292,8 @@ void ProcessModbusQuery_ISR_3(void)
 	memset((uint16_t*)MOD3_Txbuff,'\0',620);
 
 	//huart3.Instance->CR1 |= UART_IT_TXE;
-	if(MOD3_Rxbuff[0] == UART3_ID)//SlaveID) // check slave ID
+	//if(MOD3_Rxbuff[0] == UART3_ID)//SlaveID) // check slave ID
+	if(MOD3_Rxbuff[0] == PORT_3.slave_ID)
 	{
 		rx_byte_count_uart3 -= 1;
 		u16RxCRCDataPacketLength = RxCRCIndex;

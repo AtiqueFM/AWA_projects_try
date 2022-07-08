@@ -47,7 +47,9 @@ extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart3;
 extern UART_HandleTypeDef huart6;
 extern uint8_t performAUTOZERO;
+TIM_HandleTypeDef htim12;
 
+extern TIM_HandleTypeDef htim12;
 extern TIM_HandleTypeDef htim7;
 extern UART_HandleTypeDef huart6;
 extern uint8_t uart_rx_buffer;						/*< Will receive single byte from UART and will transfer it to the RX buffer array.*/
@@ -56,6 +58,9 @@ extern volatile uint8_t uart_rcv_bytes;			/*< Flag will be set when the first by
 extern volatile uint16_t uart_rx_timeout_counter;
 extern volatile uint8_t uart_rx_process_query;		/*< This flag will be set when the slave ID is correct and the query needs to be processed.*/
 
+extern uint32_t budrate_9600;//19200;//9600;		/*<For testing, lateron will be replaced by the moodbus register.*/
+extern uint32_t baudrate_uart1;		/*<For testing, lateron will be replaced by the moodbus register.*/
+extern uint32_t baudrate_uart3;		/*<For testing, lateron will be replaced by the moodbus register.*/
 extern float middle_point;
 
 uint8_t cod_flash_operation;
@@ -78,6 +83,10 @@ struct Factorynode *TSSFactoryhead = '\0'; 	/*<Head for TSS Factory Calibration*
 float COD_UpperLimit;
 float BOD_UpperLimit;
 float TSS_UpperLimit;
+
+MODBUS_config_t PORT_1;
+MODBUS_config_t PORT_2;
+MODBUS_config_t PORT_3;
 
 void ProcessModesCommands(void)
 {
@@ -535,6 +544,50 @@ void ProcessModesCommands(void)
 					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
 				}
 				break;
+			}
+			case MODBUS_Config:
+			{
+				//HMI
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == configure_mosbus_port1)
+				{
+					MODBUS_config_t temp_config;
+					temp_config.baudrate = HoldingRegister_t.MODBUS_PORTConfig_t.PORT_1.baudrate;
+					temp_config.data_length = HoldingRegister_t.MODBUS_PORTConfig_t.PORT_1.data_length;
+					temp_config.parity_bit = HoldingRegister_t.MODBUS_PORTConfig_t.PORT_1.parity_bit;
+					temp_config.stop_bits = HoldingRegister_t.MODBUS_PORTConfig_t.PORT_1.stop_bits;
+					temp_config.slave_ID = HoldingRegister_t.MODBUS_PORTConfig_t.PORT_1.slave_ID;
+					MODBUSConfiguration(&huart6, temp_config);
+				}
+				//RTU
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == configure_mosbus_port2)
+				{
+					MODBUS_config_t temp_config;
+					temp_config.baudrate = HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.baudrate;
+					temp_config.data_length = HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.data_length;
+					temp_config.parity_bit = HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.parity_bit;
+					temp_config.stop_bits = HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.stop_bits;
+					temp_config.slave_ID = HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.slave_ID;
+					MODBUSConfiguration(&huart1, temp_config);
+				}
+				//CPCB
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == configure_mosbus_port3)
+				{
+
+					//Copy the data from Holding register to live buffer
+					memcpy(&PORT_3,&HoldingRegister_t.MODBUS_PORTConfig_t.PORT_3,sizeof(HoldingRegister_t.MODBUS_PORTConfig_t.PORT_3));
+
+					//Reset the common command
+					HoldingRegister_t.ModeCommand_t.CommonCommand = RESET;
+
+					//Stop the MODBUS communication
+					resetMODBUSComm(&huart3, &htim12);
+
+					//Configure the new MODBUS configuration
+					MODBUSConfiguration(&huart3, PORT_3);
+
+					//Start the MODBUS communication
+					beginMODBUSComm(&htim12, &uart_rx_timeout_counter_uart3, &uart_rx_bytes_uart3, &MOD3_RxFlag,3);
+				}
 			}
 #if 0
 			case Calibrate_COD:
@@ -4884,4 +4937,66 @@ void startupMessages(void)
 	HoldingRegister_t.SensorCalibration_t.pHSensMessages = SIMULATE_POS_414_mV;
 	HoldingRegister_t.SensorCalibration_t.COD_Messages = ENTER_BUFFER_SOL_1;
 	HoldingRegister_t.SensorCalibration_t.TSS_Messages = ENTER_BUFFER_SOL_1;
+}
+//DEPRICATED
+void resetMODBUS(void)
+{
+	  UHolding_Modbus_3.confirm = RESET;
+
+	  HAL_UART_Abort_IT(&huart3);
+	  HAL_TIM_Base_Stop_IT(&htim12);
+	  UHolding_Modbus_3.baudrate = 9610;
+
+	  HAL_UART_DeInit(&huart3);
+	  HAL_UART_IRQHandler(&huart3);
+}
+
+void resetMODBUSComm(UART_HandleTypeDef *huart, TIM_HandleTypeDef *htim)
+{
+	  HAL_UART_Abort_IT(huart);
+	  HAL_TIM_Base_Stop_IT(htim);
+	  //UHolding_Modbus_3.baudrate = 9610;
+
+	  HAL_UART_DeInit(huart);
+	  HAL_UART_IRQHandler(huart);
+}
+
+//DEPRICATED
+void beginMODBUS(void)
+{
+
+	  uart_rx_timeout_counter_uart3 = 0;
+	  //Reset the rx byte counter
+	  uart_rx_bytes_uart3 = 0;
+	  MOD3_RxFlag = RESET;
+	  ADM_3_CLTR_LOW();
+	  HAL_TIM_Base_Start_IT(&htim12);
+}
+void beginMODBUSComm(TIM_HandleTypeDef *htim,volatile uint16_t *timeour_counter,volatile uint8_t *rx_bytes,volatile uint8_t *querry_process,int dir_line)
+{
+	//Reset the timer timeout counter
+	*timeour_counter = 0;
+	//Reset the rx byte counter
+	*rx_bytes = 0;
+	*querry_process = RESET;
+	//ADM_3_CLTR_LOW();
+	if(dir_line == 3)
+		ADM_3_CLTR_LOW();
+	//Start the MODBUS timer
+	HAL_TIM_Base_Start_IT(htim);
+}
+void MODBUSConfiguration(UART_HandleTypeDef *huart,MODBUS_config_t pConfig)
+{
+	/*
+	 * UART configuration
+	 */
+	  huart->Init.BaudRate = pConfig.baudrate;
+	  huart->Init.WordLength = ( pConfig.data_length == 1 ) ? UART_WORDLENGTH_8B : UART_WORDLENGTH_9B;
+	  huart->Init.StopBits = ( pConfig.stop_bits == 1 ) ? UART_STOPBITS_1 : UART_STOPBITS_2;
+	  huart->Init.Parity = ( pConfig.parity_bit == 0 ) ? UART_PARITY_NONE : ( pConfig.parity_bit == 1 ) ? UART_PARITY_EVEN : UART_PARITY_ODD;
+
+	  if (HAL_UART_Init(huart) != HAL_OK)
+	  {
+	    Error_Handler();
+	  }
 }

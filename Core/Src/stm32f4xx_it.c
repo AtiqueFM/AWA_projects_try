@@ -25,6 +25,7 @@
 /* USER CODE BEGIN Includes */
 #include "stm32f4xx_dma.h"
 #include "Initialization.h"
+#include "Application.h"
 #include <string.h>
 /* USER CODE END Includes */
 
@@ -60,8 +61,8 @@ volatile uint16_t uart_rx_timeout_counter;
 volatile uint16_t uart_rx_timeout_counter_uart1;
 volatile uint16_t uart_rx_timeout_counter_uart3;
 volatile uint8_t uart_rx_process_query;		/*< This flag will be set when the slave ID is correct and the query needs to be processed.*/
-static uint32_t budrate_9600 = 38400;//19200;//9600;		/*<For testing, lateron will be replaced by the moodbus register.*/
-static uint32_t baudrate_uart1 = 9600;		/*<For testing, lateron will be replaced by the moodbus register.*/
+uint32_t budrate_9600 = 38400;//19200;//9600;		/*<For testing, lateron will be replaced by the moodbus register.*/
+uint32_t baudrate_uart1 = 9600;		/*<For testing, lateron will be replaced by the moodbus register.*/
 uint32_t baudrate_uart3 = 9600;		/*<For testing, lateron will be replaced by the moodbus register.*/
 uint8_t tx_byte_count = 0;
 uint8_t rx_byte_count = 0;
@@ -80,6 +81,9 @@ extern volatile uint8_t MOD3_Rxbuff[310];
 extern volatile uint8_t MOD3_Txbuff[310];
 extern volatile uint16_t MOD3_Rxptr, MOD3_Txptr, MOD3_RxBytes, MOD3_TxBytes;
 extern uint16_t uart6_tx_length;
+extern MODBUS_config_t PORT_1;
+extern MODBUS_config_t PORT_2;
+extern MODBUS_config_t PORT_3;
 
 uint8_t state = 1;
 extern uint8_t codSlotNO;
@@ -562,7 +566,8 @@ void TIM8_BRK_TIM12_IRQHandler(void)
   /* USER CODE BEGIN TIM8_BRK_TIM12_IRQn 1 */
   uart_rx_timeout_counter_uart3 += 1;
 
-  switch(baudrate_uart3)/*TODO: this variable will be changed to a modbus register (USER SELECTABLE)*/
+  //switch(baudrate_uart3)/*TODO: this variable will be changed to a modbus register (USER SELECTABLE)*/
+  switch(PORT_3.baudrate)/*TODO: this variable will be changed to a modbus register (USER SELECTABLE)*/
   {
   case 9600:
 	  //3.7ms timeout
@@ -606,7 +611,7 @@ void TIM8_BRK_TIM12_IRQHandler(void)
 	   */
 	  flag = RESET;
 	  /*1. Check for the slave ID*/
-	  if(MOD3_Rxbuff[SLAVE_ID] == UART3_ID)
+	  if(MOD3_Rxbuff[SLAVE_ID] == PORT_3.slave_ID)
       //if(Rxbuff[SLAVE_ID] == 1)
 	  {
 		  /*2. If slave ID is correct, set the flag for processing the query, this flag will be served in the super / while loop.*/

@@ -273,7 +273,7 @@ int main(void)
   //float avgs = (float)samples;
 
   /*Start the internal ADC*/
-  InternalADCStartConversion();
+  InternalADCStartConversion()
 
   while (1)
   {

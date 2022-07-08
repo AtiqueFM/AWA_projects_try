@@ -41,7 +41,7 @@ extern "C" {
 #define FW_VER_BUGFIX		12 /*<UART 3 Configuartion change (TESTED)*/
 
 #define MODBUS_1000_BYTES					1
-#define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1500
+#define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1200
 #define UART_6_RX_DESTINATION_ADDR			(uint32_t)0x20005000
 #define QUERRY_RX_INIT_LEN_6				0
 #define NEW_PUMP2_PIN						0
@@ -528,6 +528,19 @@ typedef struct{
 	/*********************/
 }SensoralibrationHandle_t;
 
+typedef struct{
+	uint16_t baudrate;
+	uint16_t parity_bit;
+	uint16_t stop_bits;
+	uint16_t data_length;
+	uint16_t slave_ID;
+}MODBUS_Config_handle_t;
+
+typedef struct{
+	MODBUS_Config_handle_t PORT_1;
+	MODBUS_Config_handle_t PORT_2;
+	MODBUS_Config_handle_t PORT_3;
+}MODBUS_PORTConfig;
 typedef union{
 #if(!MODBUS_1000_BYTES)
 	uint8_t bytes[sizeof(ModeCommandHandle_t)\
@@ -555,6 +568,10 @@ typedef union{
 		/*13/8/2021*/
 		//44000
 		SensoralibrationHandle_t SensorCalibration_t;
+		//Reserves
+		uint8_t RES_5[800];
+		//45000
+		MODBUS_PORTConfig MODBUS_PORTConfig_t;
 	};
 }Uholding_t;
 
@@ -686,6 +703,7 @@ extern volatile uint16_t DMA_Transaction_no_Tx_uart6;
 extern volatile uint16_t DMA_Transaction_no_Tx_uart1;//HMI
 extern volatile uint16_t DMA_Transaction_no_Tx_uart3;//HMI
 
+
 extern volatile uint8_t MOD3_RxFlag;
 //extern uint16_t ADCbuff[100], dataptr;
 extern uint16_t crc_calc(char* input_str, int len );
@@ -725,6 +743,7 @@ uint16_t filter_data_PD1[500];
 uint16_t filter_data_PD2[500];
 uint64_t filter_data_PD1_mean;
 uint64_t filter_data_PD2_mean;
+
 
 /*2-point Current calibration*/
 typedef struct{
@@ -967,6 +986,9 @@ void Error_Handler(void);
 													+ (8*sizeof(RelayOUTConfigHandle_t))\
 													+ 100)
 
+#define HOLDING_REGISTER_ADDRESS_45000	(uint16_t)(HOLDING_REGISTER_ADDRESS_44000\
+													+sizeof(SensoralibrationHandle_t)\
+													+sizeof(uint8_t)*800)
 #if 0
 //Commands
 //0x220 RUN MODE
@@ -1023,6 +1045,7 @@ void Error_Handler(void);
 #define Calibrate_PH					0x23
 #define Calibrate_A1					0x24
 #define Calibrate_A2					0x25
+#define MODBUS_Config					0x26
 /*19/7/2021*/
 #define Relay_Config_page				0x30 /*Alarm Limit*/
 #define Relay_Config					0x31 /*Save the alarm Limits*/
@@ -1068,6 +1091,9 @@ void Error_Handler(void);
 #define Sensor_Calibrate_COD					0x0A//HMI
 #define Factory_Calibrate_TSS					0x10/*25/10/2021*/
 #define Sensor_Calibrate_TSS					0x0B//HMI
+#define configure_mosbus_port1					0x0C
+#define configure_mosbus_port2					0x0D
+#define configure_mosbus_port3					0x0E
 
 /*Current output calibration commands*/
 #define AO1_GENERATE_5mA				1

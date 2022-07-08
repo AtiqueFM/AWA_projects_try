@@ -37,6 +37,14 @@ struct Factorynode{
 	struct Factorynode *next;
 };
 
+typedef struct{
+	uint16_t baudrate;
+	uint16_t parity_bit;
+	uint16_t stop_bits;
+	uint16_t data_length;
+	uint16_t slave_ID;
+}MODBUS_config_t;
+
 void ProcessModesCommands(void);
 
 void CardAction(uint8_t CardID);
@@ -175,5 +183,13 @@ void epoch_to_date_time(date_time_t* date_time, uint32_t epoch);
 void calculate_Next_ProcessTime(void);
 
 void startupMessages(void);
+
+void MODBUSConfiguration(UART_HandleTypeDef *huart,MODBUS_config_t pConfig);
+
+void resetMODBUS(void);
+void resetMODBUSComm(UART_HandleTypeDef *huart, TIM_HandleTypeDef *htim);
+
+void beginMODBUS(void);
+void beginMODBUSComm(TIM_HandleTypeDef *htim,volatile uint16_t *timeour_counter,volatile uint8_t *rx_bytes,volatile uint8_t *querry_process,int dir_line);
 
 #endif /* INC_APPLICATION_H_ */
