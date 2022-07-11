@@ -530,11 +530,11 @@ typedef struct{
 
 typedef struct{
 	uint32_t baudrate;	//14
-	uint16_t parity_bit;//15
-	uint16_t stop_bits;//10
-	uint16_t data_length;//11
-	uint16_t slave_ID;//12
-	uint16_t baudrate_selection;//13
+	uint32_t parity_bit;//15
+	uint32_t stop_bits;//10
+	uint32_t data_length;//11
+	uint32_t slave_ID;//12
+	uint32_t baudrate_selection;//13
 }MODBUS_Config_handle_t;
 
 typedef struct{
@@ -570,7 +570,7 @@ typedef union{
 		//44000
 		SensoralibrationHandle_t SensorCalibration_t;
 		//Reserves
-		uint8_t RES_5[800];
+		uint8_t RES_5[100];
 		//45000
 		MODBUS_PORTConfig MODBUS_PORTConfig_t;
 	};
@@ -989,7 +989,7 @@ void Error_Handler(void);
 
 #define HOLDING_REGISTER_ADDRESS_45000	(uint16_t)(HOLDING_REGISTER_ADDRESS_44000\
 													+sizeof(SensoralibrationHandle_t)\
-													+sizeof(uint8_t)*800)
+													+sizeof(uint8_t)*100)
 #if 0
 //Commands
 //0x220 RUN MODE

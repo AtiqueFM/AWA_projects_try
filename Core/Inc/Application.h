@@ -38,12 +38,12 @@ struct Factorynode{
 };
 
 typedef struct{
-	uint32_t baudrate;
-	uint16_t parity_bit;
-	uint16_t stop_bits;
-	uint16_t data_length;
-	uint16_t slave_ID;
-	uint16_t baudrate_selection;
+	uint32_t baudrate;	//14
+	uint32_t parity_bit;//15
+	uint32_t stop_bits;//10
+	uint32_t data_length;//11
+	uint32_t slave_ID;//12
+	uint32_t baudrate_selection;//13
 }MODBUS_config_t;
 
 void ProcessModesCommands(void);

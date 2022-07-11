@@ -275,12 +275,6 @@ int main(void)
   /*Start the internal ADC*/
   InternalADCStartConversion();
 
-//  HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.baudrate_selection = 1;
-//  HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.data_length = 1;
-//  HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.parity_bit = 0;
-//  HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.slave_ID = 2;
-//  HoldingRegister_t.MODBUS_PORTConfig_t.PORT_2.stop_bits = 1;
-
   while (1)
   {
 
