@@ -3482,9 +3482,9 @@ void ModbusReadConfiguration(void)
 	uint8_t index_count = 0;
 
 	//Read modbus configuration
-	FRAM_OperationRead(FRAM_ADDRESS_MODBUSCONFIGURATION + (1 * sizeof(PORT_1)),(uint8_t*)&PORT_2,sizeof(PORT_1));
-	FRAM_OperationRead(FRAM_ADDRESS_MODBUSCONFIGURATION + (2 * sizeof(PORT_1)),(uint8_t*)&PORT_3,sizeof(PORT_1));
-	MODBUSInit();
+//	FRAM_OperationRead(FRAM_ADDRESS_MODBUSCONFIGURATION + (1 * sizeof(PORT_1)),(uint8_t*)&PORT_2,sizeof(PORT_1));
+//	FRAM_OperationRead(FRAM_ADDRESS_MODBUSCONFIGURATION + (2 * sizeof(PORT_1)),(uint8_t*)&PORT_3,sizeof(PORT_1));
+//	MODBUSInit();
 
 	//Read the complete MODBUS configuration from FRAM
 	FRAM_OperationRead(FRAM_ADDRESS_MIN, (uint8_t*)&HoldingRegister_t.bytes, sizeof(HoldingRegister_t.bytes));
@@ -3801,6 +3801,9 @@ void ModbusReadConfiguration(void)
 	{
 	  //if the flag is set then do not load with default analyzer configuration i.e; COD 300 mg/l
 	  AWALastCalibrationCount.analyzerRangeSelectflag = SET;
+		FRAM_OperationRead(FRAM_ADDRESS_MODBUSCONFIGURATION + (1 * sizeof(PORT_1)),(uint8_t*)&PORT_2,sizeof(PORT_1));
+		FRAM_OperationRead(FRAM_ADDRESS_MODBUSCONFIGURATION + (2 * sizeof(PORT_1)),(uint8_t*)&PORT_3,sizeof(PORT_1));
+		MODBUSInit();
 	}else
 	{
 	  /*Booting first time or analyzer range is not selected by the user, load with the default configuration COD = 300 mg/l*/
@@ -3811,6 +3814,24 @@ void ModbusReadConfiguration(void)
 		AWADataStoreState.analyzerRangeSelect = SET;
 		//Flag set as data not saved in the FRAM
 		AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
+
+
+		PORT_2.baudrate = 38400;
+		PORT_2.baudrate_selection = 4;
+		PORT_2.data_length = 1;
+		PORT_2.parity_bit = 0;
+		PORT_2.slave_ID = 2;
+		PORT_2.stop_bits = 1;
+
+		PORT_3.baudrate = 38400;
+		PORT_3.baudrate_selection = 4;
+		PORT_3.data_length = 1;
+		PORT_3.parity_bit = 0;
+		PORT_3.slave_ID = 2;
+		PORT_3.stop_bits = 1;
+		MODBUSInit();
+
+
 	}
 
 	/*Get the upper limits for COD and TSS*/
