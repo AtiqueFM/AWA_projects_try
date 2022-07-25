@@ -275,6 +275,8 @@ int main(void)
   /*Start the internal ADC*/
   InternalADCStartConversion();
 
+  //Initiate the queue
+  initqueue();
   while (1)
   {
 

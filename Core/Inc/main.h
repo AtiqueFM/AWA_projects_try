@@ -44,7 +44,7 @@ extern "C" {
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1200
 #define UART_6_RX_DESTINATION_ADDR			(uint32_t)0x20005000
 #define QUERRY_RX_INIT_LEN_6				0
-#define NEW_PUMP2_PIN						0
+#define NEW_PUMP2_PIN						1
 #define MODBUS_MULTI_DROP					1
 uint8_t DMA_TX_FLAG;
 uint8_t DMA_TX_FLAG_HMI;

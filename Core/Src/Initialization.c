@@ -11,6 +11,7 @@
 #include "AD7682.h"
 #include <stdlib.h>
 #include "stm32f4xx_dma.h"
+#include <string.h>
 
 TIM_OC_InitTypeDef sConfigOC_PWM1 = {0};//moved
 TIM_OC_InitTypeDef sConfigOC_PWM2 = {0};//moved
@@ -117,6 +118,16 @@ void HoldingRegisterdefaultData(void)
 
 	CoilStatusRegister_t.CoilStatus_t.NoProcess = SET;
 
+	//HMI port configuration
+	PORT_1.baudrate_selection = 38400;
+	PORT_1.slave_ID = 1;
+	PORT_1.stop_bits = 1;
+	PORT_1.parity_bit = 0;
+	PORT_1.baudrate = 38400;
+	PORT_1.data_length = 8;
+
+	//memcpy(&PORT_1,&HoldingRegister_t.MODBUS_PORTConfig_t.PORT_1,sizeof(PORT_1));
+	memcpy(&HoldingRegister_t.MODBUS_PORTConfig_t.PORT_1,&PORT_1,sizeof(PORT_1));
 	//HoldingRegister_t.SensorCalibration_t.pHElecMeaages = 1;//simulate 414mV
 }
 

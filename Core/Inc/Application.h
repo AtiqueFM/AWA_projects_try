@@ -46,6 +46,14 @@ typedef struct{
 	uint32_t baudrate_selection;//13
 }MODBUS_config_t;
 
+typedef struct queue
+{
+	int maxSize;
+	int front;
+	int rear;
+	int *data;
+}QueueHandle_t;
+
 void ProcessModesCommands(void);
 
 void CardAction(uint8_t CardID);
@@ -197,4 +205,10 @@ void beginMODBUSComm(TIM_HandleTypeDef *htim,volatile uint16_t *timeour_counter,
 void baudrateSelection(MODBUS_config_t *PORT);
 
 void MODBUSInit(void);
+
+void initqueue(void);
+
+void enqueue(struct queue *,int);
+
+void dequeue(void);
 #endif /* INC_APPLICATION_H_ */

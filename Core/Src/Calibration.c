@@ -402,8 +402,11 @@ void pH_SensorCalibrationGetValues(void)
 		if(HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command == 0x04)
 		{
 			pH_SensorCalibpoints_t.pH_counts_1_x1 = 0;
+			HoldingRegister_t.SensorCalibration_t.pH_1pt_Cal_point_1_count = 0;
 			pH_SensorCalibpoints_t.pH_Solution_1_y1 = 0;
+			HoldingRegister_t.SensorCalibration_t.pH_1pt_calib_point1 = 0;
 			pH_SensorCalibpoints_t.flag_display_count = 0;
+			HoldingRegister_t.SensorCalibration_t.pH_1pt_Cal_point_1_value = 0;
 			HoldingRegister_t.SensorCalibration_t.Sensor_Calib_Command = 0;
 		}
 		/*For HMI display*/
@@ -776,15 +779,22 @@ void PT_ElectronicCalibrationGetValues(void)
 		{
 			if(!PT_ElectronicCalibration_t.flag_15)
 			{
+				//HAL_Delay(10);
 				PT_ElectronicCalibration_t.flag_15 = 0x01;
 				PT_ElectronicCalibration_t.PT_100_Counts = PT_ElectronicCalibration_t.ADCCounts;
 				HoldingRegister_t.IOUTCalibandTest_t.PT100_ADC_Counts_100  = PT_ElectronicCalibration_t.PT_100_Counts;
+
+				HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command = RESET;
+				//HAL_Delay(5000);
 			}else if(PT_ElectronicCalibration_t.flag_15 == 0x01)
 			{
+				//HAL_Delay(10);
 				PT_ElectronicCalibration_t.flag_15 = 0x0;
 				PT_ElectronicCalibration_t.PT_150_Counts = PT_ElectronicCalibration_t.ADCCounts;
 				HoldingRegister_t.IOUTCalibandTest_t.PT100_ADC_Counts_150  = PT_ElectronicCalibration_t.PT_150_Counts;
 
+				HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command = RESET;
+				//HAL_Delay(5000);
 			}
 		}else if(HoldingRegister_t.IOUTCalibandTest_t.CalibrationType == TEMP_TYPE_PT1000)//PT100
 		{

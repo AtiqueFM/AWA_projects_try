@@ -80,6 +80,7 @@ struct Sensornode_3pt *pHSensorhead = '\0'; 	/*<Head for pH Sensor Calibration*/
 struct Factorynode *CODFactoryhead = '\0'; 	/*<Head for COD Factory Calibration*/
 struct Factorynode *TSSFactoryhead = '\0'; 	/*<Head for TSS Factory Calibration*/
 
+QueueHandle_t *queue_;
 /*
  * Analyzer range:- Parameter limit select
  */
@@ -860,6 +861,7 @@ void ProcessModesCommands(void)
 				else
 					//SEL1_PT1000();
 					PH_SEL1_OFF(CARD_SLOT_6);
+				HAL_Delay(10);
 				PT_ElectronicCalibration_t.ADCCounts = ADS1115_OperationpHMeasurement(0x02);//(float)adc_temp / (float)sample_no;
 //				adc_temp = 0;
 				InputRegister_t.SlotParameter.pH_Temperature_ADC_Counts = PT_ElectronicCalibration_t.ADCCounts;
@@ -955,12 +957,12 @@ void ProcessModesCommands(void)
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
 				/*Display messages*/
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION
-						|| HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION
-						||HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure )
-				{
-					HoldingRegister_t.SensorCalibration_t.COD_Factory_Messages = RESET;
-				}
+//				if(HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP1_ACTION
+//						|| HoldingRegister_t.ModeCommand_t.CommonCommand == PUMP2_ACTION
+//						||HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure )
+//				{
+//					HoldingRegister_t.SensorCalibration_t.COD_Factory_Messages = RESET;
+//				}
 				/**/
 				//perform the COD ADC measurement action if command is received and none of the pump actions are taking place.
 				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_Measure && !PUMPControlHandle_t.u8Flag_measurement)
@@ -4754,6 +4756,7 @@ void Application_commandCheckandProcess(void)
 
 		  //Reset the new command flag
 		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
+
 	  }
 	  /*For STOP pump action*/
 	  else if(HoldingRegister_t.ModeCommand_t.CommonCommandHMI == STOP_RUNNING_PUMP
@@ -5118,3 +5121,53 @@ void baudrateSelection(MODBUS_config_t *PORT)
 					(PORT->baudrate_selection == 3)?PORT->baudrate = 38400:
 							(PORT->baudrate_selection == 4)?PORT->baudrate = 115200:0;
 }
+
+void initqueue(void)
+{
+	queue_ = (struct queue *)malloc(sizeof(struct queue));
+	queue_->maxSize = 5;
+	queue_->data = (int *)malloc(queue_->maxSize * sizeof(int)); // allocating the memory for the pointer to store the data
+	queue_->front = -1;
+	queue_->rear = -1;
+	//printf("Init!!!\n");
+}
+
+void enqueue(struct queue *queue_,int da)
+{
+
+	if(queue_->front == -1){
+		++(queue_->front);
+	}
+	if(queue_->rear == queue_->maxSize - 1)
+	{
+		//printf("Queue is full!!");
+	}else{
+		++(queue_->rear);
+		//printf("%d\n",queue_->rear);
+		int in = queue_->rear;
+		queue_->data[in] = da;
+		//printf("%d Enqueued!!\n",da);
+		//printf("front :%d\n",queue_->front);
+		//printf("rear :%d\n",queue_->rear);
+	}
+
+}
+
+void dequeue(void)
+{
+	if(queue_->rear == -1)
+	{
+		//printf("Queue is Empty!!");
+	}else if(queue_->front == queue_->maxSize - 1){
+		queue_->front = -1;
+		queue_->rear = -1;
+		//printf("for last element front :%d\n",queue_->front);
+		//printf("for last element rear :%d\n",queue_->rear);
+	}else{
+		++(queue_->front);
+		//printf("Deququed!!\n");
+		//printf("front :%d\n",queue_->front);
+		//printf("rear :%d\n",queue_->rear);
+	}
+}
+
