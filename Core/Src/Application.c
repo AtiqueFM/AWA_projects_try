@@ -861,7 +861,6 @@ void ProcessModesCommands(void)
 				else
 					//SEL1_PT1000();
 					PH_SEL1_OFF(CARD_SLOT_6);
-				HAL_Delay(10);
 				PT_ElectronicCalibration_t.ADCCounts = ADS1115_OperationpHMeasurement(0x02);//(float)adc_temp / (float)sample_no;
 //				adc_temp = 0;
 				InputRegister_t.SlotParameter.pH_Temperature_ADC_Counts = PT_ElectronicCalibration_t.ADCCounts;

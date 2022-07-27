@@ -32,6 +32,8 @@ float COD_3_ptcal[2];
 float TSS_3_ptcal[2];
 /*External variable*/
 extern TIM_HandleTypeDef htim1;
+int count = 0;
+int reset_count = 0;
 
 void pHElectronicCalibrationmV(void)
 {
@@ -775,26 +777,22 @@ void PT_ElectronicCalibrationGetValues(void)
 {
 	if(HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command == 10)
 	{
+		HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command = 0;
 		if(HoldingRegister_t.IOUTCalibandTest_t.CalibrationType == TEMP_TYPE_PT100)//PT100
 		{
+			count += 1;
 			if(!PT_ElectronicCalibration_t.flag_15)
 			{
-				//HAL_Delay(10);
 				PT_ElectronicCalibration_t.flag_15 = 0x01;
 				PT_ElectronicCalibration_t.PT_100_Counts = PT_ElectronicCalibration_t.ADCCounts;
 				HoldingRegister_t.IOUTCalibandTest_t.PT100_ADC_Counts_100  = PT_ElectronicCalibration_t.PT_100_Counts;
 
-				HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command = RESET;
-				//HAL_Delay(5000);
 			}else if(PT_ElectronicCalibration_t.flag_15 == 0x01)
 			{
-				//HAL_Delay(10);
 				PT_ElectronicCalibration_t.flag_15 = 0x0;
 				PT_ElectronicCalibration_t.PT_150_Counts = PT_ElectronicCalibration_t.ADCCounts;
 				HoldingRegister_t.IOUTCalibandTest_t.PT100_ADC_Counts_150  = PT_ElectronicCalibration_t.PT_150_Counts;
 
-				HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command = RESET;
-				//HAL_Delay(5000);
 			}
 		}else if(HoldingRegister_t.IOUTCalibandTest_t.CalibrationType == TEMP_TYPE_PT1000)//PT100
 		{
@@ -811,10 +809,10 @@ void PT_ElectronicCalibrationGetValues(void)
 
 			}
 		}
-		HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command = 0;
+
 	}else if(HoldingRegister_t.IOUTCalibandTest_t.Current_OP_Calib_Command == 12)
 	{
-		PT_ElectronicCalibration_t.flag_15 = RESET;
+		PT_ElectronicCalibration_t.flag_15 = RESET; reset_count += 1;
 
 		/*Reset buffers*/
 		if(HoldingRegister_t.IOUTCalibandTest_t.CalibrationType == TEMP_TYPE_PT100)
@@ -830,11 +828,11 @@ void PT_ElectronicCalibrationGetValues(void)
 
 		}
 		else{
-			PT_ElectronicCalibration_t.PT_100_Counts = 0;
-			HoldingRegister_t.IOUTCalibandTest_t.PT100_ADC_Counts_100  = 0;
+			PT_ElectronicCalibration_t.PT_1000_Counts = 0;
+			HoldingRegister_t.IOUTCalibandTest_t.PT1000_ADC_Counts_1000  = 0;
 
-			PT_ElectronicCalibration_t.PT_150_Counts = 0;
-			HoldingRegister_t.IOUTCalibandTest_t.PT100_ADC_Counts_150  = 0;
+			PT_ElectronicCalibration_t.PT_1500_Counts = 0;
+			HoldingRegister_t.IOUTCalibandTest_t.PT1000_ADC_Counts_1500 = 0;
 
 			//Simulate 1000 ohm
 			HoldingRegister_t.SensorCalibration_t.TempElectronicCalibMessages = SIMULATE_1000_OHMS;

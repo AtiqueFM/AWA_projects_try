@@ -850,6 +850,11 @@ void TIM7_IRQHandler(void)
 	  flag = RESET;
 	  /*1. Check for the slave ID*/
 	  //if(MOD2_Rxbuff[SLAVE_ID] == 2)
+//		int temp = 0;
+//		while(huart6.Instance->DR != 0)
+//		{
+//			huart6.Instance->DR = 0;
+//		}
       if(Rxbuff[SLAVE_ID] == 1)
 	  {
 		  /*2. If slave ID is correct, set the flag for processing the query, this flag will be served in the super / while loop.*/
