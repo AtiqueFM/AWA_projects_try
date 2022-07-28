@@ -52,20 +52,21 @@ typedef enum{
 	/*pH Electronic calibration*/
 	SIMULATE_POS_414_mV,		//9
 	SIMULATE_NEG_414_mV,
-	PRESS_CALIBRATE,
+	PRESS_CALIBRATE_,			//Deprecated
 
 	/*PT-100 Temperature Electronic calibration*/
 	SIMULATE_100_OHMS,			//12
 	SIMULATE_150_OHMS,
+	PRESS_CALIBRATE,
 
 	/*PT-1000 Temperature Electronic calibration*/
-	SIMULATE_1000_OHMS,			//14
+	SIMULATE_1000_OHMS,			//15
 	SIMULATE_1500_OHMS,
 
 	/*Sample Pump Stopped*/
-	SAMPLING_PUMP_STOPPED,		//16
+	SAMPLING_PUMP_STOPPED,		//17
 
 	/*Cleaning Pump Stopped*/
-	CLEANING_PUMP_STOPPED,		//17
+	CLEANING_PUMP_STOPPED,		//18
 }AWAMessages;
 #endif /* INC_CALIBRATION_H_ */

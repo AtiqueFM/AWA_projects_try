@@ -767,11 +767,13 @@ void ProcessModesCommands(void)
 
 					/*----------------------------------------------------------------------*/
 					AWAOperationStatus_t.FactoryMode = 0x0;
+					//Calibration successful
+					HoldingRegister_t.SensorCalibration_t.pHElectronicCalibMessages = CALIBRATION_SUCCESSFULL;
 					//Flag set as data not saved in the FRAM
 					//AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 					//Set the state of which data to store
 					//AWADataStoreState.electronicpH = SET;/*<TODO: to RESET after storing the data in FRAM*/
-					HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x50;
+					//HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x50;
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0x0;
 					HoldingRegister_t.ModeCommand_t.CommonCommandHMI = 0x0;
 					//Flag set as data not saved in the FRAM
@@ -908,13 +910,14 @@ void ProcessModesCommands(void)
 					/*<TODO: Push the slope and intercept to Last Calibration Input register*/
 
 					/*----------------------------------------------------------------------*/
-
+					//Calibration successful
+					HoldingRegister_t.SensorCalibration_t.TempElectronicCalibMessages = CALIBRATION_SUCCESSFULL;
 					AWAOperationStatus_t.FactoryMode = 0x0;
 					//Flag set as data not saved in the FRAM
 					AWAOperationStatus_t.AWADataSave_Calibration = 0x01;
 					//Set the state of which data to store
 					AWADataStoreState.electronicPT = SET;/*<TODO: to RESET after storing the data in FRAM*/
-					HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x50;
+					//HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x50;
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0x0;
 					HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
 				}else{
@@ -5043,6 +5046,7 @@ void calculate_Next_ProcessTime(void)
 void startupMessages(void)
 {
 	HoldingRegister_t.SensorCalibration_t.pHSensMessages = SIMULATE_POS_414_mV;
+	HoldingRegister_t.SensorCalibration_t.TempElectronicCalibMessages = SIMULATE_100_OHMS;
 	HoldingRegister_t.SensorCalibration_t.COD_Messages = ENTER_BUFFER_SOL_1;
 	HoldingRegister_t.SensorCalibration_t.TSS_Messages = ENTER_BUFFER_SOL_1;
 }

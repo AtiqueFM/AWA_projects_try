@@ -787,11 +787,17 @@ void PT_ElectronicCalibrationGetValues(void)
 				PT_ElectronicCalibration_t.PT_100_Counts = PT_ElectronicCalibration_t.ADCCounts;
 				HoldingRegister_t.IOUTCalibandTest_t.PT100_ADC_Counts_100  = PT_ElectronicCalibration_t.PT_100_Counts;
 
+				//Simulate 100 ohm
+				HoldingRegister_t.SensorCalibration_t.TempElectronicCalibMessages = SIMULATE_150_OHMS;
+
 			}else if(PT_ElectronicCalibration_t.flag_15 == 0x01)
 			{
 				PT_ElectronicCalibration_t.flag_15 = 0x0;
 				PT_ElectronicCalibration_t.PT_150_Counts = PT_ElectronicCalibration_t.ADCCounts;
 				HoldingRegister_t.IOUTCalibandTest_t.PT100_ADC_Counts_150  = PT_ElectronicCalibration_t.PT_150_Counts;
+
+				//Simulate 100 ohm
+				HoldingRegister_t.SensorCalibration_t.TempElectronicCalibMessages = PRESS_CALIBRATE;
 
 			}
 		}else if(HoldingRegister_t.IOUTCalibandTest_t.CalibrationType == TEMP_TYPE_PT1000)//PT100
@@ -801,11 +807,17 @@ void PT_ElectronicCalibrationGetValues(void)
 				PT_ElectronicCalibration_t.flag_15 = 0x01;
 				PT_ElectronicCalibration_t.PT_1000_Counts = PT_ElectronicCalibration_t.ADCCounts;
 				HoldingRegister_t.IOUTCalibandTest_t.PT1000_ADC_Counts_1000 = PT_ElectronicCalibration_t.PT_1000_Counts;
+
+				//Simulate 100 ohm
+				HoldingRegister_t.SensorCalibration_t.TempElectronicCalibMessages = SIMULATE_1500_OHMS;
 			}else if(PT_ElectronicCalibration_t.flag_15 == 0x01)
 			{
 				PT_ElectronicCalibration_t.flag_15 = 0x0;
 				PT_ElectronicCalibration_t.PT_1500_Counts = PT_ElectronicCalibration_t.ADCCounts;
 				HoldingRegister_t.IOUTCalibandTest_t.PT1000_ADC_Counts_1500  = PT_ElectronicCalibration_t.PT_1500_Counts;
+
+				//Simulate 100 ohm
+				HoldingRegister_t.SensorCalibration_t.TempElectronicCalibMessages = PRESS_CALIBRATE;
 
 			}
 		}
