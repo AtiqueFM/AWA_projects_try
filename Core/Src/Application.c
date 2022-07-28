@@ -3801,7 +3801,7 @@ void ModbusReadConfiguration(void)
 	uint8_t flag = 0;
 	FRAM_OperationRead(FRAM_ADDRESS_RANGESELECT_FLAG,(uint8_t*)&flag,1);
 	/*Check if flag is SET*/
-	if(flag)
+	if(flag == SET)
 	{
 	  //if the flag is set then do not load with default analyzer configuration i.e; COD 300 mg/l
 	  AWALastCalibrationCount.analyzerRangeSelectflag = SET;

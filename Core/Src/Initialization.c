@@ -673,6 +673,14 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 
 		//Initialize MODBUS
 		MODBUS_Port_Initialization();
+
+		//AO Electronic calibration
+		for(int i = 0;i<4;i++)
+		{
+			CurrentOutputCalibration_t[i].AO_slope = 0.000914922683f;
+			CurrentOutputCalibration_t[i].AO_intercept = -0.982635021f;
+		}
+
 		break;
 	/*
 	 * Range	:
@@ -791,6 +799,13 @@ void CalibrationDefaultValue(uint8_t AnalyzerRange)
 
 		//Initialize modbus
 		MODBUS_Port_Initialization();
+
+		//AO Electronic calibration
+		for(int i = 0;i<4;i++)
+		{
+			CurrentOutputCalibration_t[i].AO_slope = 0.000914922683f;
+			CurrentOutputCalibration_t[i].AO_intercept = -0.982635021f;
+		}
 		break;
 	}
 }
