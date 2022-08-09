@@ -653,6 +653,7 @@ typedef union{
 		float TSS_raw;
 		float pH_mV;
 		float temp_resistance;
+		uint16_t TEST[5];
 		float RES[50];
 		uint16_t main_cmd;
 		uint16_t common_cmd;
@@ -664,9 +665,6 @@ typedef union{
 		float read_acid;
 		float read_sample;
 		float NoProcess;
-		float RES_1[100];
-		uint16_t TEST[5];
-
 	};
 }UHolding_Modbus_2_t;
 UHolding_Modbus_2_t UHolding_Modbus_2;
@@ -674,11 +672,6 @@ UHolding_Modbus_2_t UHolding_Modbus_2;
 typedef union{
 	uint8_t bytes[100];
 	struct{
-		uint16_t slaveID;
-		uint16_t baudrate;
-		uint16_t confirm;
-		uint16_t confirm_ID;
-		float RES_1[100];
 		uint16_t TEST[5];
 	};
 }UHolding_Modbus_3_t;

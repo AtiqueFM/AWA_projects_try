@@ -3892,19 +3892,6 @@ void ModbusReadConfiguration(void)
 
 	/*Read the Check Screen parameters*/
 	//FRAM_OperationRead(FRAM_ADDRESS_CHECKSCREENVALUES,(uint8_t*)&HoldingRegister_t.ModeCommand_t.CS_PD_1_MIN,16);
-
-	//TEST
-	HoldingRegister_t.PORT_1_TEST[0] = 1;
-	HoldingRegister_t.PORT_1_TEST[1] = 2;
-	HoldingRegister_t.PORT_1_TEST[2] = 3;
-	HoldingRegister_t.PORT_1_TEST[3] = 4;
-	HoldingRegister_t.PORT_1_TEST[4] = 5;
-
-	HoldingRegister_t.PORT_2_TEST[0] = 1;
-	HoldingRegister_t.PORT_2_TEST[1] = 2;
-	HoldingRegister_t.PORT_2_TEST[2] = 3;
-	HoldingRegister_t.PORT_2_TEST[3] = 4;
-	HoldingRegister_t.PORT_2_TEST[4] = 5;
 }
 
 
@@ -5124,14 +5111,14 @@ void startupMessages(void)
 //DEPRICATED
 void resetMODBUS(void)
 {
-	  UHolding_Modbus_3.confirm = RESET;
-
-	  HAL_UART_Abort_IT(&huart3);
-	  HAL_TIM_Base_Stop_IT(&htim12);
-	  UHolding_Modbus_3.baudrate = 9610;
-
-	  HAL_UART_DeInit(&huart3);
-	  HAL_UART_IRQHandler(&huart3);
+//	  UHolding_Modbus_3.confirm = RESET;
+//
+//	  HAL_UART_Abort_IT(&huart3);
+//	  HAL_TIM_Base_Stop_IT(&htim12);
+//	  UHolding_Modbus_3.baudrate = 9610;
+//
+//	  HAL_UART_DeInit(&huart3);
+//	  HAL_UART_IRQHandler(&huart3);
 }
 
 void resetMODBUSComm(UART_HandleTypeDef *huart, TIM_HandleTypeDef *htim)

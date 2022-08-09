@@ -129,6 +129,12 @@ void HoldingRegisterdefaultData(void)
 	//memcpy(&PORT_1,&HoldingRegister_t.MODBUS_PORTConfig_t.PORT_1,sizeof(PORT_1));
 	memcpy(&HoldingRegister_t.MODBUS_PORTConfig_t.PORT_1,&PORT_1,sizeof(PORT_1));
 	//HoldingRegister_t.SensorCalibration_t.pHElecMeaages = 1;//simulate 414mV
+
+	for(int i = 0;i<5;i++)
+	{
+		UHolding_Modbus_2.TEST[i] = i+1;
+		UHolding_Modbus_3.TEST[i] = i+1;
+	}
 }
 
 void DMA_UART6_RX_Init(void)
