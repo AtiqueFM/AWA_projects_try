@@ -74,6 +74,9 @@ uint16_t noOfFlashes;
 uint16_t flash_limit_max;
 uint16_t flash_limit_min;
 
+uint8_t COD_sensor_calibration_point;
+uint8_t TSS_sensor_calibration_point;
+
 struct Sensornode_3pt *CODSensorhead = '\0'; 	/*<Head for COD Sensor Calibration*/
 struct Sensornode_3pt *TSSSensorhead = '\0'; 	/*<Head for TSS Sensor Calibration*/
 struct Sensornode_3pt *pHSensorhead = '\0'; 	/*<Head for pH Sensor Calibration*/
@@ -448,13 +451,22 @@ void ProcessModesCommands(void)
 			{
 				//Measure Zero
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt1)
+				{
 					COD_SensorCalib_ypoint(1);
+					COD_sensor_calibration_point = 1;
+				}
 				//Measure Sample 1
 				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt2)
+				{
 					COD_SensorCalib_ypoint(2);
+					COD_sensor_calibration_point = 2;
+				}
 				//Measure sample 2
 				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt3)
+				{
 					COD_SensorCalib_ypoint(3);
+					COD_sensor_calibration_point = 3;
+				}
 
 				/*Stop sampling pump, if MIL state is RESET*/
 				else if((HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt1
@@ -475,6 +487,17 @@ void ProcessModesCommands(void)
 					//CODADCCapture(COD_Measure);
 					CODADCCapture_Sensor(COD_Measure,point);
 #endif
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
+				{
+					pumpOperationStop();
+					//Delay
+					HAL_Delay(500);
+					//perform the ADC measurement action when the pump action is completed
+					if(!PUMPControlHandle_t.u8Flag_measurement)
+					{
+						HoldingRegister_t.ModeCommand_t.CommonCommand = COD_Measure;
+						point = COD_sensor_calibration_point;
+					}
 				}
 				//For Two point calibration operation
 				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == Sensor_Calibrate_COD)
@@ -500,13 +523,23 @@ void ProcessModesCommands(void)
 			{
 				//Measure Zero
 				if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt1)
+				{
 					COD_SensorCalib_ypoint(4);
+					TSS_sensor_calibration_point = 4;
+
+				}
 				//Measure Sample 1
 				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt2)
+				{
 					COD_SensorCalib_ypoint(5);
+					TSS_sensor_calibration_point = 5;
+				}
 				//Measure sample 2
 				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt3)
+				{
 					COD_SensorCalib_ypoint(6);
+					TSS_sensor_calibration_point = 6;
+				}
 
 				/*Stop sampling pump, if MIL state is RESET*/
 				else if((HoldingRegister_t.ModeCommand_t.CommonCommand == COD_SENSOR_MEASURE_pt1
@@ -527,6 +560,17 @@ void ProcessModesCommands(void)
 					//CODADCCapture(COD_Measure);
 					CODADCCapture_Sensor(COD_Measure,point);
 #endif
+				}else if(HoldingRegister_t.ModeCommand_t.CommonCommand == STOP_RUNNING_PUMP)
+				{
+					pumpOperationStop();
+					//Delay
+					HAL_Delay(500);
+					//perform the ADC measurement action when the pump action is completed
+					if(!PUMPControlHandle_t.u8Flag_measurement)
+					{
+						HoldingRegister_t.ModeCommand_t.CommonCommand = COD_Measure;
+						point = TSS_sensor_calibration_point;
+					}
 				}
 				//For Two point calibration operation
 				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == Sensor_Calibrate_TSS)
@@ -3848,6 +3892,19 @@ void ModbusReadConfiguration(void)
 
 	/*Read the Check Screen parameters*/
 	//FRAM_OperationRead(FRAM_ADDRESS_CHECKSCREENVALUES,(uint8_t*)&HoldingRegister_t.ModeCommand_t.CS_PD_1_MIN,16);
+
+	//TEST
+	HoldingRegister_t.PORT_1_TEST[0] = 1;
+	HoldingRegister_t.PORT_1_TEST[1] = 2;
+	HoldingRegister_t.PORT_1_TEST[2] = 3;
+	HoldingRegister_t.PORT_1_TEST[3] = 4;
+	HoldingRegister_t.PORT_1_TEST[4] = 5;
+
+	HoldingRegister_t.PORT_2_TEST[0] = 1;
+	HoldingRegister_t.PORT_2_TEST[1] = 2;
+	HoldingRegister_t.PORT_2_TEST[2] = 3;
+	HoldingRegister_t.PORT_2_TEST[3] = 4;
+	HoldingRegister_t.PORT_2_TEST[4] = 5;
 }
 
 
@@ -3855,6 +3912,19 @@ static inline void COD_SensorCalib_ypoint(uint8_t pt)
 {
 
 	HoldingRegister_t.SensorCalibration_t.COD_Messages = RESET;
+#if 1
+	if(HoldingRegister_t.SensorCalibration_t.RES_1[0] == 1)
+	{
+		HMIInterlockingFlag(HMI_INTERLOCK_SENSOR_READACID, SET);
+	//First operate the sample pump
+		PumpOperation(0x01);
+	}
+	else if(HoldingRegister_t.SensorCalibration_t.RES_1[0] == 2)
+	{
+		HMIInterlockingFlag(HMI_INTERLOCK_SENSOR_READSAMPLE, SET);
+		PumpOperation(0x02);
+	}
+#else
 	if(pt == 1 || pt == 4)
 	{
 		HMIInterlockingFlag(HMI_INTERLOCK_SENSOR_READACID, SET);
@@ -3866,6 +3936,7 @@ static inline void COD_SensorCalib_ypoint(uint8_t pt)
 		HMIInterlockingFlag(HMI_INTERLOCK_SENSOR_READSAMPLE, SET);
 		PumpOperation(0x02);
 	}
+#endif
 
 	//perform the ADC measurement action when the pump action is completed
 	if(!PUMPControlHandle_t.u8Flag_measurement)

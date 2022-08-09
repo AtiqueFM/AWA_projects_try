@@ -44,7 +44,7 @@ extern "C" {
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1200
 #define UART_6_RX_DESTINATION_ADDR			(uint32_t)0x20005000
 #define QUERRY_RX_INIT_LEN_6				0
-#define NEW_PUMP2_PIN						1
+#define NEW_PUMP2_PIN						0
 #define MODBUS_MULTI_DROP					1
 uint8_t DMA_TX_FLAG;
 uint8_t DMA_TX_FLAG_HMI;
@@ -509,7 +509,7 @@ typedef struct{
 	float pH_Y3;
 	float pH_slope_range_2;
 	float pH_intercept_range_2;
-	float RES_1[10];
+	uint32_t RES_1[10];
 	float pH_Cal_Point_3_value;
 	uint16_t pH_Cal_Point_3_count;
 	//COD
@@ -664,6 +664,9 @@ typedef union{
 		float read_acid;
 		float read_sample;
 		float NoProcess;
+		float RES_1[100];
+		uint16_t TEST[5];
+
 	};
 }UHolding_Modbus_2_t;
 UHolding_Modbus_2_t UHolding_Modbus_2;
@@ -675,6 +678,8 @@ typedef union{
 		uint16_t baudrate;
 		uint16_t confirm;
 		uint16_t confirm_ID;
+		float RES_1[100];
+		uint16_t TEST[5];
 	};
 }UHolding_Modbus_3_t;
 UHolding_Modbus_3_t UHolding_Modbus_3;
