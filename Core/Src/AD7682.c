@@ -6,6 +6,7 @@
  */
 
 #include "AD7682.h"
+#include <string.h>
 
 extern SPI_HandleTypeDef hspi3;
 uint8_t codSlotNO = CARD_SLOT_1;

@@ -7,6 +7,7 @@
 
 
 #include "ADS1115.h"
+#include <string.h>
 
 extern I2C_HandleTypeDef hi2c1;
 ADS1115_Config ADS1115_Config_t;
@@ -142,7 +143,6 @@ uint16_t ADS1115_OperationpHMeasurement(uint8_t measure)
 	uint64_t adc_temp = 0;
 	uint16_t adc_val = 0;
 	uint16_t arr[50];
-	uint16_t avg_val = 0;
 	union{
 		uint8_t raw_data[2];
 		uint16_t data;

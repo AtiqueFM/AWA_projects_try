@@ -33,9 +33,12 @@
 #include "Application.h"
 #include "Calibration.h"
 #include "Initialization.h"
+#include <time.h>
 
 
 #define ITM_Port32(n)	(*((volatile unsigned long *)(0xe0000000 +4*n)))
+#define SINGLE_SHOT 0
+#define TEST	0
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -53,6 +56,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc1;
+
 I2C_HandleTypeDef hi2c1;
 
 SPI_HandleTypeDef hspi3;
@@ -61,14 +66,20 @@ TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim4;
+TIM_HandleTypeDef htim5;
 TIM_HandleTypeDef htim6;
+TIM_HandleTypeDef htim7;
+TIM_HandleTypeDef htim12;
 
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart6;
+DMA_HandleTypeDef hdma_usart6_tx;
 
 /* USER CODE BEGIN PV */
-
+extern uint8_t uart_rx_buffer;			/*< Will receive single byte from UART and will transfer it to the RX buffer array.*/
+extern uint8_t uart_rx_buffer_uart1;	/*< Will receive single byte from UART and will transfer it to the RX buffer array.*/
+extern uint8_t uart_rx_buffer_uart3;	/*< Will receive single byte from UART and will transfer it to the RX buffer array.*/
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -84,6 +95,11 @@ static void MX_USART3_UART_Init(void);
 static void MX_TIM6_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART6_UART_Init(void);
+static void MX_ADC1_Init(void);
+static void MX_DMA_Init(void);
+static void MX_TIM7_Init(void);
+static void MX_TIM5_Init(void);
+static void MX_TIM12_Init(void);
 /* USER CODE BEGIN PFP */
 
 void ProcessCommandCommands(void);
@@ -111,6 +127,8 @@ typedef union{
 }Data;
 Data data_;
 
+//AutoZero flag
+uint8_t performAUTOZERO;
 
 int _write(int file, char *ptr, int len)
 {
@@ -145,6 +163,7 @@ int main(void)
 
 
   /* USER CODE END 1 */
+  
 
   /* MCU Configuration--------------------------------------------------------*/
 
@@ -160,13 +179,20 @@ int main(void)
 
   /* USER CODE BEGIN SysInit */
   ITM_Port32(31) = 1;
-
+#if MODBUS_MULTI_DROP
+  //HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
+#else
   //Configure DMA for UART 6 RX
   DMA_UART6_RX_Init();
+#endif
 
   //Configure DMA for UART 1 RX
   //DMA_UART1_RX_Init();
+#if QUERRY_RX_INIT_LEN_6
   DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),DMA_FIRST_TRANSACTION_NO); /*< Initialize the DMA2 Stream 5 with DMA_FIRST_TRANSACTION_NO*/
+#else
+  //DMA_UART1_RX_Init((uint32_t*)(&Rxbuff[0]),8); /*< Initialize the DMA2 Stream 5 with DMA_FIRST_TRANSACTION_NO*/
+#endif
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
@@ -181,14 +207,28 @@ int main(void)
   MX_TIM6_Init();
   MX_USART1_UART_Init();
   MX_USART6_UART_Init();
+  MX_ADC1_Init();
+  MX_DMA_Init();
+  MX_TIM7_Init();
+  MX_TIM5_Init();
+  MX_TIM12_Init();
   /* USER CODE BEGIN 2 */
   ITM_Port32(31) = 2;
 
   //Enable the DMA 2 Stream for UART 6 RX
-  DMAPeripheralEnable(DMA2_Stream2, ENABLE);
+  //DMAPeripheralEnable(DMA2_Stream2, ENABLE);
+
+  //Start the reception in UART6 using interrupt
+  HAL_UART_Receive_IT(&huart6, &uart_rx_buffer, 1);
 
   //Enable the DMA 2 Stream for UART 1 RX
-  DMAPeripheralEnable(DMA2_Stream5, ENABLE);
+  //DMAPeripheralEnable(DMA2_Stream5, ENABLE);
+
+  //Start the reception in UART6 using interrupt
+  HAL_UART_Receive_IT(&huart1, &uart_rx_buffer_uart1, 1);
+
+  //Start UART3 on interrupt
+  HAL_UART_Receive_IT(&huart3, &uart_rx_buffer_uart3, 1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -196,10 +236,13 @@ int main(void)
   ADM_CLTR_LOW();
 
   ADM_2_CLTR_LOW();
+
+  ADM_3_CLTR_LOW();
   //test
 //  HoldingRegisterdefaultData();
   ModbusReadConfiguration();
   HoldingRegisterdefaultData();
+  startupMessages();
   /**************************/
 
   PWM_setup();
@@ -217,29 +260,31 @@ int main(void)
   //this is set to 0x01 when the start ADC command is received
   TimerStart = 0x02;
   //printf("Hello AWA!!!\n");
+  //memset(&InputRegister_t.bytes[sizeof(PVhandle_t)],'\0',sizeof(InputRegister_t.bytes));
+//  int flag_= 0;
+  //FRAM_OperationWrite(FRAM_ADDRESS_LASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t)],sizeof(InputRegister_t.bytes));
+  //int size = sizeof(PVhandle_t) + sizeof(InputRegister_t.COD_lastCalibration);
+#if TEST
+  memset(&CurrentOutputCalibration_t,'\0',sizeof(CurrentOutputCalibration_t));
+  FRAM_OperationWrite(FRAM_ADDRESS_AO_ELEC_CALIB, (uint8_t*)&CurrentOutputCalibration_t, sizeof(CurrentOutputCalibration_t));
+#endif
+  //float arrayADC [1000];
+  uint16_t samples = 100;
+  //float avgs = (float)samples;
+
+  /*Start the internal ADC*/
+  InternalADCStartConversion();
+
+  //Initiate the queue
+  initqueue();
   while (1)
   {
+
 	  //Process the commands from the HMI
 	  ProcessModesCommands();
 
-	  if(AWAOperationStatus_t.FactoryMode != 1 && AWAOperationStatus_t.CalibrationMode != 1 && AWAOperationStatus_t.CODFlashOperation != 1)
-	  {
-		  CardAction(0x01);
-		  if(AWAOperationStatus_t.ElectronicCal_AO == 0)
-		  {
-			ParameterValues_t.pH_Value = InputRegister_t.PV_info.pH_value;
-			ParameterValues_t.COD_Value = InputRegister_t.PV_info.CODValue;
-			ParameterValues_t.BOD_Value = InputRegister_t.PV_info.BODValue;
-			ParameterValues_t.TSS_Value = InputRegister_t.PV_info.TSSValue;
-
-			//Analog Output
-			ParameterIOutProcess();
-
-			//Relay Output
-			//ParameterRelayAlarmProcess();
-		  }
-
-	  }
+	  //Relay outputs and analog outputs
+	  Application_AWAIOProcess();
 
 #if 0
 	  if(AWAOperationStatus_t.ElectronicCal_AO == 0 \
@@ -254,41 +299,20 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  if(RxFlag == 0x01)
-	  {
-		  RxFlag = 0;
-		  ProcessModbusQuery();
-	  }
-	  if(MOD2_RxFlag == 0x01)
-	  {
-		  UHolding_Modbus_2.BOD_Value = InputRegister_t.PV_info.BODValue;
-		  UHolding_Modbus_2.COD_Value = InputRegister_t.PV_info.CODValue;
-		  UHolding_Modbus_2.TSS_Value = InputRegister_t.PV_info.TSSValue;
-		  UHolding_Modbus_2.TOC_Value = InputRegister_t.PV_info.TOC;
-		  UHolding_Modbus_2.pH_mV = InputRegister_t.PV_info.pH_value;
-		  UHolding_Modbus_2.Temperature = InputRegister_t.PV_info.temp_pH;
-		  MOD2_RxFlag = 0;
-		  //ProcessMOD2_ModbusQuery();
-		  ProcessMOD2_ModbusQuery_DMA();
-	  }
-	  //Check for the save calibration data flag, if the flag is set then save the calibration data into FRAM
-	  if(AWAOperationStatus_t.AWADataSave_Calibration)
-	  {
-		  ModbusSaveConfiguration(SAVE_CALIBRATION_DATA);
-	  }
 
-	  //RTU
-	  if(dma_tx_flag_AT == 1)
-	  {
-		  ADM_2_CLTR_LOW();
-		  dma_tx_flag_AT = 0;
-	  }
-	  //HMI
-	  if(dma_tx_flag_uart1 == 1)
-	  {
-		  ADM_CLTR_LOW();
-		  dma_tx_flag_uart1 = 0;
-	  }
+	  //Parses the data received from the MODBUS master and execute the command received
+	  Application_MODBUSParseQuery();
+
+	  //Stores the process variables and calibration data if the respective flag is raised
+	  Application_StoreData();
+
+	  //Will if data is transmitted by the slave and is ready for new query
+	  //Application_MODBUSRXprocess();
+
+	  /*COD process controls*/
+	  FlowSensorReadStatus();
+	  MILSwitchReadStatus();
+
 
   }
   /* USER CODE END 3 */
@@ -303,11 +327,11 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Configure the main internal regulator output voltage
+  /** Configure the main internal regulator output voltage 
   */
   __HAL_RCC_PWR_CLK_ENABLE();
   __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE1);
-  /** Initializes the CPU, AHB and APB busses clocks
+  /** Initializes the CPU, AHB and APB busses clocks 
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
@@ -321,7 +345,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks
+  /** Initializes the CPU, AHB and APB busses clocks 
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -334,6 +358,56 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief ADC1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_ADC1_Init(void)
+{
+
+  /* USER CODE BEGIN ADC1_Init 0 */
+
+  /* USER CODE END ADC1_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC1_Init 1 */
+
+  /* USER CODE END ADC1_Init 1 */
+  /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion) 
+  */
+  hadc1.Instance = ADC1;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
+  hadc1.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc1.Init.ScanConvMode = DISABLE;
+  hadc1.Init.ContinuousConvMode = ENABLE;
+  hadc1.Init.DiscontinuousConvMode = DISABLE;
+  hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc1.Init.NbrOfConversion = 1;
+  hadc1.Init.DMAContinuousRequests = DISABLE;
+  hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time. 
+  */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = 1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_480CYCLES;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC1_Init 2 */
+
+  /* USER CODE END ADC1_Init 2 */
+
 }
 
 /**
@@ -633,6 +707,51 @@ static void MX_TIM4_Init(void)
 }
 
 /**
+  * @brief TIM5 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM5_Init(void)
+{
+
+  /* USER CODE BEGIN TIM5_Init 0 */
+
+  /* USER CODE END TIM5_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM5_Init 1 */
+
+  /* USER CODE END TIM5_Init 1 */
+  htim5.Instance = TIM5;
+  htim5.Init.Prescaler = 2499;
+  htim5.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim5.Init.Period = 1;
+  htim5.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim5.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim5) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim5, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim5, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM5_Init 2 */
+
+  /* USER CODE END TIM5_Init 2 */
+
+}
+
+/**
   * @brief TIM6 Initialization Function
   * @param None
   * @retval None
@@ -669,6 +788,84 @@ static void MX_TIM6_Init(void)
 	htim6.Instance->DIER &= ~TIM_IT_UPDATE; //DISnable timer interrupt flag
 	htim6.Instance->CR1 &= ~TIM_CR1_CEN; // disable timer
   /* USER CODE END TIM6_Init 2 */
+
+}
+
+/**
+  * @brief TIM7 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM7_Init(void)
+{
+
+  /* USER CODE BEGIN TIM7_Init 0 */
+
+  /* USER CODE END TIM7_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM7_Init 1 */
+
+  /* USER CODE END TIM7_Init 1 */
+  htim7.Instance = TIM7;
+  htim7.Init.Prescaler = 2499;
+  htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim7.Init.Period = 1;
+  htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM7_Init 2 */
+
+  /*Start the timer in interrupt mode*/
+  //HAL_TIM_Base_Start_IT(&htim7);
+  /* USER CODE END TIM7_Init 2 */
+
+}
+
+/**
+  * @brief TIM12 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM12_Init(void)
+{
+
+  /* USER CODE BEGIN TIM12_Init 0 */
+
+  /* USER CODE END TIM12_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+
+  /* USER CODE BEGIN TIM12_Init 1 */
+
+  /* USER CODE END TIM12_Init 1 */
+  htim12.Instance = TIM12;
+  htim12.Init.Prescaler = 2499;
+  htim12.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim12.Init.Period = 1;
+  htim12.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim12.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim12) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim12, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM12_Init 2 */
+
+  /* USER CODE END TIM12_Init 2 */
 
 }
 
@@ -756,7 +953,7 @@ static void MX_USART6_UART_Init(void)
 
   /* USER CODE END USART6_Init 1 */
   huart6.Instance = USART6;
-  huart6.Init.BaudRate = 9600;
+  huart6.Init.BaudRate = 38400;
   huart6.Init.WordLength = UART_WORDLENGTH_8B;
   huart6.Init.StopBits = UART_STOPBITS_1;
   huart6.Init.Parity = UART_PARITY_NONE;
@@ -771,8 +968,24 @@ static void MX_USART6_UART_Init(void)
   //huart6.Instance->CR1 |= UART_IT_RXNE; // UART RX not empty interrupt enable
   //Enable DMA receive
   huart6.Instance->SR &= !USART_SR_TC;
-  huart6.Instance->CR3 |= USART_CR3_DMAR;
+  //huart6.Instance->CR3 |= USART_CR3_DMAR;
   /* USER CODE END USART6_Init 2 */
+
+}
+
+/** 
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void) 
+{
+
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA2_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA2_Stream6_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA2_Stream6_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(DMA2_Stream6_IRQn);
 
 }
 
@@ -799,32 +1012,32 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOE, CARD_7_SPI_SS_Pin|RELAY_6_Pin|RELAY_7_Pin|RELAY_8_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, CARD_7_PWR_Pin|CARD_7_SEL1_Pin|CARD_7_SEL2_Pin|RELAY_3_Pin
-                          |RELAY_4_Pin|CARD_5_SEL2_Pin|CARD_5_SEL1_Pin|ADM_2_CLTR_Pin
-                          |CARD_3_SPI_SS_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOC, CARD_7_PWR_Pin|CARD_7_SEL1_Pin|CARD_7_SEL2_Pin|DO_LV_CH8_Pin 
+                          |RELAY_3_Pin|RELAY_4_Pin|CARD_5_SEL2_Pin|CARD_5_SEL1_Pin 
+                          |ADM_2_CLTR_Pin|CARD_3_SPI_SS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOF, CARD_6_SPI_SS_Pin|CARD_6_PWR_Pin|CARD_6_SEL1_Pin|CARD_6_SEL2_Pin
-                          |DO_LV_CH3_Pin|DO_LV_CH4_Pin|DO_LV_CH6_Pin|SYS_LED_ERROR_Pin
+  HAL_GPIO_WritePin(GPIOF, CARD_6_SPI_SS_Pin|CARD_6_PWR_Pin|CARD_6_SEL1_Pin|CARD_6_SEL2_Pin 
+                          |DO_LV_CH3_Pin|DO_LV_CH4_Pin|DO_LV_CH6_Pin|SYS_LED_ERROR_Pin 
                           |CARD_1_SPI_SS_Pin|CARD_1_PWR_Pin|CARD_1_SEL1_Pin|CARD_1_SEL2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOA, RELAY_5_Pin|ADM_CLTR_Pin|CARD_3_SEL2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, CARD_5_PWR_Pin|CARD_5_SPI_SS_Pin|SYS_LED_STATUS_Pin|RELAY_1_Pin
-                          |RELAY_2_Pin|CARD_8_PWR_Pin|CARD_8_SEL1_Pin|CARD_8_SEL2_Pin
+  HAL_GPIO_WritePin(GPIOB, CARD_5_PWR_Pin|CARD_5_SPI_SS_Pin|SYS_LED_STATUS_Pin|RELAY_1_Pin 
+                          |RELAY_2_Pin|CARD_8_PWR_Pin|CARD_8_SEL1_Pin|CARD_8_SEL2_Pin 
                           |CARD_8_SPI_SS_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, CARD_2_SPI_SS_Pin|CARD_3_PWR_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOD, ADM_3_CLTR_Pin|CARD_2_SPI_SS_Pin|CARD_3_PWR_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOG, CARD_2_PWR_Pin|CARD_2_SEL1_Pin|CARD_2_SEL2_Pin|CARD_3_SEL1_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : CARD_8_ID3_Pin CARD_7_ID1_Pin CARD_7_ID2_Pin CARD_7_ID3_Pin
+  /*Configure GPIO pins : CARD_8_ID3_Pin CARD_7_ID1_Pin CARD_7_ID2_Pin CARD_7_ID3_Pin 
                            CARD_1_ID3_Pin RESERVE_PE15_Pin CARD_8_ID1_Pin CARD_8_ID2_Pin */
-  GPIO_InitStruct.Pin = CARD_8_ID3_Pin|CARD_7_ID1_Pin|CARD_7_ID2_Pin|CARD_7_ID3_Pin
+  GPIO_InitStruct.Pin = CARD_8_ID3_Pin|CARD_7_ID1_Pin|CARD_7_ID2_Pin|CARD_7_ID3_Pin 
                           |CARD_1_ID3_Pin|RESERVE_PE15_Pin|CARD_8_ID1_Pin|CARD_8_ID2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -837,12 +1050,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : CARD_7_PWR_Pin CARD_7_SEL1_Pin CARD_7_SEL2_Pin RELAY_3_Pin
-                           RELAY_4_Pin CARD_5_SEL2_Pin CARD_5_SEL1_Pin ADM_2_CLTR_Pin
-                           CARD_3_SPI_SS_Pin */
-  GPIO_InitStruct.Pin = CARD_7_PWR_Pin|CARD_7_SEL1_Pin|CARD_7_SEL2_Pin|RELAY_3_Pin
-                          |RELAY_4_Pin|CARD_5_SEL2_Pin|CARD_5_SEL1_Pin|ADM_2_CLTR_Pin
-                          |CARD_3_SPI_SS_Pin;
+  /*Configure GPIO pins : CARD_7_PWR_Pin CARD_7_SEL1_Pin CARD_7_SEL2_Pin DO_LV_CH8_Pin 
+                           RELAY_3_Pin RELAY_4_Pin CARD_5_SEL2_Pin CARD_5_SEL1_Pin 
+                           ADM_2_CLTR_Pin CARD_3_SPI_SS_Pin */
+  GPIO_InitStruct.Pin = CARD_7_PWR_Pin|CARD_7_SEL1_Pin|CARD_7_SEL2_Pin|DO_LV_CH8_Pin 
+                          |RELAY_3_Pin|RELAY_4_Pin|CARD_5_SEL2_Pin|CARD_5_SEL1_Pin 
+                          |ADM_2_CLTR_Pin|CARD_3_SPI_SS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -854,21 +1067,21 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : CARD_6_SPI_SS_Pin CARD_6_PWR_Pin CARD_6_SEL1_Pin CARD_6_SEL2_Pin
-                           DO_LV_CH3_Pin DO_LV_CH4_Pin DO_LV_CH6_Pin SYS_LED_ERROR_Pin
+  /*Configure GPIO pins : CARD_6_SPI_SS_Pin CARD_6_PWR_Pin CARD_6_SEL1_Pin CARD_6_SEL2_Pin 
+                           DO_LV_CH3_Pin DO_LV_CH4_Pin DO_LV_CH6_Pin SYS_LED_ERROR_Pin 
                            CARD_1_SPI_SS_Pin CARD_1_PWR_Pin CARD_1_SEL1_Pin CARD_1_SEL2_Pin */
-  GPIO_InitStruct.Pin = CARD_6_SPI_SS_Pin|CARD_6_PWR_Pin|CARD_6_SEL1_Pin|CARD_6_SEL2_Pin
-                          |DO_LV_CH3_Pin|DO_LV_CH4_Pin|DO_LV_CH6_Pin|SYS_LED_ERROR_Pin
+  GPIO_InitStruct.Pin = CARD_6_SPI_SS_Pin|CARD_6_PWR_Pin|CARD_6_SEL1_Pin|CARD_6_SEL2_Pin 
+                          |DO_LV_CH3_Pin|DO_LV_CH4_Pin|DO_LV_CH6_Pin|SYS_LED_ERROR_Pin 
                           |CARD_1_SPI_SS_Pin|CARD_1_PWR_Pin|CARD_1_SEL1_Pin|CARD_1_SEL2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : RESERVE_PA1_Pin RESERVE_PA3_Pin CARD_5_ID1_Pin CARD_5_ID2_Pin
-                           CARD_5_ID3_Pin CARD_3_ID1_Pin CARD_3_ID2_Pin */
-  GPIO_InitStruct.Pin = RESERVE_PA1_Pin|RESERVE_PA3_Pin|CARD_5_ID1_Pin|CARD_5_ID2_Pin
-                          |CARD_5_ID3_Pin|CARD_3_ID1_Pin|CARD_3_ID2_Pin;
+  /*Configure GPIO pins : MIL_SWITCH_Pin CARD_5_ID1_Pin CARD_5_ID2_Pin CARD_5_ID3_Pin 
+                           CARD_3_ID1_Pin CARD_3_ID2_Pin */
+  GPIO_InitStruct.Pin = MIL_SWITCH_Pin|CARD_5_ID1_Pin|CARD_5_ID2_Pin|CARD_5_ID3_Pin 
+                          |CARD_3_ID1_Pin|CARD_3_ID2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -880,38 +1093,38 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : CARD_5_PWR_Pin CARD_5_SPI_SS_Pin SYS_LED_STATUS_Pin RELAY_1_Pin
-                           RELAY_2_Pin CARD_8_PWR_Pin CARD_8_SEL1_Pin CARD_8_SEL2_Pin
+  /*Configure GPIO pins : CARD_5_PWR_Pin CARD_5_SPI_SS_Pin SYS_LED_STATUS_Pin RELAY_1_Pin 
+                           RELAY_2_Pin CARD_8_PWR_Pin CARD_8_SEL1_Pin CARD_8_SEL2_Pin 
                            CARD_8_SPI_SS_Pin */
-  GPIO_InitStruct.Pin = CARD_5_PWR_Pin|CARD_5_SPI_SS_Pin|SYS_LED_STATUS_Pin|RELAY_1_Pin
-                          |RELAY_2_Pin|CARD_8_PWR_Pin|CARD_8_SEL1_Pin|CARD_8_SEL2_Pin
+  GPIO_InitStruct.Pin = CARD_5_PWR_Pin|CARD_5_SPI_SS_Pin|SYS_LED_STATUS_Pin|RELAY_1_Pin 
+                          |RELAY_2_Pin|CARD_8_PWR_Pin|CARD_8_SEL1_Pin|CARD_8_SEL2_Pin 
                           |CARD_8_SPI_SS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : CARD_1_ID1_Pin CARD_1_ID2_Pin CARD_2_ID1_Pin CARD_2_ID2_Pin
-                           CARD_2_ID3_Pin RESERVE_PG8_Pin CARD_3_ID3_Pin RESERVE_PG11_Pin
+  /*Configure GPIO pins : CARD_1_ID1_Pin CARD_1_ID2_Pin CARD_2_ID1_Pin CARD_2_ID2_Pin 
+                           CARD_2_ID3_Pin RESERVE_PG8_Pin CARD_3_ID3_Pin RESERVE_PG11_Pin 
                            RESERVE_PG12_Pin RESERVE_PG13_Pin RESERVE_PG14_Pin RESERVE_PG15_Pin */
-  GPIO_InitStruct.Pin = CARD_1_ID1_Pin|CARD_1_ID2_Pin|CARD_2_ID1_Pin|CARD_2_ID2_Pin
-                          |CARD_2_ID3_Pin|RESERVE_PG8_Pin|CARD_3_ID3_Pin|RESERVE_PG11_Pin
+  GPIO_InitStruct.Pin = CARD_1_ID1_Pin|CARD_1_ID2_Pin|CARD_2_ID1_Pin|CARD_2_ID2_Pin 
+                          |CARD_2_ID3_Pin|RESERVE_PG8_Pin|CARD_3_ID3_Pin|RESERVE_PG11_Pin 
                           |RESERVE_PG12_Pin|RESERVE_PG13_Pin|RESERVE_PG14_Pin|RESERVE_PG15_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : ADM_3_CLTR_Pin CARD_2_SPI_SS_Pin CARD_3_PWR_Pin */
+  GPIO_InitStruct.Pin = ADM_3_CLTR_Pin|CARD_2_SPI_SS_Pin|CARD_3_PWR_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
   /*Configure GPIO pins : RESERVE_PD11_Pin RESERVE_PD12_Pin RESERVE_PD13_Pin RESERVE_PD14_Pin */
   GPIO_InitStruct.Pin = RESERVE_PD11_Pin|RESERVE_PD12_Pin|RESERVE_PD13_Pin|RESERVE_PD14_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : CARD_2_SPI_SS_Pin CARD_3_PWR_Pin */
-  GPIO_InitStruct.Pin = CARD_2_SPI_SS_Pin|CARD_3_PWR_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /*Configure GPIO pins : CARD_2_PWR_Pin CARD_2_SEL1_Pin CARD_2_SEL2_Pin CARD_3_SEL1_Pin */
@@ -1161,7 +1374,7 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line)
-{
+{ 
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */

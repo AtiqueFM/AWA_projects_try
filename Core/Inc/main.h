@@ -32,13 +32,22 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+/*SOftware Version for HMI and Firmware*/
+#define HMI_VER_MAJOR		2 /*<*/
+#define HMI_VER_MINOR		1 /*<*/
+#define HMI_VER_BUGFIX		0 /*<*/
+#define FW_VER_MAJOR		2 /*<*/
+#define FW_VER_MINOR		4 /*<COD card slot change*/
+#define FW_VER_BUGFIX		1 /*<*/
 
 #define MODBUS_1000_BYTES					1
 #define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1200
 #define UART_6_RX_DESTINATION_ADDR			(uint32_t)0x20005000
-uint8_t dma_tx_flag_AT;
-uint8_t dma_tx_flag_uart1;
+#define QUERRY_RX_INIT_LEN_6				0
+#define NEW_PUMP2_PIN						0
+#define MODBUS_MULTI_DROP					1
+uint8_t DMA_TX_FLAG;
+uint8_t DMA_TX_FLAG_HMI;
 //If you want to skip the auto zero process for the HMI testing
 //#define HMI_TEST
 // Card IDs
@@ -76,6 +85,7 @@ extern void ADCInit(void);
 extern void ProcessModbusQuery(void);
 extern void ProcessMOD2_ModbusQuery(void);
 extern void ProcessMOD2_ModbusQuery_DMA(void);
+extern void ProcessModbusQuery_ISR_3(void);
 //extern void MX_SPI3_Init(void);
 //extern void MX_USART3_UART_Init(void);
 /* USER CODE END ET */
@@ -170,10 +180,10 @@ extern union HoldReg UHoldReg;
  *  MOSCAN address : 30001 - 30060
  */
 typedef struct{
-	float CODValue;
-	float BODValue;
-	float TSSValue;
-	float TOC;
+	float CODValue;		/*<This value is for the Customer display, display only positive value.*/
+	float BODValue;		/*<This value is for the Customer display, display only positive value.*/
+	float TSSValue;		/*<This value is for the Customer display, display only positive value.*/
+	float TOC;			/*<This value is for the Customer display, display only positive value.*/
 	float PD1_MEAN;
 	float PD2_MEAN;
 	float PD3_MEAN;
@@ -193,20 +203,44 @@ typedef struct{
 	float OIW_raw;
 	float TSS_PD2_0;
 	float SPARE[3];
-	float Iout_1_value;
-	float Iout_2_value;
-	float Iout_3_value;
-	float Iout_4_value;
-	float Iout_5_value;
-	float Iout_6_value;
-	float Iout_7_value;
-	float Iout_8_value;
+//	float Iout_1_value;
+//	float Iout_2_value;
+//	float Iout_3_value;
+//	float Iout_4_value;
+//	float Iout_5_value;
+//	float Iout_6_value;
+//	float Iout_7_value;
+//	float Iout_8_value;
+	float Iout_value[8];
+	float SPARE_A[10];
+	float CODValueUser;		/*<This value is for the Developer only*/
+	float TSSValueUser;		/*<This value is for the Developer only*/
+	float BODValueUser;		/*<This value is for the Developer only*/
 }PVhandle_t;
 
+/*Generic handle for COD and TSS factory calibration*/
 typedef struct{
-	float CODCalibSlope;
-	float CODCalibIntercept;
-}LastCalibrationCODHanlde_t;
+	float C0[10];
+	float C1[10];
+	float C2[10];
+	uint32_t epochtimestamp[10];
+	uint32_t overflowFlag;
+}LastCalibrationFactoryHanlde_t;
+
+/*Generic handle for COD, TSS and pH sensor calibration*/
+typedef struct{
+#if 0
+	float intercept[10];
+	float slope[10];
+#else
+	float intercept[10];
+	float slope[10];
+	float intercept_range_2[10];
+	float slope_range_2[10];
+#endif
+	uint32_t epochtimestamp[10];
+	uint32_t overflowFlag;
+}LastCalibrationSensorHandle_t;
 
 typedef struct{
 	float BODCalibSlope;
@@ -253,6 +287,8 @@ typedef struct{
 	uint16_t PD1_mean;
 	//test
 	uint16_t PD2_mean;
+	uint16_t PD1_Zero;
+	uint16_t PD2_Zero;
 	uint16_t PD1_SIGNAL_MIN;
 	uint16_t PD1_SIGNAL_MAX;
 	uint16_t PD2_SIGNAL_MIN;
@@ -261,19 +297,20 @@ typedef struct{
 	float pH_Temperature_Live_Voltage;
 	float PD1_Voltage;/*14/10/2021*/
 	float PD2_Voltage;/*19/10/2021*/
+	float FlowSensorVolatge;			/*<Sensor voltage output; For diagnostics*/
 }SlotParametersHandle_t;
 
 
 typedef union{
 #if(MODBUS_1000_BYTES)
-	uint8_t bytes[sizeof(PVhandle_t)\
-				  + (10 * sizeof(LastCalibrationCODHanlde_t))\
-				  + (10 * sizeof(LastCalibrationBODHanlde_t))\
-				  + (10 * sizeof(LastCalibrationTSSHanlde_t))\
-				  + (10 * sizeof(LastCalibrationOIWHanlde_t))\
-				  + (10 * sizeof(LastCalibrationPHHanlde_t))\
-				  + (10 * sizeof(LastCalibrationAI1Hanlde_t))\
-				  + (10 * sizeof(LastCalibrationAI2Hanlde_t))\
+	uint8_t bytes[sizeof(PVhandle_t)
+				  + (sizeof(LastCalibrationFactoryHanlde_t))	/*<COD Factory calibration*/
+				  + (sizeof(LastCalibrationFactoryHanlde_t))	/*<TSS Factory calibration*/
+				  + (sizeof(LastCalibrationSensorHandle_t))		/*<COD Sensor calibration*/
+				  + (sizeof(LastCalibrationSensorHandle_t))		/*<TSS Sensor calibration*/
+				  + (sizeof(LastCalibrationSensorHandle_t))		/*<pH Sensor calibration*/
+				  + (10 * sizeof(LastCalibrationAI1Hanlde_t))
+				  + (10 * sizeof(LastCalibrationAI2Hanlde_t))
 				  + sizeof(SlotParametersHandle_t)];
 #else
 	uint8_t bytes[1000];
@@ -282,11 +319,11 @@ typedef union{
 		//30000
 		PVhandle_t PV_info;
 		//31000
-		LastCalibrationCODHanlde_t COD_lastCalibration[10];
-		LastCalibrationBODHanlde_t BOD_lastCalibration[10];
-		LastCalibrationTSSHanlde_t TSS_lastCalibration[10];
-		LastCalibrationOIWHanlde_t OIW_lastCalibration[10];
-		LastCalibrationPHHanlde_t PH_lastCalibration[10];
+		LastCalibrationFactoryHanlde_t COD_lastCalibration;
+		LastCalibrationFactoryHanlde_t TSS_lastCalibration;
+		LastCalibrationSensorHandle_t COD_lastSensorCalibration;
+		LastCalibrationSensorHandle_t TSS_lastSensorCalibration;
+		LastCalibrationSensorHandle_t pH_lastSensorCalibration;
 		LastCalibrationAI1Hanlde_t AI1_lastCalibration[10];
 		LastCalibrationAI2Hanlde_t AI2_lastCalibration[10];
 		//32000
@@ -307,7 +344,7 @@ typedef struct{
 	uint16_t PUMP1_DELAY;
 	uint16_t PUMP2_ONTIME;
 	uint16_t PUMP2_DELAY;
-	uint16_t SPARE;
+	uint16_t RANGESELECT; 			/*<Range select for the Analyzer; @ref RANGE_SELECT_MACRO*/
 	uint16_t AI1_unit;
 	uint16_t AI2_unit;
 	float AI1_SF;
@@ -331,7 +368,8 @@ typedef struct{
 	float OIW_I[10];
 	float M[3];//added new
 	float OIW_SF;
-	uint16_t Procedure_State;
+	//uint16_t Procedure_State;
+	uint16_t treand_time;
 	uint16_t HMI_onUpdate;
 	uint16_t SlaveID;
 	uint16_t Baud;
@@ -345,11 +383,34 @@ typedef struct{
 	//uint16_t PWM2;
 //	uint16_t PWM3;
 //	uint16_t PWM4;
-	uint16_t PWM1_offset;
-	uint16_t PWM2_offset;
-	uint16_t PWM3_offset;
-	uint16_t PWM4_offset;
+	//uint16_t PWM1_offset;
+	//uint16_t PWM2_offset;
+	uint32_t Epoch_Timestamp;		/*<Epoch time stamp from HMI*/
+	float FlowSensorCutoff;			/*<HMI access for cutoff setting*/
+	//uint16_t PWM3_offset;
+	//uint16_t PWM4_offset;
 	//uint16_t relay[8];//address : 187
+	uint8_t ModeCommandHMI_L;		/*<Request command from HMI*/
+	uint8_t ModeCommandHMI_H;		/*<Request command from HMI*/
+	uint16_t CommonCommandHMI;		/*<Request command from HMI*/
+	//uint32_t RES[10];				/*<Reserve memory 40 bytes*/
+	float CS_PUMP1_ONTIME;			/*<Cleaning pump on time for Check screen*/
+	float CS_PUMP1_DELAY;			/*<Cleaning pump de-gas time for check screen*/
+	float CS_PUMP2_ONTIME;			/*<Sample pump on time for check screen*/
+	float CS_PUMP2_DELAY;			/*<Cleaning pump de-gas time for check screen*/
+	float CS_FLASH;					/*<IF 1 : 100 FLASHES; IF 2 : 500 flashes*/
+	float CS_PD_1_MIN;				/*<Gives the minimum values from the array of flashes*/
+	float CS_PD_1_MAX;				/*<Gives the maximum values from the array of flashes*/
+	float CS_PD_2_MIN;				/*<Gives the minimum values from the array of flashes*/
+	float CS_PD_2_MAX;				/*<Gives the maximum values from the array of flashes*/
+	float AUTO_ZERO;				/*<Auto Zero, if SET : Perform zeroing else : only perform flashing*/
+	float HMI_Ver_Major;
+	float HMI_Ver_Minor;
+	float HMI_Ver_BugFix;
+	float FW_Ver_Major;
+	float FW_Ver_Minor;
+	float FW_Ver_BugFix;
+	float RL[8];					/*<Relay 1 - 8*/
 }ModeCommandHandle_t;
 
 typedef struct{
@@ -381,6 +442,7 @@ typedef struct{
 	uint16_t PT100_ADC_Counts_150;
 	uint16_t PT1000_ADC_Counts_1000;
 	uint16_t PT1000_ADC_Counts_1500;
+	float temperatureSensorCable_resistance; /*<Temperature sensor cable resistance, to be subtracted from calculated resistance*/
 
 }IOUTCalibandTestHandle_t;
 
@@ -427,9 +489,59 @@ typedef struct{
 	//Two_pt_Cal AI1_PT;
 	float TSS_CF;
 	float TSS_Intercept;
-	Two_pt_Cal AI2_PT;
+	float pH_Cal_Point_1_value; 			/*<Caluclated pH value*/
+	float pH_Cal_Point_2_value; 			/*<Caluclated pH value*/
+	float pH_1pt_Cal_point_1_value; 		/*<Caluclated pH value*/
+	float pH_slope;					/*<For HMI display*/
+	float pH_intercept;				/*<For HMI display*/
+//	float pH_1_pt_slope;					/*<For HMI display*/
+//	float pH_1_pt_intercept;				/*<For HMI display*/
+	uint16_t NextProcessTime_Hr;	/*<From HMI, Batch mode hour*/
+	uint16_t NextProcessTime_Min;	/*<From HMI, Batch mode min*/
+	uint16_t NextProcessTime_Sec;	/*<From HMI, Batch mode sec*/
+	uint16_t SPARE_1;					//NEW - To be checked in HMI programming
+	uint32_t LastBatchTime;			/*<Epoch time from HMI*/
+	uint32_t NextProcessTime;		/*<Epoch time for next process time*/
+	uint32_t pHSensMessages;		/*<NA*/
+	uint32_t pHElectronicCalibMessages;
+	uint32_t TempElectronicCalibMessages;
+	/*3-POINT CALIBRATION*/
+	float pH_Y3;
+	float pH_slope_range_2;
+	float pH_intercept_range_2;
+	uint32_t RES_1[10];
+	float pH_Cal_Point_3_value;
+	uint16_t pH_Cal_Point_3_count;
+	//COD
+	float COD_CF_RANGE_2;
+	float COD_Intercept_RANGE_2;
+	//TSS 3-pt
+	float TSS_X3;
+	float TSS_Y3;
+	float TSS_CF_RANGE_2;
+	float TSS_Intercept_RANGE_2;
+	//COD and TSS messages
+	uint16_t COD_Messages;	/*<7 : Calibration successful, 8 : Calibration Failed*/
+	uint16_t TSS_Messages;	/*<7 : Calibration successful, 8 : Calibration Failed*/
+	uint16_t COD_Factory_Messages;	/*<7 : Calibration successful, 8 : Calibration Failed*/
+	uint16_t TSS_Factory_Messages;	/*<7 : Calibration successful, 8 : Calibration Failed*/
+	/*********************/
 }SensoralibrationHandle_t;
 
+typedef struct{
+	uint32_t baudrate;	//14
+	uint32_t parity_bit;//15
+	uint32_t stop_bits;//10
+	uint32_t data_length;//11
+	uint32_t slave_ID;//12
+	uint32_t baudrate_selection;//13
+}MODBUS_Config_handle_t;
+
+typedef struct{
+	MODBUS_Config_handle_t PORT_1;
+	MODBUS_Config_handle_t PORT_2;
+	MODBUS_Config_handle_t PORT_3;
+}MODBUS_PORTConfig;
 typedef union{
 #if(!MODBUS_1000_BYTES)
 	uint8_t bytes[sizeof(ModeCommandHandle_t)\
@@ -443,15 +555,24 @@ typedef union{
 	struct{
 		//40000
 		ModeCommandHandle_t ModeCommand_t;
+		//uint8_t RES_1[100 - 4];					/*<Reserve for additional MODBUS register*/
+		uint8_t RES_1[100 - 36 - 4 - 28 - 32];						/*<Reserve for additional MODBUS register*/
 		//41000
 		IOUTConfigHanldle_t IOUTConfig_t[8];
+		uint8_t RES_2[100];						/*<Reserve for additional MODBUS register*/
 		//42000
 		IOUTCalibandTestHandle_t IOUTCalibandTest_t;
+		uint8_t RES_3[100 - 4];						/*<Reserve for additional MODBUS register*/
 		//43000
 		RelayOUTConfigHandle_t RelayOUTConfig_t[8];
+		uint8_t RES_4[100];						/*<Reserve for additional MODBUS register*/
 		/*13/8/2021*/
 		//44000
 		SensoralibrationHandle_t SensorCalibration_t;
+		//Reserves
+		uint8_t RES_5[100];
+		//45000
+		MODBUS_PORTConfig MODBUS_PORTConfig_t;
 	};
 }Uholding_t;
 
@@ -462,19 +583,21 @@ typedef struct{
 	uint8_t p[8]; //p5-p12
 	uint8_t relay[8];//relay 1 - relay 8
 	uint8_t spare[2];
-	uint8_t COD_USECOEFF;
-	uint8_t TSS_USECOEFF;
-	uint8_t pH_USECOEFF;
-	uint8_t OIW_USECOEFF;
-	uint8_t AUTOCLEAN;
-	uint8_t AUTOZERO;
-	uint8_t MeasureReady;
-	uint8_t CleanReady;
-	uint8_t ADCReadStart;
-	uint8_t acid_pump;
-	uint8_t sample_pump;
-	uint8_t measure;
-	uint8_t no_mode;
+	uint8_t NEW_COMMAND_FLAG;	/*<Set by HMI is there is new command, Reset by uC after receiving the command.*/
+	uint8_t TRED_TRIGGER;		/*<NA*/
+	uint8_t RES;			/*<NA*/ //21
+	uint8_t NoProcess;		/*<NA*/
+	uint8_t pHelecCalibrate;	/*<NA*/
+	uint8_t AUTOZERO;			/*<If set; Perform zeroing of PD1 and PD2 Zero*/
+	uint8_t MeasureReady;		/*<NA*/
+	uint8_t CleanReady;			/*<NA*/
+	uint8_t ADCReadStart;		/*<NA*/
+	uint8_t CleaningTankEmpty;	/*<Bit Set if Cleaning tank is empty*/
+	uint8_t MILSwitchState;		/*<State - Yet to be defined.*/
+	uint8_t measure;			/*<NA*/
+	uint8_t read_acid;			/*<NA*/
+	uint8_t read_sample;		/*<NA*/
+	uint8_t button_press;		/*<Button inter-locking*/
 }CoilStatusHandle_t;
 
 typedef union{
@@ -507,11 +630,52 @@ typedef union{
 		float TSS_Value;
 		float BOD_Value;
 		float TOC_Value;
-		float pH_mV;
+		float pH;
 		float Temperature;
+		float FlowSensorVoltage;
+		float FlowSensorStatus;
+		float MILSwitchStatus;
+		/*2-pt calibration*/
+		float COD_slope;
+		float COD_intercept;
+		float TSS_slope;
+		float TSS_intercept;
+		float pH_slope;
+		float pH_intercept;
+		float PD_1;
+		float PD_2;
+		float PD_1_Zero;
+		float PD_2_Zero;
+		float PD_2_TSS_Zero;
+		float rsd_1;
+		float rsd_2;
+		float COD_raw;
+		float TSS_raw;
+		float pH_mV;
+		float temp_resistance;
+		uint16_t TEST[5];
+		float RES[50];
+		uint16_t main_cmd;
+		uint16_t common_cmd;
+		float RES_1[10];
+		LastCalibrationSensorHandle_t pH_lastSensorCalibration;
+		float auto_zero;//test
+		float SchedulerTime;				//<modbus address : 239
+		float measure;
+		float read_acid;
+		float read_sample;
+		float NoProcess;
 	};
 }UHolding_Modbus_2_t;
 UHolding_Modbus_2_t UHolding_Modbus_2;
+
+typedef union{
+	uint8_t bytes[100];
+	struct{
+		uint16_t TEST[5];
+	};
+}UHolding_Modbus_3_t;
+UHolding_Modbus_3_t UHolding_Modbus_3;
 /*****************/
 extern UART_HandleTypeDef huart3;
 extern volatile uint8_t Rxbuff[310], RxFlag;
@@ -526,10 +690,20 @@ extern volatile uint8_t MOD2_RxFlag;
 extern volatile uint8_t MOD2_Rxbuff[310];
 extern volatile uint8_t MOD2_Txbuff[310];
 extern volatile uint16_t MOD2_Rxptr, MOD2_Txptr, MOD2_RxBytes, MOD2_TxBytes;
+extern volatile uint8_t MOD3_RxFlag;
+extern volatile uint8_t MOD3_Rxbuff[310];
+extern volatile uint8_t MOD3_Txbuff[310];
+extern volatile uint16_t MOD3_Rxptr, MOD3_Txptr, MOD3_RxBytes, MOD3_TxBytes;
+extern volatile uint16_t uart_rx_timeout_counter_uart3;
+extern volatile uint8_t uart_rx_bytes_uart3; 		/*< Will contain the received byte count.*/
+extern uint32_t baudrate_uart3;		/*<For testing, lateron will be replaced by the moodbus register.*/
+extern uint8_t UART3_ID;
 extern volatile uint16_t DMA_Transaction_no_Tx_uart6;
 extern volatile uint16_t DMA_Transaction_no_Tx_uart1;//HMI
+extern volatile uint16_t DMA_Transaction_no_Tx_uart3;//HMI
 
 
+extern volatile uint8_t MOD3_RxFlag;
 //extern uint16_t ADCbuff[100], dataptr;
 extern uint16_t crc_calc(char* input_str, int len );
 
@@ -543,19 +717,19 @@ uint16_t TempDetSignal;
 uint16_t TempADCounts[10];
 //uint16_t TempDet1Signal_Ch1[100];
 
-uint16_t TempDet1Noise_Ch1[100];
-uint16_t TempDet1Signal_Ch1[100];
-uint16_t TempDet2Noise_Ch2[100];
-uint16_t TempDet2Signal_Ch2[100];
+uint16_t TempDet1Noise_Ch1[500];
+uint16_t TempDet1Signal_Ch1[500];
+uint16_t TempDet2Noise_Ch2[500];
+uint16_t TempDet2Signal_Ch2[500];
 
 //buffers required for the the averaging of PD1 and PD2 noise and signal
-uint16_t SignalNoiseDiff_Ch1[100];//19/10/2021
-uint16_t SignalNoiseDiff_Ch2[100];//19/10/2021
+uint16_t SignalNoiseDiff_Ch1[500];//19/10/2021
+uint16_t SignalNoiseDiff_Ch2[500];//19/10/2021
 uint64_t TempMeanPd1,TempMeanPd2;//19/10/2021
 uint16_t PD1_new, PD2_new;
 uint16_t PD1_Zero, PD2_Zero;
-double sd[100];
-double sd2[100];
+double sd[500];
+double sd2[500];
 
 //LPF Array
 //uint16_t Y_filter_new;
@@ -564,10 +738,11 @@ double sd2[100];
 ////float sampling_time_noise = 0.059;
 ////float sampling_time_noise = 0.051;
 //uint16_t averaging_time = 1;
-uint16_t filter_data_PD1[100];
-uint16_t filter_data_PD2[100];
+uint16_t filter_data_PD1[500];
+uint16_t filter_data_PD2[500];
 uint64_t filter_data_PD1_mean;
 uint64_t filter_data_PD2_mean;
+
 
 /*2-point Current calibration*/
 typedef struct{
@@ -656,14 +831,14 @@ void Error_Handler(void);
 #define DO_LV_CH4_GPIO_Port GPIOF
 #define DO_LV_CH6_Pin GPIO_PIN_10
 #define DO_LV_CH6_GPIO_Port GPIOF
+#define DO_LV_CH8_Pin GPIO_PIN_1
+#define DO_LV_CH8_GPIO_Port GPIOC
 #define RELAY_3_Pin GPIO_PIN_2
 #define RELAY_3_GPIO_Port GPIOC
 #define RELAY_4_Pin GPIO_PIN_3
 #define RELAY_4_GPIO_Port GPIOC
-#define RESERVE_PA1_Pin GPIO_PIN_1
-#define RESERVE_PA1_GPIO_Port GPIOA
-#define RESERVE_PA3_Pin GPIO_PIN_3
-#define RESERVE_PA3_GPIO_Port GPIOA
+#define MIL_SWITCH_Pin GPIO_PIN_0
+#define MIL_SWITCH_GPIO_Port GPIOA
 #define RELAY_5_Pin GPIO_PIN_4
 #define RELAY_5_GPIO_Port GPIOA
 #define CARD_5_ID1_Pin GPIO_PIN_5
@@ -718,6 +893,8 @@ void Error_Handler(void);
 #define RELAY_1_GPIO_Port GPIOB
 #define RELAY_2_Pin GPIO_PIN_11
 #define RELAY_2_GPIO_Port GPIOB
+#define ADM_3_CLTR_Pin GPIO_PIN_10
+#define ADM_3_CLTR_GPIO_Port GPIOD
 #define RESERVE_PD11_Pin GPIO_PIN_11
 #define RESERVE_PD11_GPIO_Port GPIOD
 #define RESERVE_PD12_Pin GPIO_PIN_12
@@ -786,23 +963,31 @@ void Error_Handler(void);
 //Starting addresses
 #define INPUT_REGISTER_ADDRESS_31000	(uint16_t)(sizeof(PVhandle_t))
 #define INPUT_REGISTER_ADDRESS_32000	(uint16_t)(INPUT_REGISTER_ADDRESS_31000\
-													+ (10 * sizeof(LastCalibrationCODHanlde_t))\
-													+ (10 * sizeof(LastCalibrationBODHanlde_t))\
-													+ (10 * sizeof(LastCalibrationTSSHanlde_t))\
-													+ (10 * sizeof(LastCalibrationOIWHanlde_t))\
-													+ (10 * sizeof(LastCalibrationPHHanlde_t))\
+													+ (sizeof(LastCalibrationFactoryHanlde_t))\
+													+ (sizeof(LastCalibrationFactoryHanlde_t))\
+													+ (sizeof(LastCalibrationSensorHandle_t))\
+													+ (sizeof(LastCalibrationSensorHandle_t))\
+													+ (sizeof(LastCalibrationSensorHandle_t))\
 													+ (10 * sizeof(LastCalibrationAI1Hanlde_t))\
 													+ (10 * sizeof(LastCalibrationAI2Hanlde_t)))
 
-#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t))
+
+//#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t) + 100 - 4)
+#define HOLDING_REGISTER_ADDRESS_41000	(uint16_t)(sizeof(ModeCommandHandle_t) + 100 - 36 - 4 - 28 - 32)
 #define HOLDING_REGISTER_ADDRESS_42000	(uint16_t)(HOLDING_REGISTER_ADDRESS_41000\
-													+ (8*sizeof(IOUTConfigHanldle_t)))
+													+ (8*sizeof(IOUTConfigHanldle_t))\
+													+ 100)
 #define HOLDING_REGISTER_ADDRESS_43000	(uint16_t)(HOLDING_REGISTER_ADDRESS_42000\
-													+ sizeof(IOUTCalibandTestHandle_t))
+													+ sizeof(IOUTCalibandTestHandle_t)\
+													+96)
 /*13/8/2021*/
 #define HOLDING_REGISTER_ADDRESS_44000	(uint16_t)(HOLDING_REGISTER_ADDRESS_43000\
-													+ (8*sizeof(RelayOUTConfigHandle_t)))
+													+ (8*sizeof(RelayOUTConfigHandle_t))\
+													+ 100)
 
+#define HOLDING_REGISTER_ADDRESS_45000	(uint16_t)(HOLDING_REGISTER_ADDRESS_44000\
+													+sizeof(SensoralibrationHandle_t)\
+													+sizeof(uint8_t)*100)
 #if 0
 //Commands
 //0x220 RUN MODE
@@ -846,17 +1031,20 @@ void Error_Handler(void);
 #define COD_SENSOR_MEASURE_pt1			0x18
 #define COD_SENSOR_MEASURE_pt2			0x19
 #define COD_SENSOR_MEASURE_pt3			0x20
+#define STOP_RUNNING_PUMP				0x99
 
 #define SETTING_CONFIG_MODE				0x23
 #define Default							0x11
 #define Edit							0x12
 #define Save							0x14
+#define SchedulerSave					0x15
 /*Sensor Calibration*/
 #define Calibrate_COD					0x21
 #define Calibrate_TSS					0x22
 #define Calibrate_PH					0x23
 #define Calibrate_A1					0x24
 #define Calibrate_A2					0x25
+#define MODBUS_Config					0x26
 /*19/7/2021*/
 #define Relay_Config_page				0x30 /*Alarm Limit*/
 #define Relay_Config					0x31 /*Save the alarm Limits*/
@@ -878,6 +1066,18 @@ void Error_Handler(void);
 #define CalibrateCOD							0x32
 #define TSSCoeffs								0x33
 #define CalibrateTSS							0x34
+#define Select_Range							0x41 /*<Set button*/
+
+
+/*CHECK*/
+#define CHECK_MODE								0x25
+#define COD_Check								0x10
+#define TSS_Check								0x20
+#define Read_acid								0x01
+#define Read_sample								0x02
+
+/*SOFTWARE REST*/
+#define SOFTWARE_RESET							0x5A
 
 /*COMMON COMMANDS*/
 #define Sample_pump								0x01
@@ -890,6 +1090,9 @@ void Error_Handler(void);
 #define Sensor_Calibrate_COD					0x0A//HMI
 #define Factory_Calibrate_TSS					0x10/*25/10/2021*/
 #define Sensor_Calibrate_TSS					0x0B//HMI
+#define configure_mosbus_port1					0x0C
+#define configure_mosbus_port2					0x0D
+#define configure_mosbus_port3					0x0E
 
 /*Current output calibration commands*/
 #define AO1_GENERATE_5mA				1
@@ -957,8 +1160,13 @@ void Error_Handler(void);
 //pump control definition - GPIO toggle action
 #define PUMP1_ON()						HAL_GPIO_WritePin(DO_LV_CH3_GPIO_Port, DO_LV_CH3_Pin, GPIO_PIN_SET)
 #define PUMP1_OFF()						HAL_GPIO_WritePin(DO_LV_CH3_GPIO_Port, DO_LV_CH3_Pin, GPIO_PIN_RESET)
+#if !NEW_PUMP2_PIN
 #define PUMP2_ON()						HAL_GPIO_WritePin(DO_LV_CH4_GPIO_Port, DO_LV_CH4_Pin, GPIO_PIN_SET)
 #define PUMP2_OFF()						HAL_GPIO_WritePin(DO_LV_CH4_GPIO_Port, DO_LV_CH4_Pin, GPIO_PIN_RESET)
+#else
+#define PUMP2_ON()						HAL_GPIO_WritePin(DO_LV_CH8_GPIO_Port, DO_LV_CH8_Pin, GPIO_PIN_SET)
+#define PUMP2_OFF()						HAL_GPIO_WritePin(DO_LV_CH8_GPIO_Port, DO_LV_CH8_Pin, GPIO_PIN_RESET)
+#endif
 #define VALVE_ON()						HAL_GPIO_WritePin(DO_LV_CH6_GPIO_Port, DO_LV_CH6_Pin, GPIO_PIN_SET)
 #define VALVE_OFF()						HAL_GPIO_WritePin(DO_LV_CH6_GPIO_Port, DO_LV_CH6_Pin, GPIO_PIN_RESET)
 
@@ -967,6 +1175,8 @@ void Error_Handler(void);
 #define ADM_CLTR_HIGH()					HAL_GPIO_WritePin(ADM_CLTR_GPIO_Port, ADM_CLTR_Pin, GPIO_PIN_SET)
 #define ADM_2_CLTR_LOW()				HAL_GPIO_WritePin(ADM_2_CLTR_GPIO_Port, ADM_2_CLTR_Pin, GPIO_PIN_RESET)
 #define ADM_2_CLTR_HIGH()				HAL_GPIO_WritePin(ADM_2_CLTR_GPIO_Port, ADM_2_CLTR_Pin, GPIO_PIN_SET)
+#define ADM_3_CLTR_LOW()				HAL_GPIO_WritePin(ADM_3_CLTR_GPIO_Port, ADM_3_CLTR_Pin, GPIO_PIN_RESET)
+#define ADM_3_CLTR_HIGH()				HAL_GPIO_WritePin(ADM_3_CLTR_GPIO_Port, ADM_3_CLTR_Pin, GPIO_PIN_SET)
 
 
 //pH Card
@@ -1228,6 +1438,7 @@ void Error_Handler(void);
 
 #define SAVE_CONFIGURATION_DATA			0x01
 #define SAVE_CALIBRATION_DATA			0x02
+#define SAVE_PROCESSPARAMETER_DATA		0x03
 
 //HMI inter-locking
 #define HMI_INTERLOCK_SAMPLE_PUMP				1
@@ -1236,6 +1447,30 @@ void Error_Handler(void);
 #define HMI_INTERLOCK_SENSOR_SAMPLE_PUMP		4
 #define HMI_INTERLOCK_SENSOR_ACID_PUMP			5
 #define HMI_INTERLOCK_SENSOR_MEASURE			6
+#define HMI_INTERLOCK_SENSOR_READACID			7	/*<For acid pump and flashing*/
+#define HMI_INTERLOCK_SENSOR_READSAMPLE			8	/*<For sample pump and flashing*/
+#define HMI_INTERLOCKING_RESETALL				9	/*<For resetting all the buttons to orignal state*/
+
+
+/*
+ * @ref RANGE_SELECT_MACRO
+ */
+#define MODEL_3041_3042			4	/*<COD : 20000 mg/l*/
+#define MODEL_3051_3052			5	/*<COD : 05000 mg/l*/
+#define MODEL_3031_3032			3	/*<COD : 02000 mg/l*/
+#define MODEL_3021_3022			2	/*<COD : 00800 mg/l*/
+#define MODEL_3011_3012			1	/*<COD : 00300 mg/l*/
+
+/*Enum for parameter limit*/
+typedef enum{
+	COD_20000_UPPER	= 20000,
+	COD_5000_UPPER	= 5000,
+	COD_2000_UPPER	= 2000,
+	COD_800_UPPER	= 800,
+	COD_300_UPPER	= 300,
+	TSS_750_UPPER	= 750,
+	TSS_450_UPPER	= 450
+}AWA_RangeSelect_t;
 /*Control status bits*/
 typedef union{
 	uint16_t status;
@@ -1275,9 +1510,51 @@ typedef union{
 		unsigned CalibrationMode			: 1;/*2/9/2021*/
 		unsigned CODFlashOperation			: 1;
 		unsigned AWADataSave_Calibration	: 1;//if not saved '1', else '0'
+		unsigned AWADataSave_ProcessValues	: 1;
+		unsigned CleaningTankEmpty			: 1;	/*<If SET then Set As Zero won't be accessible
+		 	 	 	 	 	 	 	 	 	 	 	 	 Warning on the HMI*/
+		unsigned MILSwitchState				: 1;
 	};
 }AWAOperationHandle_t;
 AWAOperationHandle_t AWAOperationStatus_t;
+
+/*Data to save in FRAM*/
+typedef struct{
+	unsigned factoryCOD 		: 1;	/*<SET after calibration and RESET after COD factory calibration stored in last calibration FRAM*/
+	unsigned factoryTSS 		: 1;	/*<SET after calibration and RESET after TSS factory calibration stored in last calibration FRAM*/
+	unsigned sensorCOD			: 1;	/*<SET after calibration and RESET after COD sensor calibration stored in last calibration FRAM*/
+	unsigned sensorTSS			: 1;	/*<SET after calibration and RESET after TSS sensor calibration stored in last calibration FRAM*/
+	unsigned sensorpH			: 1;	/*<SET after calibration and RESET after pH sensor calibration stored in last calibration FRAM*/
+	unsigned electronicpH		: 1;	/*<SET after calibration and RESET after pH electronic calibration stored in last calibration FRAM*/
+	unsigned electronicPT		: 1;	/*<SET after calibration and RESET after PT electronic calibration stored in last calibration FRAM*/
+	unsigned electronicAO		: 1;	/*<SET after calibration and RESET after AO electronic calibration stored in last calibration FRAM*/
+	unsigned factoryCOD_setzero	: 1;	/*<SET after setting zero and RESET after storing in FRAM*/
+	unsigned factoryTSS_setzero	: 1;	/*<SET after setting zero and RESET after storing in FRAM*/
+	unsigned analyzerRangeSelect: 1;	/*<SEt after selecting the analyzer range from the factory menu, will be reset for the first time.*/
+	unsigned analyzerPocessvalue: 1;	/*<Set after calculating new process values ; COD,BOD,TSS,TOC*/
+	unsigned modbusConfigport1	: 1;	/*<Set after MODBUS configuration in changed*/
+	unsigned modbusConfigport2	: 1;	/*<Set after MODBUS configuration in changed*/
+	unsigned modbusConfigport3	: 1;	/*<Set after MODBUS configuration in changed*/
+}AWADataStoreState_t;
+AWADataStoreState_t	AWADataStoreState;
+
+typedef struct{
+	uint8_t factoryCOD_count;			/*<Stores the count of COD factory calibration last calibration stored in the FRAM*/
+	uint8_t factoryTSS_count;			/*<Stores the count of TSS factory calibration last calibration stored in the FRAM*/
+	uint8_t sensorCOD_count;			/*<Stores the count of COD sensor calibration last calibration stored in the FRAM*/
+	uint8_t sensorTSS_count;			/*<Stores the count of TSS sensor calibration last calibration stored in the FRAM*/
+	uint8_t sensorpH_count;				/*<Stores the count of pH sensor calibration last calibration stored in the FRAM*/
+	uint8_t electronicpH_count;			/*<Stores the count of pH electronic calibration last calibration stored in the FRAM*/
+	uint8_t electronicPT_count;			/*<Stores the count of PT electronic calibration last calibration stored in the FRAM*/
+	uint8_t electronicAO_count;			/*<Stores the count of AO electronic calibration last calibration stored in the FRAM*/
+	unsigned factoryCOD_overflowflag;	/*<Flag will be set to 1 when count exceeds 10*/
+	unsigned factoryTSS_overflowflag;	/*<Flag will be set to 1 when count exceeds 10*/
+	unsigned sensorCOD_overflowflag;	/*<Flag will be set to 1 when count exceeds 10*/
+	unsigned sensorTSS_overflowflag;	/*<Flag will be set to 1 when count exceeds 10*/
+	unsigned sensorpH_overflowflag;		/*<Flag will be set to 1 when count exceeds 10*/
+	unsigned analyzerRangeSelectflag;	/*<SET when Range is selected from Factory menu, RESET when the analyzer is programmed for the first time*/
+}AWALastCalibrationCount_t;
+AWALastCalibrationCount_t AWALastCalibrationCount;
 
 //typedef struct{
 //	uint16_t pH_ADCCounts;
@@ -1300,28 +1577,62 @@ typedef union{
 }ElectronicCalibpHHandle_t;
 ElectronicCalibpHHandle_t pH_ElectronicCalibpoints_t;
 
+#if 1
 typedef union{
-	float byte[2];
+	uint8_t byte[90];//40 bytes reserved
 	struct{
-		float pH_Solpe;
-		float pH_Intercept;
-		/*1-pt calib points*/
-		uint16_t pH_1ptCalib_sample;
-		uint16_t pH_1ptCalib_count;
-		/*2-pt calib points*/
-		float pH_Solution_1_y1;
-		float pH_Solution_2_y2;
-		signed int pH_counts_1_x1;
-		signed int pH_counts_2_x2;
-		uint16_t flag_sample_set;
-		uint16_t flag_ADC_count_set;
-		uint16_t flag_display_count;
+		//Stored in FRAM
+		float pH_Solpe;					/*<Slope for range 1*/
+		float pH_Intercept;				/*<Intercept range 1*/
+		float pH_slope_range_2;			/*<Slope for range 2*/
+		float pH_Intercept_range_2;		/*<Intercept range 2*/
+		float pH_Solution_1_y1;			/*<Simulation solution*/
+		float pH_Solution_2_y2;			/*<Simulation solution*/
+		float pH_Solution_3_y3;			/*<Simulation solution*/
+		int pH_counts_1_x1;				/*<Corresponding ADC counts*/
+		int pH_counts_2_x2;				/*<Corresponding ADC counts*/
+		int pH_counts_3_x3;				/*<Corresponding ADC counts*/
+		float pH_Calculated_1_x1;		/*<Calculated pH value,(Display only)*/
+		float pH_Calculated_2_x2;		/*<Calculated pH value,(Display only)*/
+		float pH_Calculated_3_x3;		/*<Calculated pH value,(Display only)*/
+		uint16_t pH_1ptCalib_sample;	/*<NA*/
+		uint16_t pH_1ptCalib_count;		/*<NA*/
+		float middle_value;
+		float measurement_Type;			/*<Three point calibration or 2 point calibration.*/
+		//Not stored in FRAM
+		uint16_t flag_sample_set;		/*<From HMI, for storing the simulation pH solution value*/
+		uint16_t flag_ADC_count_set;	/*<From HMI, for storing the pH solution corresponding ADC counts*/
+		uint16_t flag_display_count;	/*<From HMI, for displaying the current raw value of the pH*/
 		/*ADC counts*/
 		uint16_t pH_ADCCounts;
 	};
 }SensorCalibrationHande_t;
 SensorCalibrationHande_t pH_SensorCalibpoints_t;
-
+#else
+typedef union{
+	uint8_t byte[32];
+	struct{
+		//Stored in FRAM
+		float pH_Solpe;					/*<Slope*/
+		float pH_Intercept;				/*<Intercept*/
+		float pH_Solution_1_y1;			/*<Simulation solution*/
+		float pH_Solution_2_y2;			/*<Simulation solution*/
+		int pH_counts_1_x1;				/*<Corresponding ADC counts*/
+		int pH_counts_2_x2;				/*<Corresponding ADC counts*/
+		float pH_Calculated_1_x1;		/*<Calculated pH value,(Display only)*/
+		float pH_Calculated_2_x2;		/*<Calculated pH value,(Display only)*/
+		//Not stored in FRAM
+		uint16_t pH_1ptCalib_sample;	/*<NA*/
+		uint16_t pH_1ptCalib_count;		/*<NA*/
+		uint16_t flag_sample_set;		/*<From HMI, for storing the simulation pH solution value*/
+		uint16_t flag_ADC_count_set;	/*<From HMI, for storing the pH solution corresponding ADC counts*/
+		uint16_t flag_display_count;	/*<From HMI, for displaying the current raw value of the pH*/
+		/*ADC counts*/
+		uint16_t pH_ADCCounts;
+	};
+}SensorCalibrationHande_t;
+SensorCalibrationHande_t pH_SensorCalibpoints_t;
+#endif
 /*For AO output*/
 typedef union{
 	float value[4];
@@ -1358,6 +1669,22 @@ ElectronicCalibration_PT_Handle_t PT_ElectronicCalibration_t;
 typedef union{
 	float byte[2];
 	struct{
+#if 1
+		float slope;
+		float intercept;
+		float slope_range_2;
+		float intercept_range_2;
+		float zero_value; /*For the "set as zero" storage variable*/
+		float x1;
+		float y1;
+		float x2;
+		float y2;
+		float x3;
+		float y3;
+		float middle_value;
+		uint8_t measurementType;
+		uint8_t point_flag;
+#else
 		float slope;
 		float intercept;
 		float zero_value; /*For the "set as zero" storage variable*/
@@ -1366,6 +1693,7 @@ typedef union{
 		float x2;
 		float y2;
 		uint8_t point_flag;
+#endif
 	};
 }COD_SensorCalibrationHandle_t;
 COD_SensorCalibrationHandle_t COD_SensorCalibration_t;
@@ -1433,6 +1761,39 @@ typedef union{
 
 }CardIDInfo_Handler_t;
 CardIDInfo_Handler_t CardID_Info;
+// Date-Time structure, used to store date-time values such as seconds, minutes etc...
+typedef struct
+{
+    unsigned char second; // 0-59
+    unsigned char minute; // 0-59
+    unsigned char hour;   // 0-23
+    unsigned char day;    // 1-31
+    unsigned char month;  // 1-12
+    unsigned char year;   // 0-99 (representing 2000-2099)
+}
+date_time_t;
+
+// Days array
+static unsigned short days[4][12] =
+{
+    {   0,  31,  60,  91, 121, 152, 182, 213, 244, 274, 305, 335},
+    { 366, 397, 425, 456, 486, 517, 547, 578, 609, 639, 670, 700},
+    { 731, 762, 790, 821, 851, 882, 912, 943, 974,1004,1035,1065},
+    {1096,1127,1155,1186,1216,1247,1277,1308,1339,1369,1400,1430},
+};
+
+typedef enum{
+	SLAVE_ID	= 0,
+	FUNCTION_CODE,
+	START_ADDRESS_HIGH,
+	START_ADDRESS_LOW,
+}modbus_frame_t;
+
+typedef enum{
+	SINGLE_POINT = 1,
+	TWO_POINT,
+	THREE_POINT,
+}sensor_calibration_type_t;
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

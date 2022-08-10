@@ -27,7 +27,159 @@ Risk				:-
 								 by writing '1' to it.
 					    Comment :- Not implemented yet.
 					    
+Date				:- 13/01/2022
+Updates				:- 
+						1. Added the caluclted pH values to the HMI display instead of the ADC counts.
+						2. Implemented in pHsensotGetValue().
+
+Date				:-13/01/2022
+Updates				:- 
+						1. Added new register in Input register for :-
+							1. COD
+							2. BOD
+							3. TSS
+							These register will hold the values which will be only seen by the developer.
+							and will be viewed on check and factory setting display.
+						2. Chnages alos applied in CODCapture()
+
 Date				:- 27/01/2022
 Update				:- 
 						1. Added MODBUS for HMI over DMA, handling the query except multiple preset input coil.
 						  TESTED over MODSCAN.
+
+Date				:- 13/01/2022
+Updates				:- Added the COD and TSS check screen, including
+						1. Screen switch commands.
+						2. read acid
+						3. read sample
+						4. set as zero
+						
+Date				:- 28/01/2022
+Updates				:- Merged COD and TSS check branch with COD modbus map change branch cobined with master branch.
+
+
+Date				:- 01/02/2020
+Updates				:- 
+						1. Full fledged HMI MODBUS with DMA.(TESTED)
+						2. RTU on DMA.
+						3. Temperature cable resistance.(TESTED - 01/02/2022)
+						4. Only positive value for customer and -ve values for developer. (TESTED - 02/02/2022)
+						5. Check Screen.
+						6. Holding register spare resister space for every section.(TESTED)
+						
+Date				:-09/02/2022
+Updates				:-
+						1. DMA Bug solved, wit for TC bit in UART.
+						2. Clear the DMAR bit in UART in DMA ISR.
+						3. DMA Communication eshtablished also during the Lamp flashing.
+						4. COD Factory Calibration (coefficient and timestamp stored).
+						5. Linked List used for the updating the Last 10 calibration on the MODBUS.
+						6. Reading the Last 10 Calibration from FRAM during the first time boot.
+						
+Date				:- 10/02/2022
+Updates				:-
+						1. Storing of TSS into FRAM and reading from FRAM.
+						2. MODBUS MAP updated.
+
+Date				:- 11/02/2022
+Updates				:-
+						1. COD sensor calibration, implemented last 10 Calibration.
+						2. Updated interlocking for COD and TSS sensor calibration buttons.
+						
+Date				:- 17/02/2022
+Updates				:- 
+						1. Added BOD SF to the formaul and defalut va;ue of 0.5 in initialization.
+						2. ADC in polling mode. yet to interate with the sennsor and Clean pump operation.
+Date				:- 21/02/2022
+Updates				:-
+						1. Button interlocking for Sensor and Factory calibration fot COD and TSS.
+						2. Internal ADC for flow sensor and interlocking for SET AS ZERO.
+							if cleaning tank is empty then wont be able to set that PD values as zero.
+							(if the voltage values are below 2.3V then cleaning tank is not empty.)
+						3. pH display value limited b/w 0 to 14.	
+	
+Date				:- 24/02/2022					
+Updates				:-
+						1. MIL, Flow sensor and Stop button command for sampling and cleaning up added to COD 10 point calibration.	
+						2. Delay b/t value on and pump 1 on changed from 1000 to 500ms
+						3. Commented all the default calibration parameters.	
+						
+Date 				:- 28/02/2022
+Updates				:- 
+						1. Added interlocking of MIL state in Sensor calibration of COD and TSS.
+						2. Moved the DMA TC flag in main loop from ISR -> caused the delay in pH card ADC reading.	
+						
+Date				:- 2/3/2022
+Updates				:-
+						1. uncommented the Relay operations, and tested with masibus for pH parameter.
+
+Date				:- 3/3/2022
+Updates				:-
+						1. Analyzer range selection added to the State machine, data will be stored in the FRAM.
+						2. On fist boot the default data will be loaded for the parameter COD : 300 mg/l.
+						
+Date				:- 7/3/2022
+Updates				:-
+						1. pH 1-point sensor calibration added in software and HMI and tested using HMI and MODBUS.
+						2. BUG fix :- COD and TSS upper limits were not saved in the FRAM, now saved and read at BOOT.
+						3. Storing the process parameters in FRAM.
+						4. Reading the pH sensor calibration from memory and storing on the MODBUS, which will be displayed on the HMI.
+						
+Date				:- 8/3/2022
+Updates				:-
+						1. Added default pH sensor calibration for range select.
+						2. Added the pH sensor calibration points and data to the FRAM.
+Date				:- 14/3/2022
+Updates				:-
+						1. Added PD1 and PD2 zero values for Range select.
+						2. merged range Select 2.0 and 500 flashes (check screen with command)
+Date				:- 16/3/2022
+Updates				:-
+						1. Altered the TSS 10 Pt calibration.
+						2. Changed the state mchine for the command copy feature.
+						
+Data				:- 17/3/2022
+Updates				:-
+						1. Resetting on HMI command on action completion.
+						2. pH Sensor calibration history added to the MODBUS.
+						3. while loop clean-up.
+						4. Auto Zero condition to be executed if occured while Continuous mode is in action.
+						
+Date				:- 24/3/2022
+Updates				:- 
+						1. Saving of check screen parameters
+						2. TSS range select 10 pt and sensor calibration changed.
+						
+Date				:- 29/3/2022
+Updates				:-
+						1. Relay transfered from coil status to holding register.
+						2. Auto zero selction addedin sheduler.
+						3. Manual sensor calibration data manupulation will be seen in calibration history and will be taken in actual process value calculation.
+						
+Date				:- 5/4/2022
+Updates				:-
+						1. Added bits in coil status register measure,read_acid,read_sample and NoProcess for MIMIC process.
+						2. Next process time will be seen on the main screen, after the process automatically next process time will be calculated according to the HMI input and shown on the HMI.
+						
+						
+Date				:- 8/4/2022
+Updates				:- 
+						1. MIMIC and optimum communication configuration.
+						
+Date				:- 11/4/2022
+Updates				:-
+						1. BUG:- NoProcess bit is resetting, reason UNK.
+						2. Forced the NoProcess bit as SET.
+						3. pH electronic calibration ADC value read only after 10 cycles, once in 10 cycles as MODBUS was giving timeout.
+						
+Date				:- 18/4/2022
+Updates				:-	
+						1. MODBUS changed from 6 + 2 byte transaction to 8 bytes transactions.
+						2. FW version changed to 2.1.2
+
+Date 				:- 22/4/2022
+Updates				:-
+						1. PUMP 2 DO selection Macro.
+						2. AO calibraton data erase Macro.
+						3. pH electronic calibration common command BUG solve.
+						4. FW version changed to 2.1.3
