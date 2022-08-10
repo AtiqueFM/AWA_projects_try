@@ -585,10 +585,10 @@ void pH_SensorCalibrationGetValues(void)
 			pH_SensorCalibpoints_t.pH_Calculated_1_x1 = pH_calculated;
 			//Read by HMI
 			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_value = pH_calculated;
-			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = 0;
+			//HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_value = 0;
 
 			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_1_count = pH_SensorCalibpoints_t.pH_ADCCounts;
-			HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count = 0;
+			//HoldingRegister_t.SensorCalibration_t.pH_Cal_Point_2_count = 0;
 		}else if(display_flag == 2)
 		{
 			//convert the mV to Calculated pH
