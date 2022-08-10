@@ -240,6 +240,9 @@ int main(void)
   ADM_3_CLTR_LOW();
   //test
 //  HoldingRegisterdefaultData();
+  //FRAM_OperationWrite(FRAM_ADDRESS_CODSENSORLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 328],204);
+  //FRAM_OperationWrite(FRAM_ADDRESS_TSSSENSORLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 532],204);
+  //FRAM_OperationWrite(FRAM_ADDRESS_PHSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 532],204);
   ModbusReadConfiguration();
   HoldingRegisterdefaultData();
   startupMessages();
