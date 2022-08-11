@@ -1195,7 +1195,7 @@ void gaussEliminationLS(double x[],double y[],int len,int degree,uint8_t type){
     if(type == 1)
     {
         //publish the data on the modbus
-        for(int i = 0;i<4;i++)
+        for(int i = 0;i<3;i++)
         {
         	HoldingRegister_t.ModeCommand_t.C[i] = A[i];
         	COD_10ptFactoryCalibrationHandle_t.c[i] = A[i];
