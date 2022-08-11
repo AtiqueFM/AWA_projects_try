@@ -986,7 +986,8 @@ void ProcessModesCommands(void)
 						COD_10ptFactoryCalibrationHandle_t.y[i] = y_mat[i];
 					}
 
-					gaussEliminationLS(x_mat,y_mat,10,3,1);
+					//gaussEliminationLS(x_mat,y_mat,10,3,1);
+					gaussEliminationLS(x_mat,y_mat,10,2,1);
 
 					//Display messages
 					HoldingRegister_t.SensorCalibration_t.COD_Factory_Messages = CALIBRATION_SUCCESSFULL;
