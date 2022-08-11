@@ -3395,7 +3395,8 @@ void ModbusSaveConfiguration(uint8_t data)
 			  FRAM_OperationWrite(FRAM_ADDRESS_TSS_SENSOR_CALIB,(uint8_t*)&TSS_SensorCalibration_t.byte,48);
 
 			  //Storing in Last calibration Space
-			  FRAM_OperationWrite(FRAM_ADDRESS_TSSSENSORLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 452],204); //Storing COD factory calibration with overflow flag
+			  //FRAM_OperationWrite(FRAM_ADDRESS_TSSSENSORLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 452],204); //Storing COD factory calibration with overflow flag
+			  FRAM_OperationWrite(FRAM_ADDRESS_TSSSENSORLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 532],204); //Storing COD factory calibration with overflow flag
 			  AWADataStoreState.sensorTSS = RESET;
 		  }
 		  if(AWADataStoreState.sensorpH)
@@ -3406,7 +3407,7 @@ void ModbusSaveConfiguration(uint8_t data)
 
 			  //Storing in Last calibration Space
 			  //FRAM_OperationWrite(FRAM_ADDRESS_pHSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 576],124); //Storing COD factory calibration with overflow flag
-			  FRAM_OperationWrite(FRAM_ADDRESS_PHSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 576],204); //Storing COD factory calibration with overflow flag
+			  FRAM_OperationWrite(FRAM_ADDRESS_PHSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 736],204); //Storing COD factory calibration with overflow flag
 			  AWADataStoreState.sensorpH = RESET;
 		  }
 		  if(AWADataStoreState.factoryCOD)
@@ -3754,7 +3755,7 @@ void ModbusReadConfiguration(void)
 	/*For TSS Sensor last Calibration reading from FRAM*/
 	//Storing in Last calibration Space
 	//FRAM_OperationRead(FRAM_ADDRESS_TSSSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 452],124); //Storing only COD factory calibration with overflow flag
-	FRAM_OperationRead(FRAM_ADDRESS_TSSSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 532],204); //Storing only COD factory calibration with overflow flag
+	FRAM_OperationRead(FRAM_ADDRESS_TSSSENSORLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 532],204); //Storing only COD factory calibration with overflow flag
 
 	/*<TODO: Store the data from Input registers to Linked List*/
 	/*If the overflow flag is not set*/

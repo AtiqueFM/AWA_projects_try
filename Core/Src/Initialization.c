@@ -538,12 +538,19 @@ void setpHSensorCalibrationData(void)
 	HoldingRegister_t.SensorCalibration_t.pH_PT.Y2 = 7.0f;
 
 	//Calibration Values
-	HoldingRegister_t.SensorCalibration_t.pH_slope = -16.9408436f;
+	HoldingRegister_t.SensorCalibration_t.pH_slope = 100.54;
 	HoldingRegister_t.SensorCalibration_t.pH_intercept = 6.88764143f;
+	HoldingRegister_t.SensorCalibration_t.pH_slope_range_2 = 0;
+	HoldingRegister_t.SensorCalibration_t.pH_intercept_range_2 = 0;
 
 	//load to the live buffer
 	pH_SensorCalibpoints_t.pH_Solpe = HoldingRegister_t.SensorCalibration_t.pH_slope;
 	pH_SensorCalibpoints_t.pH_Intercept = HoldingRegister_t.SensorCalibration_t.pH_intercept;
+	pH_SensorCalibpoints_t.pH_slope_range_2 = HoldingRegister_t.SensorCalibration_t.pH_slope_range_2;
+	pH_SensorCalibpoints_t.pH_Intercept_range_2 = HoldingRegister_t.SensorCalibration_t.pH_intercept_range_2;
+
+	//Select Two Point Calibration
+	pH_SensorCalibpoints_t.measurement_Type = TWO_POINT;
 
 }
 
