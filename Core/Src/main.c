@@ -280,6 +280,16 @@ int main(void)
 
   //Initiate the queue
   initqueue();
+
+  float Current_COD_SF = 0;
+  float Current_TSS_SF = 0;
+  float Current_COD_C[4];
+  float Current_TSS_C[3];
+  Current_COD_SF = HoldingRegister_t.ModeCommand_t.COD_SF;
+  Current_TSS_SF = HoldingRegister_t.ModeCommand_t.TSS_SF;
+  memcpy(HoldingRegister_t.ModeCommand_t.C,Current_COD_C,sizeof(Current_COD_C));//Source,dest,size
+  memcpy(HoldingRegister_t.ModeCommand_t.TSS_K,Current_TSS_C,sizeof(Current_TSS_C));
+
   while (1)
   {
 
@@ -316,7 +326,23 @@ int main(void)
 	  FlowSensorReadStatus();
 	  MILSwitchReadStatus();
 
+	  //Check for data change
+	  if(Current_COD_SF != HoldingRegister_t.ModeCommand_t.COD_SF ||
+			  Current_TSS_SF != HoldingRegister_t.ModeCommand_t.TSS_SF)
+	  {
+		  Current_COD_SF = HoldingRegister_t.ModeCommand_t.COD_SF;
+		  COD_10ptFactoryCalibrationHandle_t.SF = Current_COD_SF;
 
+		  Current_TSS_SF = HoldingRegister_t.ModeCommand_t.TSS_SF;
+		  TSS_10ptFactoryCalibrationHandle_t.SF = Current_TSS_SF;
+
+		  FRAM_OperationWrite(FRAM_ADDRESS_MIN, (uint8_t*)&HoldingRegister_t.bytes, sizeof(HoldingRegister_t.bytes));
+	  }
+
+//	  if(!memcmp(Current_COD_C,HoldingRegister_t.ModeCommand_t.C,sizeof(Current_COD_C)))
+//	  {
+//		  return;
+//	  }
   }
   /* USER CODE END 3 */
 }
