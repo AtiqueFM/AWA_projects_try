@@ -1060,6 +1060,9 @@ void TSS_SensorCalibration(void)
 		//Publish to the MODBUS
 		HoldingRegister_t.SensorCalibration_t.TSS_CF = slope;
 		HoldingRegister_t.SensorCalibration_t.TSS_Intercept = intercept;
+
+		HoldingRegister_t.SensorCalibration_t.TSS_Messages = CALIBRATION_SUCCESSFULL;
+
 		//Reset the Common command Flag
 		HoldingRegister_t.ModeCommand_t.CommonCommand = 0x00;
 		HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
