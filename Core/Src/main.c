@@ -243,6 +243,7 @@ int main(void)
   //FRAM_OperationWrite(FRAM_ADDRESS_CODSENSORLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 328],204);
   //FRAM_OperationWrite(FRAM_ADDRESS_TSSSENSORLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 532],204);
   //FRAM_OperationWrite(FRAM_ADDRESS_PHSENSLASTCALIB_HISTORY,(uint8_t*)&InputRegister_t.bytes[sizeof(PVhandle_t) + 532],204);
+  //FRAM_OperationWrite(FRAM_ADDRESS_MIN,'\0',(1024*8)-1);
   ModbusReadConfiguration();
   HoldingRegisterdefaultData();
   startupMessages();
@@ -285,10 +286,21 @@ int main(void)
   float Current_TSS_SF = 0;
   float Current_COD_C[4];
   float Current_TSS_C[3];
+  float Current_CheckScreen_sample_on_time = 0;
+  float Current_CheckScreen_sample_wait_time = 0;
+  float Current_CheckScreen_clean_on_time = 0;
+  float Current_CheckScreen_clean_wait_time = 0;
+  float Current_CheckScreen_No_of_flashes = 0;
+
   Current_COD_SF = HoldingRegister_t.ModeCommand_t.COD_SF;
   Current_TSS_SF = HoldingRegister_t.ModeCommand_t.TSS_SF;
   memcpy(HoldingRegister_t.ModeCommand_t.C,Current_COD_C,sizeof(Current_COD_C));//Source,dest,size
   memcpy(HoldingRegister_t.ModeCommand_t.TSS_K,Current_TSS_C,sizeof(Current_TSS_C));
+  Current_CheckScreen_sample_on_time = HoldingRegister_t.ModeCommand_t.CS_PUMP1_ONTIME;
+  Current_CheckScreen_sample_wait_time = HoldingRegister_t.ModeCommand_t.CS_PUMP1_DELAY;
+  Current_CheckScreen_clean_on_time = HoldingRegister_t.ModeCommand_t.CS_PUMP2_ONTIME;
+  Current_CheckScreen_clean_wait_time = HoldingRegister_t.ModeCommand_t.CS_PUMP2_DELAY;
+  Current_CheckScreen_No_of_flashes = HoldingRegister_t.ModeCommand_t.CS_FLASH;
 
   while (1)
   {
@@ -298,16 +310,6 @@ int main(void)
 
 	  //Relay outputs and analog outputs
 	  Application_AWAIOProcess();
-
-#if 0
-	  if(AWAOperationStatus_t.ElectronicCal_AO == 0 \
-			  && AWAOperationStatus_t.CalibrationMode != 1 \
-			  && AWAOperationStatus_t.FactoryMode != 1)
-	  {
-		  ParameterIOutProcess();/*26/8/2021*/
-//		  ParameterRelayAlarmProcess();/*2/9/2021*/
-	  }
-#endif
 
     /* USER CODE END WHILE */
 
@@ -319,16 +321,18 @@ int main(void)
 	  //Stores the process variables and calibration data if the respective flag is raised
 	  Application_StoreData();
 
-	  //Will if data is transmitted by the slave and is ready for new query
-	  //Application_MODBUSRXprocess();
-
 	  /*COD process controls*/
 	  FlowSensorReadStatus();
 	  MILSwitchReadStatus();
 
 	  //Check for data change
 	  if(Current_COD_SF != HoldingRegister_t.ModeCommand_t.COD_SF ||
-			  Current_TSS_SF != HoldingRegister_t.ModeCommand_t.TSS_SF)
+			Current_TSS_SF != HoldingRegister_t.ModeCommand_t.TSS_SF ||
+			Current_CheckScreen_sample_on_time != HoldingRegister_t.ModeCommand_t.CS_PUMP1_ONTIME||
+			Current_CheckScreen_sample_wait_time != HoldingRegister_t.ModeCommand_t.CS_PUMP1_DELAY||
+			Current_CheckScreen_clean_on_time != HoldingRegister_t.ModeCommand_t.CS_PUMP2_ONTIME||
+			Current_CheckScreen_clean_wait_time != HoldingRegister_t.ModeCommand_t.CS_PUMP2_DELAY||
+			Current_CheckScreen_No_of_flashes != HoldingRegister_t.ModeCommand_t.CS_FLASH)
 	  {
 		  Current_COD_SF = HoldingRegister_t.ModeCommand_t.COD_SF;
 		  COD_10ptFactoryCalibrationHandle_t.SF = Current_COD_SF;
@@ -336,13 +340,15 @@ int main(void)
 		  Current_TSS_SF = HoldingRegister_t.ModeCommand_t.TSS_SF;
 		  TSS_10ptFactoryCalibrationHandle_t.SF = Current_TSS_SF;
 
+		  Current_CheckScreen_sample_on_time = HoldingRegister_t.ModeCommand_t.CS_PUMP1_ONTIME;
+		  Current_CheckScreen_sample_wait_time = HoldingRegister_t.ModeCommand_t.CS_PUMP1_DELAY;
+		  Current_CheckScreen_clean_on_time = HoldingRegister_t.ModeCommand_t.CS_PUMP2_ONTIME;
+		  Current_CheckScreen_clean_wait_time = HoldingRegister_t.ModeCommand_t.CS_PUMP2_DELAY;
+
+		  Current_CheckScreen_No_of_flashes = HoldingRegister_t.ModeCommand_t.CS_FLASH;
+
 		  FRAM_OperationWrite(FRAM_ADDRESS_MIN, (uint8_t*)&HoldingRegister_t.bytes, sizeof(HoldingRegister_t.bytes));
 	  }
-
-//	  if(!memcmp(Current_COD_C,HoldingRegister_t.ModeCommand_t.C,sizeof(Current_COD_C)))
-//	  {
-//		  return;
-//	  }
   }
   /* USER CODE END 3 */
 }

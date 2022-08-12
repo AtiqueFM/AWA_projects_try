@@ -195,6 +195,8 @@ void ProcessModesCommands(void)
 					//Store the manual pH calibration factor
 					pH_SensorCalibpoints_t.pH_Solpe = HoldingRegister_t.SensorCalibration_t.pH_slope;
 					pH_SensorCalibpoints_t.pH_Intercept = HoldingRegister_t.SensorCalibration_t.pH_intercept;
+					pH_SensorCalibpoints_t.pH_slope_range_2 = HoldingRegister_t.SensorCalibration_t.pH_slope_range_2;
+					pH_SensorCalibpoints_t.pH_Intercept_range_2 = HoldingRegister_t.SensorCalibration_t.pH_intercept_range_2;
 
 					/*<TODO: Push the slope and intercept to Last Calibration Input register*/
 					//Set the state of which data to store
@@ -4611,6 +4613,22 @@ void TSScalculateValue(void)
 
 }
 
+void genericData(void)
+{
+	HoldingRegister_t.ModeCommand_t.CS_PUMP1_DELAY = 1;
+	HoldingRegister_t.ModeCommand_t.CS_PUMP1_ONTIME=  20;
+	HoldingRegister_t.ModeCommand_t.CS_PUMP2_DELAY = 1;
+	HoldingRegister_t.ModeCommand_t.CS_PUMP2_ONTIME=  20;
+	HoldingRegister_t.ModeCommand_t.CS_FLASH = 1;
+
+	HoldingRegister_t.ModeCommand_t.PUMP1_DELAY = 1;
+	HoldingRegister_t.ModeCommand_t.PUMP1_ONTIME = 10;
+	HoldingRegister_t.ModeCommand_t.PUMP2_DELAY = 1;
+	HoldingRegister_t.ModeCommand_t.PUMP2_ONTIME = 10;
+
+	HoldingRegister_t.IOUTCalibandTest_t.temperatureSensorCable_resistance = 1.0f;
+
+}
 
 void AWA_RangeSelect(void)
 {
@@ -4636,7 +4654,8 @@ void AWA_RangeSelect(void)
 		break;
 	}
 
-	//Reflect in calibration history
+	//Set generic Data
+	genericData();
 
 	//Set the flags for the parameters to be reflected in calibration history
 	AWADataStoreState.sensorCOD = SET;

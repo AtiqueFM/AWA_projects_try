@@ -41,7 +41,7 @@ extern "C" {
 #define FW_VER_BUGFIX		4 /*<*/
 
 #define MODBUS_1000_BYTES					1
-#define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)1200
+#define HOLDING_REGISTER_BYTE_SIZE			(uint16_t)2000//1200
 #define UART_6_RX_DESTINATION_ADDR			(uint32_t)0x20005000
 #define QUERRY_RX_INIT_LEN_6				0
 #define NEW_PUMP2_PIN						0
