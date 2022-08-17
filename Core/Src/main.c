@@ -325,6 +325,9 @@ int main(void)
 	  FlowSensorReadStatus();
 	  MILSwitchReadStatus();
 
+	  //Send the data to RTU
+	  setRTUData();
+
 	  //Check for data change
 	  if(Current_COD_SF != HoldingRegister_t.ModeCommand_t.COD_SF ||
 			Current_TSS_SF != HoldingRegister_t.ModeCommand_t.TSS_SF ||
