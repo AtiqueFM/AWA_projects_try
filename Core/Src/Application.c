@@ -3590,7 +3590,7 @@ void ModbusReadConfiguration(void)
 		HoldingRegister_t.ModeCommand_t.COD_Y[i] = COD_10ptFactoryCalibrationHandle_t.y[i];
 	}
 
-	for(int i = 0;i<4;i++)
+	for(int i = 0;i<3;i++)
 	{
 		HoldingRegister_t.ModeCommand_t.C[i] = COD_10ptFactoryCalibrationHandle_t.c[i];
 	}

@@ -294,8 +294,8 @@ int main(void)
 
   Current_COD_SF = HoldingRegister_t.ModeCommand_t.COD_SF;
   Current_TSS_SF = HoldingRegister_t.ModeCommand_t.TSS_SF;
-  memcpy(HoldingRegister_t.ModeCommand_t.C,Current_COD_C,sizeof(Current_COD_C));//Source,dest,size
-  memcpy(HoldingRegister_t.ModeCommand_t.TSS_K,Current_TSS_C,sizeof(Current_TSS_C));
+  //memcpy(HoldingRegister_t.ModeCommand_t.C,Current_COD_C,sizeof(Current_COD_C));//Source,dest,size
+  //memcpy(HoldingRegister_t.ModeCommand_t.TSS_K,Current_TSS_C,sizeof(Current_TSS_C));
   Current_CheckScreen_sample_on_time = HoldingRegister_t.ModeCommand_t.CS_PUMP1_ONTIME;
   Current_CheckScreen_sample_wait_time = HoldingRegister_t.ModeCommand_t.CS_PUMP1_DELAY;
   Current_CheckScreen_clean_on_time = HoldingRegister_t.ModeCommand_t.CS_PUMP2_ONTIME;
