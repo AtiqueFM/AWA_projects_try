@@ -582,7 +582,8 @@ Uholding_t HoldingRegister_t;
 typedef struct{
 	uint8_t p[8]; //p5-p12
 	uint8_t relay[8];//relay 1 - relay 8
-	uint8_t spare[2];
+	uint8_t Scheduler_interlock; /*<If 1: then perform the action; ELSE IF 0: discard the action*/
+	uint8_t spare[1];
 	uint8_t NEW_COMMAND_FLAG;	/*<Set by HMI is there is new command, Reset by uC after receiving the command.*/
 	uint8_t TRED_TRIGGER;		/*<NA*/
 	uint8_t RES;			/*<NA*/ //21
