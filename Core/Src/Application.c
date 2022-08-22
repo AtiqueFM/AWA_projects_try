@@ -48,6 +48,7 @@ extern UART_HandleTypeDef huart1;
 extern UART_HandleTypeDef huart3;
 extern UART_HandleTypeDef huart6;
 extern uint8_t performAUTOZERO;
+extern uint8_t performBatchCycle;
 TIM_HandleTypeDef htim12;
 
 extern TIM_HandleTypeDef htim12;
@@ -4839,6 +4840,19 @@ void Application_commandCheckandProcess(void)
 		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
 
 	  }
+	  /*For batch cycle*/
+	  else if(HoldingRegister_t.ModeCommand_t.CommonCommandHMI == AUTO_COD_MEASURE
+	  			  && CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG == SET)
+	  {
+		  /*Perform batch mode after the current action is over*/
+		  performBatchCycle = SET;	//Action will be performed in main loop
+
+		  HoldingRegister_t.ModeCommand_t.CommonCommandHMI = RESET;
+
+		  //Reset the new command flag
+		  CoilStatusRegister_t.CoilStatus_t.NEW_COMMAND_FLAG = RESET;
+
+	  }
 	  /*For STOP pump action*/
 	  else if(HoldingRegister_t.ModeCommand_t.CommonCommandHMI == STOP_RUNNING_PUMP
 			  && HoldingRegister_t.ModeCommand_t.CommonCommand != COD_Measure
@@ -4886,6 +4900,17 @@ void Application_commandCheckandProcess(void)
 		  //Reset the Auto Zero command flag.
 		  performAUTOZERO = RESET;
 
+	  }else if(performBatchCycle && HoldingRegister_t.ModeCommand_t.CommonCommand == RESET)
+	  {
+		  //Set the main page command
+		  HoldingRegister_t.ModeCommand_t.ModeCommand_H = 0x22;
+		  HoldingRegister_t.ModeCommand_t.ModeCommand_L = 0x01;
+
+		  //Set the common command for batch mode
+		  HoldingRegister_t.ModeCommand_t.CommonCommand = AUTO_COD_MEASURE;
+
+		  //Reset the Auto Zero command flag.
+		  performBatchCycle = RESET;
 	  }
 }
 

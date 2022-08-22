@@ -129,6 +129,8 @@ Data data_;
 
 //AutoZero flag
 uint8_t performAUTOZERO;
+//Batch mode
+uint8_t performBatchCycle;
 
 int _write(int file, char *ptr, int len)
 {
