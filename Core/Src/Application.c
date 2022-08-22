@@ -96,6 +96,7 @@ MODBUS_config_t PORT_1;
 MODBUS_config_t PORT_2;
 MODBUS_config_t PORT_3;
 
+uint8_t inProgress = RESET;
 void ProcessModesCommands(void)
 {
 	if(HoldingRegister_t.ModeCommand_t.ModeCommand_H == RUN_MODE)
@@ -112,8 +113,11 @@ void ProcessModesCommands(void)
 				AWAOperationStatus_t.CalibrationMode = 0;
 				AWAOperationStatus_t.FactoryMode = 0;
 				//Auto measurement, background process
-				if(HoldingRegister_t.ModeCommand_t.CommonCommand == AUTO_COD_MEASURE  && AWAOperationStatus_t.MILSwitchState == SET)
+				if(HoldingRegister_t.ModeCommand_t.CommonCommand == AUTO_COD_MEASURE
+						&& AWAOperationStatus_t.MILSwitchState == SET
+						&& (inProgress == SET || CoilStatusRegister_t.CoilStatus_t.Scheduler_interlock == SET))
 				{
+					inProgress = SET;
 					//Change the next process time
 					calculate_Next_ProcessTime();
 					//First operate the sample pump
@@ -136,8 +140,10 @@ void ProcessModesCommands(void)
 					HoldingRegister_t.ModeCommand_t.CommonCommand = 0;
 				}
 				//Perform the Auto Zero process
-				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == AUTO_COD_ZERO)
+				else if(HoldingRegister_t.ModeCommand_t.CommonCommand == AUTO_COD_ZERO
+						&& (inProgress == SET || CoilStatusRegister_t.CoilStatus_t.Scheduler_interlock == SET))
 				{
+					inProgress = SET;
 					//First operate the sample pump
 					PumpOperation(0x01);
 
@@ -2537,6 +2543,8 @@ uint8_t CODADCCapture(uint8_t command)
 			CoilStatusRegister_t.CoilStatus_t.read_acid = RESET;
 			CoilStatusRegister_t.CoilStatus_t.read_sample = RESET;
 			CoilStatusRegister_t.CoilStatus_t.NoProcess = SET;
+
+			inProgress = RESET;
 		}
 
 	  }
