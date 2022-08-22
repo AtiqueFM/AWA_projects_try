@@ -33,7 +33,7 @@ extern "C" {
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 /*SOftware Version for HMI and Firmware*/
-#define HMI_VER_MAJOR		3 /*<*/
+#define HMI_VER_MAJOR		4 /*<*/
 #define HMI_VER_MINOR		0 /*<*/
 #define HMI_VER_BUGFIX		0 /*<*/
 #define FW_VER_MAJOR		2 /*<*/
